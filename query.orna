@@ -2,8 +2,9 @@
 // intrinsics. Source declarations record the pinned public API; the evaluator
 // maps these exact exports to the same intrinsic identities as std.collection
 // so pipelines, order, failures, effects and resource bounds cannot diverge.
-// Stream operations are not duplicated here: their waiting/checkpoint effects
-// are a separate API and are not finite Collection<T> overloads.
+// Stream<T> operators are deliberately not aliases of these finite collection
+// intrinsics: they have distinct waiting/checkpoint identities under
+// std.stream, so the evaluator never coerces a stream through a list operator.
 // Relation<T> selects the shared intrinsic overload from its input value.
 pub fn filter<T>(rows: [T], predicate: fn(T): Bool): [T] = fail(error(
     code: "ORNA-EVAL-UNSUPPORTED",

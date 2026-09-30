@@ -1,5 +1,6 @@
 use math;
 use collection;
 use query;
+use text;
 
 pub fn version(): Str = "1.0.0";
