@@ -3,5 +3,6 @@ use collection;
 use query;
 use text;
 use bits;
+use stats;
 
 pub fn version(): Str = "1.0.0";

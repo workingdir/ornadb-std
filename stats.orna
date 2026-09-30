@@ -1,0 +1,33 @@
+// These declarations are the snapshot admission record for the bounded stats
+// intrinsics. Generic signatures keep the portable numeric representations
+// open; runtime checks enforce homogeneous Int, Decimal, or Float inputs.
+// Mean may promote Int to Decimal when its exact quotient requires it, so its
+// source result is kept generic until numeric-union types are available.
+pub fn mean<T>(
+    rows: [T],
+    scale: Int? = null,
+    rounding: Str? = null
+): T? = fail(error(
+    code: "ORNA-EVAL-UNSUPPORTED",
+    message: "std.stats.mean requires its evaluator binding"
+));
+
+pub fn median<T>(
+    rows: [T],
+    scale: Int? = null,
+    rounding: Str? = null
+): T? = fail(error(
+    code: "ORNA-EVAL-UNSUPPORTED",
+    message: "std.stats.median requires its evaluator binding"
+));
+
+pub fn percentile<T, P>(
+    rows: [T],
+    p: P,
+    interpolation: Str,
+    scale: Int? = null,
+    rounding: Str? = null
+): T? = fail(error(
+    code: "ORNA-EVAL-UNSUPPORTED",
+    message: "std.stats.percentile requires its evaluator binding"
+));
