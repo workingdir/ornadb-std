@@ -88,3 +88,73 @@ pub fn exists<T>(rows: [T], predicate: fn(T): Bool): Bool = fail(error(
     code: "ORNA-EVAL-UNSUPPORTED",
     message: "std.query.exists requires its evaluator binding"
 ));
+
+pub fn chunk<T>(values: [T], size: Int): [[T]] = fail(error(
+    code: "ORNA-EVAL-UNSUPPORTED",
+    message: "std.query.chunk requires its evaluator binding"
+));
+
+pub fn flatten<T>(values: [[T]]): [T] = fail(error(
+    code: "ORNA-EVAL-UNSUPPORTED",
+    message: "std.query.flatten requires its evaluator binding"
+));
+
+pub fn partition<T>(values: [T], predicate: fn(T): Bool): ([T], [T]) = fail(error(
+    code: "ORNA-EVAL-UNSUPPORTED",
+    message: "std.query.partition requires its evaluator binding"
+));
+
+pub fn zip<T, U>(left: [T], right: [U]): [(T, U)] = fail(error(
+    code: "ORNA-EVAL-UNSUPPORTED",
+    message: "std.query.zip requires its evaluator binding"
+));
+
+pub fn zip_exact<T, U>(left: [T], right: [U]): [(T, U)] = fail(error(
+    code: "ORNA-EVAL-UNSUPPORTED",
+    message: "std.query.zip_exact requires its evaluator binding"
+));
+
+pub fn unique<T>(values: [T]): [T] = fail(error(
+    code: "ORNA-EVAL-UNSUPPORTED",
+    message: "std.query.unique requires its evaluator binding"
+));
+
+pub fn group_by<T, K>(values: [T], key: fn(T): K): [(K, [T])] = fail(error(
+    code: "ORNA-EVAL-UNSUPPORTED",
+    message: "std.query.group_by requires its evaluator binding"
+));
+
+pub fn pairs<T>(values: [T]): [(T, T)] = fail(error(
+    code: "ORNA-EVAL-UNSUPPORTED",
+    message: "std.query.pairs requires its evaluator binding"
+));
+
+pub fn window<T>(values: [T], size: Int, step: Int = 1): [[T]] = fail(error(
+    code: "ORNA-EVAL-UNSUPPORTED",
+    message: "std.query.window requires its evaluator binding"
+));
+
+pub fn split_when<T>(values: [T], predicate: fn(T): Bool): [[T]] = fail(error(
+    code: "ORNA-EVAL-UNSUPPORTED",
+    message: "std.query.split_when requires its evaluator binding"
+));
+
+pub fn rank<T, K>(values: [T], key: fn(T): K): [(T, Int)] = fail(error(
+    code: "ORNA-EVAL-UNSUPPORTED",
+    message: "std.query.rank requires its evaluator binding"
+));
+
+pub fn asof_join<T, Time, Key>(
+    left: [T],
+    right: [T],
+    time: fn(T): Time,
+    by: fn(T): Key
+): [(T, T?)] = fail(error(
+    code: "ORNA-EVAL-UNSUPPORTED",
+    message: "std.query.asof_join requires its evaluator binding"
+));
+
+pub fn bucket_by<T>(rows: [T], period: Duration, zone: Str): [T] = fail(error(
+    code: "ORNA-EVAL-UNSUPPORTED",
+    message: "std.query.bucket_by requires its evaluator binding"
+));

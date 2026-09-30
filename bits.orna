@@ -1,0 +1,31 @@
+// std.bits is optional library API. The pinned declarations admit the exact
+// bounded evaluator intrinsics; the core database does not depend on them.
+pub fn bit_or(left: Int, right: Int): Int = fail(error(
+    code: "ORNA-EVAL-UNSUPPORTED",
+    message: "std.bits.bit_or requires its evaluator binding"
+));
+
+pub fn bit_and(left: Int, right: Int): Int = fail(error(
+    code: "ORNA-EVAL-UNSUPPORTED",
+    message: "std.bits.bit_and requires its evaluator binding"
+));
+
+pub fn bit_xor(left: Int, right: Int): Int = fail(error(
+    code: "ORNA-EVAL-UNSUPPORTED",
+    message: "std.bits.bit_xor requires its evaluator binding"
+));
+
+pub fn bit_not(value: Int): Int = fail(error(
+    code: "ORNA-EVAL-UNSUPPORTED",
+    message: "std.bits.bit_not requires its evaluator binding"
+));
+
+pub fn shift_left(value: Int, count: Int): Int = fail(error(
+    code: "ORNA-EVAL-UNSUPPORTED",
+    message: "std.bits.shift_left requires its evaluator binding"
+));
+
+pub fn shift_right(value: Int, count: Int): Int = fail(error(
+    code: "ORNA-EVAL-UNSUPPORTED",
+    message: "std.bits.shift_right requires its evaluator binding"
+));
