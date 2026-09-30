@@ -106,3 +106,67 @@ pub fn asof_join<T, Time, Key>(
     code: "ORNA-EVAL-UNSUPPORTED",
     message: "std.collection.asof_join requires its evaluator binding"
 ));
+
+// The bounded evaluator also supplies the portable finite helpers below.
+// Their pinned declarations are the admission record for those intrinsics.
+pub fn chunk<T>(values: [T], size: Int): [[T]] = fail(error(
+    code: "ORNA-EVAL-UNSUPPORTED",
+    message: "std.collection.chunk requires its evaluator binding"
+));
+
+pub fn flatten<T>(values: [[T]]): [T] = fail(error(
+    code: "ORNA-EVAL-UNSUPPORTED",
+    message: "std.collection.flatten requires its evaluator binding"
+));
+
+pub fn partition<T>(values: [T], predicate: fn(T): Bool): ([T], [T]) = fail(error(
+    code: "ORNA-EVAL-UNSUPPORTED",
+    message: "std.collection.partition requires its evaluator binding"
+));
+
+pub fn zip<T, U>(left: [T], right: [U]): [(T, U)] = fail(error(
+    code: "ORNA-EVAL-UNSUPPORTED",
+    message: "std.collection.zip requires its evaluator binding"
+));
+
+pub fn zip_exact<T, U>(left: [T], right: [U]): [(T, U)] = fail(error(
+    code: "ORNA-EVAL-UNSUPPORTED",
+    message: "std.collection.zip_exact requires its evaluator binding"
+));
+
+pub fn unique<T>(values: [T]): [T] = fail(error(
+    code: "ORNA-EVAL-UNSUPPORTED",
+    message: "std.collection.unique requires its evaluator binding"
+));
+
+pub fn group_by<T, K>(values: [T], key: fn(T): K): [(K, [T])] = fail(error(
+    code: "ORNA-EVAL-UNSUPPORTED",
+    message: "std.collection.group_by requires its evaluator binding"
+));
+
+pub fn pairs<T>(values: [T]): [(T, T)] = fail(error(
+    code: "ORNA-EVAL-UNSUPPORTED",
+    message: "std.collection.pairs requires its evaluator binding"
+));
+
+pub fn window<T>(values: [T], size: Int, step: Int = 1): [[T]] = fail(error(
+    code: "ORNA-EVAL-UNSUPPORTED",
+    message: "std.collection.window requires its evaluator binding"
+));
+
+pub fn split_when<T>(values: [T], predicate: fn(T): Bool): [[T]] = fail(error(
+    code: "ORNA-EVAL-UNSUPPORTED",
+    message: "std.collection.split_when requires its evaluator binding"
+));
+
+pub fn rank<T, K>(values: [T], key: fn(T): K): [(T, Int)] = fail(error(
+    code: "ORNA-EVAL-UNSUPPORTED",
+    message: "std.collection.rank requires its evaluator binding"
+));
+
+// Calendar bucketing is a relation plan operation. The relation runtime owns
+// its explicit zone and checkpoint-safe ordering semantics.
+pub fn bucket_by<T>(rows: [T], period: Duration, zone: Str): [T] = fail(error(
+    code: "ORNA-EVAL-UNSUPPORTED",
+    message: "std.collection.bucket_by requires its evaluator binding"
+));
