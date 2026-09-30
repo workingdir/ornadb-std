@@ -1,3 +1,96 @@
+// These public signatures identify the portable collection intrinsics. The
+// evaluator binds this exact pinned export to its bounded implementation;
+// calling a stub without that binding fails closed instead of substituting a
+// host collection library. Stream operations stay separate because they own
+// waiting, checkpoint and cancellation effects rather than finite values.
+// Relation<T> uses the same intrinsic identity as this [T] declaration; the
+// semantic/runtime overload is selected from the supplied relation value.
+pub fn filter<T>(rows: [T], predicate: fn(T): Bool): [T] = fail(error(
+    code: "ORNA-EVAL-UNSUPPORTED",
+    message: "std.collection.filter requires its evaluator binding"
+));
+
+pub fn map<T, U>(rows: [T], transform: fn(T): U): [U] = fail(error(
+    code: "ORNA-EVAL-UNSUPPORTED",
+    message: "std.collection.map requires its evaluator binding"
+));
+
+pub fn flat_map<T, U>(rows: [T], transform: fn(T): [U]): [U] = fail(error(
+    code: "ORNA-EVAL-UNSUPPORTED",
+    message: "std.collection.flat_map requires its evaluator binding"
+));
+
+pub fn sort_by<T, K>(rows: [T], key: fn(T): K): [T] = fail(error(
+    code: "ORNA-EVAL-UNSUPPORTED",
+    message: "std.collection.sort_by requires its evaluator binding"
+));
+
+pub fn take<T>(rows: [T], count: Int): [T] = fail(error(
+    code: "ORNA-EVAL-UNSUPPORTED",
+    message: "std.collection.take requires its evaluator binding"
+));
+
+pub fn drop<T>(rows: [T], count: Int): [T] = fail(error(
+    code: "ORNA-EVAL-UNSUPPORTED",
+    message: "std.collection.drop requires its evaluator binding"
+));
+
+pub fn distinct<T>(rows: [T]): [T] = fail(error(
+    code: "ORNA-EVAL-UNSUPPORTED",
+    message: "std.collection.distinct requires its evaluator binding"
+));
+
+pub fn union<T>(left: [T], right: [T]): [T] = fail(error(
+    code: "ORNA-EVAL-UNSUPPORTED",
+    message: "std.collection.union requires its evaluator binding"
+));
+
+pub fn count<T>(rows: [T]): Int = fail(error(
+    code: "ORNA-EVAL-UNSUPPORTED",
+    message: "std.collection.count requires its evaluator binding"
+));
+
+pub fn first<T>(rows: [T]): T? = fail(error(
+    code: "ORNA-EVAL-UNSUPPORTED",
+    message: "std.collection.first requires its evaluator binding"
+));
+
+// The intrinsic also exposes one(rows) without a predicate. A default true
+// callback keeps that arity visible to ordinary named imports while the
+// evaluator binding preserves the distinct zero/multiple cardinality errors.
+pub fn one<T>(
+    rows: [T],
+    predicate: fn(T): Bool = value => true
+): T = fail(error(
+    code: "ORNA-EVAL-UNSUPPORTED",
+    message: "std.collection.one requires its evaluator binding"
+));
+
+pub fn sum<T>(rows: [T]): T = fail(error(
+    code: "ORNA-EVAL-UNSUPPORTED",
+    message: "std.collection.sum requires its evaluator binding"
+));
+
+pub fn min<T>(rows: [T]): T? = fail(error(
+    code: "ORNA-EVAL-UNSUPPORTED",
+    message: "std.collection.min requires its evaluator binding"
+));
+
+pub fn max<T>(rows: [T]): T? = fail(error(
+    code: "ORNA-EVAL-UNSUPPORTED",
+    message: "std.collection.max requires its evaluator binding"
+));
+
+pub fn every<T>(rows: [T], predicate: fn(T): Bool): Bool = fail(error(
+    code: "ORNA-EVAL-UNSUPPORTED",
+    message: "std.collection.every requires its evaluator binding"
+));
+
+pub fn exists<T>(rows: [T], predicate: fn(T): Bool): Bool = fail(error(
+    code: "ORNA-EVAL-UNSUPPORTED",
+    message: "std.collection.exists requires its evaluator binding"
+));
+
 // `asof_join`'s reference entry leaves the selector and result shapes open.
 // This profile applies each selector to both lists' rows and returns one
 // `(left, right?)` pair per left row. The bounded evaluator selects by nearest

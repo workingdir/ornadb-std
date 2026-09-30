@@ -1,0 +1,89 @@
+// The reference library permits std.query to re-export portable collection
+// intrinsics. Source declarations record the pinned public API; the evaluator
+// maps these exact exports to the same intrinsic identities as std.collection
+// so pipelines, order, failures, effects and resource bounds cannot diverge.
+// Stream operations are not duplicated here: their waiting/checkpoint effects
+// are a separate API and are not finite Collection<T> overloads.
+// Relation<T> selects the shared intrinsic overload from its input value.
+pub fn filter<T>(rows: [T], predicate: fn(T): Bool): [T] = fail(error(
+    code: "ORNA-EVAL-UNSUPPORTED",
+    message: "std.query.filter requires its evaluator binding"
+));
+
+pub fn map<T, U>(rows: [T], transform: fn(T): U): [U] = fail(error(
+    code: "ORNA-EVAL-UNSUPPORTED",
+    message: "std.query.map requires its evaluator binding"
+));
+
+pub fn flat_map<T, U>(rows: [T], transform: fn(T): [U]): [U] = fail(error(
+    code: "ORNA-EVAL-UNSUPPORTED",
+    message: "std.query.flat_map requires its evaluator binding"
+));
+
+pub fn sort_by<T, K>(rows: [T], key: fn(T): K): [T] = fail(error(
+    code: "ORNA-EVAL-UNSUPPORTED",
+    message: "std.query.sort_by requires its evaluator binding"
+));
+
+pub fn take<T>(rows: [T], count: Int): [T] = fail(error(
+    code: "ORNA-EVAL-UNSUPPORTED",
+    message: "std.query.take requires its evaluator binding"
+));
+
+pub fn drop<T>(rows: [T], count: Int): [T] = fail(error(
+    code: "ORNA-EVAL-UNSUPPORTED",
+    message: "std.query.drop requires its evaluator binding"
+));
+
+pub fn distinct<T>(rows: [T]): [T] = fail(error(
+    code: "ORNA-EVAL-UNSUPPORTED",
+    message: "std.query.distinct requires its evaluator binding"
+));
+
+pub fn union<T>(left: [T], right: [T]): [T] = fail(error(
+    code: "ORNA-EVAL-UNSUPPORTED",
+    message: "std.query.union requires its evaluator binding"
+));
+
+pub fn count<T>(rows: [T]): Int = fail(error(
+    code: "ORNA-EVAL-UNSUPPORTED",
+    message: "std.query.count requires its evaluator binding"
+));
+
+pub fn first<T>(rows: [T]): T? = fail(error(
+    code: "ORNA-EVAL-UNSUPPORTED",
+    message: "std.query.first requires its evaluator binding"
+));
+
+pub fn one<T>(
+    rows: [T],
+    predicate: fn(T): Bool = value => true
+): T = fail(error(
+    code: "ORNA-EVAL-UNSUPPORTED",
+    message: "std.query.one requires its evaluator binding"
+));
+
+pub fn sum<T>(rows: [T]): T = fail(error(
+    code: "ORNA-EVAL-UNSUPPORTED",
+    message: "std.query.sum requires its evaluator binding"
+));
+
+pub fn min<T>(rows: [T]): T? = fail(error(
+    code: "ORNA-EVAL-UNSUPPORTED",
+    message: "std.query.min requires its evaluator binding"
+));
+
+pub fn max<T>(rows: [T]): T? = fail(error(
+    code: "ORNA-EVAL-UNSUPPORTED",
+    message: "std.query.max requires its evaluator binding"
+));
+
+pub fn every<T>(rows: [T], predicate: fn(T): Bool): Bool = fail(error(
+    code: "ORNA-EVAL-UNSUPPORTED",
+    message: "std.query.every requires its evaluator binding"
+));
+
+pub fn exists<T>(rows: [T], predicate: fn(T): Bool): Bool = fail(error(
+    code: "ORNA-EVAL-UNSUPPORTED",
+    message: "std.query.exists requires its evaluator binding"
+));
