@@ -18,3 +18,11 @@ pub fn resolve_local(local: Str, zone: Str, ambiguous: Str): Instant = fail(erro
     code: "ORNA-EVAL-UNSUPPORTED",
     message: "std.time.resolve_local requires its evaluator binding"
 ));
+
+// Keep the four elapsed-duration presentations reachable from std.time. Their
+// sources are separate pinned modules, so a snapshot captures each formatter
+// independently and cannot acquire one from an installed library later.
+use std.time.duration.compact;
+use std.time.duration.clock;
+use std.time.duration.words;
+use std.time.duration.iso;
