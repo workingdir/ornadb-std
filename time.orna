@@ -1,0 +1,20 @@
+// The evaluator profile embeds this immutable time-zone edition. Keeping its
+// identity in ordinary pinned source lets old snapshots reject runtime data
+// they did not capture instead of silently borrowing the current edition.
+pub fn timezone_data_version(): Str = "orna-iana-2024a";
+
+// This initial portable surface returns a resolved offset and instant rather
+// than inventing a locale-specific formatted datetime.
+pub fn offset_at(instant: Instant, zone: Str): Int = fail(error(
+    code: "ORNA-EVAL-UNSUPPORTED",
+    message: "std.time.offset_at requires its evaluator binding"
+));
+
+// local is ISO civil text without an offset: YYYY-MM-DDTHH:MM:SS with an
+// optional 1..9 digit fractional second. ambiguous must explicitly select
+// earlier/later for overlaps; reject accepts unique times only. Gaps fail
+// because this profile has no named gap-adjustment policy.
+pub fn resolve_local(local: Str, zone: Str, ambiguous: Str): Instant = fail(error(
+    code: "ORNA-EVAL-UNSUPPORTED",
+    message: "std.time.resolve_local requires its evaluator binding"
+));
