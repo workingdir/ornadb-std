@@ -22,6 +22,8 @@ pub fn resolve_local(local: Str, zone: Str, ambiguous: Str): Instant = fail(erro
 // Keep the four elapsed-duration presentations reachable from std.time. Their
 // sources are separate pinned modules, so a snapshot captures each formatter
 // independently and cannot acquire one from an installed library later.
+// Elapsed decimal unit literals must resolve exactly to core nanoseconds;
+// calendar day periods stay distinct and cannot be formatted as elapsed time.
 use std.time.duration.compact;
 use std.time.duration.clock;
 use std.time.duration.words;
