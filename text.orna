@@ -1,0 +1,52 @@
+// std.text exports pin these pure Unicode text intrinsics as ordinary library
+// functions. The evaluator binds the exact captured exports to the bounded
+// implementation; without that binding these bodies fail closed.
+pub fn trim(value: Str): Str = fail(error(
+    code: "ORNA-EVAL-UNSUPPORTED",
+    message: "std.text.trim requires its evaluator binding"
+));
+
+pub fn split(value: Str, separator: Str): [Str] = fail(error(
+    code: "ORNA-EVAL-UNSUPPORTED",
+    message: "std.text.split requires its evaluator binding"
+));
+
+pub fn join(values: [Str], separator: Str): Str = fail(error(
+    code: "ORNA-EVAL-UNSUPPORTED",
+    message: "std.text.join requires its evaluator binding"
+));
+
+pub fn starts_with(value: Str, prefix: Str): Bool = fail(error(
+    code: "ORNA-EVAL-UNSUPPORTED",
+    message: "std.text.starts_with requires its evaluator binding"
+));
+
+pub fn ends_with(value: Str, suffix: Str): Bool = fail(error(
+    code: "ORNA-EVAL-UNSUPPORTED",
+    message: "std.text.ends_with requires its evaluator binding"
+));
+
+pub fn contains(value: Str, needle: Str): Bool = fail(error(
+    code: "ORNA-EVAL-UNSUPPORTED",
+    message: "std.text.contains requires its evaluator binding"
+));
+
+pub fn replace(value: Str, from: Str, to: Str): Str = fail(error(
+    code: "ORNA-EVAL-UNSUPPORTED",
+    message: "std.text.replace requires its evaluator binding"
+));
+
+pub fn normalise(value: Str, form: Str): Str = fail(error(
+    code: "ORNA-EVAL-UNSUPPORTED",
+    message: "std.text.normalise requires its evaluator binding"
+));
+
+pub fn lower(value: Str): Str = fail(error(
+    code: "ORNA-EVAL-UNSUPPORTED",
+    message: "std.text.lower requires its evaluator binding"
+));
+
+pub fn upper(value: Str): Str = fail(error(
+    code: "ORNA-EVAL-UNSUPPORTED",
+    message: "std.text.upper requires its evaluator binding"
+));
