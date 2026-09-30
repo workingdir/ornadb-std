@@ -4,5 +4,6 @@ use query;
 use text;
 use bits;
 use stats;
+use time;
 
 pub fn version(): Str = "1.0.0";
