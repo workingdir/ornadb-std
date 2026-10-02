@@ -119,6 +119,11 @@ pub fn add_days(year: Int, month: Int, day: Int, amount: Int): (Int, Int, Int)? 
         null: null,
     };
 
+// Move by whole civil weeks. This scales calendar days rather than elapsed
+// seconds, so the operation remains independent of daylight-saving changes.
+pub fn add_weeks(year: Int, month: Int, day: Int, weeks: Int): (Int, Int, Int)? =
+    add_days(year, month, day, weeks * 7);
+
 fn shift_months(year: Int, month: Int, day: Int, amount: Int, clamp: Bool): (Int, Int, Int)? =
     if is_valid_date(year, month, day) {
         let target_index = (year - 1) * 12 + month - 1 + amount;
