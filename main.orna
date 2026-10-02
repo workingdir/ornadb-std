@@ -25,5 +25,6 @@ use type_utils;
 use pattern;
 use iterator;
 use lazy;
+use views;
 
 pub fn version(): Str = "1.0.0";

@@ -1,0 +1,121 @@
+// Views keep one immutable source list and a zero-based half-open range into
+// it. Constructing and slicing a view retain that source; `to_list` explicitly
+// materializes the selected values in source order.
+// The enum variant is public, so operations validate ranges constructed
+// directly by callers as well as ranges returned by these helpers.
+pub enum View<T> {
+    Slice { source: [T], start: Int, end: Int },
+}
+
+fn valid_range<T>(source: [T], start: Int, end: Int): Bool =
+    start >= 0 && end >= start && end <= std.collection.count(source);
+
+pub fn from_list<T>(source: [T]): View<T> = View.Slice {
+    source: source,
+    start: 0,
+    end: std.collection.count(source),
+};
+
+pub fn length<T>(view: View<T>): Int = case view {
+    View.Slice { source, start, end }:
+        if valid_range(source, start, end) {
+            end - start
+        } else {
+            fail(error(code: "std.views.invalid_view", message: "view range is outside its source list"))
+        },
+};
+
+pub fn is_empty<T>(view: View<T>): Bool = length(view) == 0;
+
+// `get` returns null for any negative or out-of-range index. A present list
+// element is returned as Some(value); no later elements are enumerated.
+pub fn get<T>(view: View<T>, index: Int): T? = case view {
+    View.Slice { source, start, end }:
+        if !valid_range(source, start, end) {
+            fail(error(code: "std.views.invalid_view", message: "view range is outside its source list"))
+        } else if index < 0 || index >= end - start {
+            null
+        } else {
+            std.collection.first(std.collection.drop(source, start + index))
+        },
+};
+
+// Slice bounds are relative to the current view and use [start, end). Invalid
+// bounds fail instead of being clamped. The result retains the original list.
+pub fn slice<T>(view: View<T>, start: Int, end: Int): View<T> = case view {
+    View.Slice { source, start: base_start, end: base_end }:
+        if !valid_range(source, base_start, base_end) {
+            fail(error(code: "std.views.invalid_view", message: "view range is outside its source list"))
+        } else if start < 0 || end < start || end > base_end - base_start {
+            fail(error(
+                code: "std.views.invalid_bounds",
+                message: "slice bounds must satisfy 0 <= start <= end <= view length"
+            ))
+        } else {
+            View.Slice {
+                source: source,
+                start: base_start + start,
+                end: base_start + end,
+            }
+        },
+};
+
+pub fn take<T>(view: View<T>, count: Int): View<T> =
+    if count < 0 {
+        fail(error(code: "std.views.negative_count", message: "view count must be nonnegative"))
+    } else {
+        slice(view, 0, if count < length(view) { count } else { length(view) })
+    };
+
+pub fn drop<T>(view: View<T>, count: Int): View<T> =
+    if count < 0 {
+        fail(error(code: "std.views.negative_count", message: "view count must be nonnegative"))
+    } else {
+        slice(
+            view,
+            if count < length(view) { count } else { length(view) },
+            length(view)
+        )
+    };
+
+pub fn to_list<T>(view: View<T>): [T] = case view {
+    View.Slice { source, start, end }:
+        if valid_range(source, start, end) {
+            std.collection.take(std.collection.drop(source, start), end - start)
+        } else {
+            fail(error(code: "std.views.invalid_view", message: "view range is outside its source list"))
+        },
+};
+
+fn windows_from<T>(
+    view: View<T>,
+    width: Int,
+    step: Int,
+    cursor_index: Int,
+    collected: [View<T>]
+): [View<T>] =
+    if cursor_index + width > length(view) {
+        collected
+    } else {
+        windows_from(
+            view,
+            width,
+            step,
+            cursor_index + step,
+            std.collection.union(
+                collected,
+                [slice(view, cursor_index, cursor_index + width)]
+            )
+        )
+    };
+
+// Windows are complete views starting at offsets 0, step, 2*step, and so on.
+// An incomplete final window is omitted; empty input yields [].
+pub fn windows<T>(view: View<T>, width: Int, step: Int = 1): [View<T>] =
+    if width <= 0 {
+        fail(error(code: "std.views.invalid_width", message: "window width must be positive"))
+    } else if step <= 0 {
+        fail(error(code: "std.views.invalid_step", message: "window step must be positive"))
+    } else {
+        windows_from(view, width, step, 0, [])
+    };
