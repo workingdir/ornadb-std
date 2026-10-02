@@ -14,5 +14,7 @@ use concurrent;
 use error;
 use option;
 use result;
+use hash;
+use random;
 
 pub fn version(): Str = "1.0.0";

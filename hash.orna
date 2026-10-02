@@ -1,0 +1,40 @@
+// Hash helpers operate on exact input bytes and return the core nominal Digest
+// type. Digests are fingerprints, not equality proofs: callers must still
+// compare the original typed values when a collision could change semantics.
+// Hashes of low-entropy secret values are sensitive and must not be published
+// as public identifiers; domain separation does not prevent dictionary attacks.
+
+// SHA-256 over the complete Blob, returning the 32-byte digest value.
+pub fn sha256(input: Blob): Digest = fail(error(
+    code: "ORNA-EVAL-UNSUPPORTED",
+    message: "std.hash.sha256 requires its SHA-256 binding"
+));
+
+// Encode text as its exact UTF-8 bytes before hashing. No Unicode
+// normalisation, case folding or locale conversion is applied.
+pub fn sha256_text(input: Str): Digest = fail(error(
+    code: "ORNA-EVAL-UNSUPPORTED",
+    message: "std.hash.sha256_text requires its UTF-8 SHA-256 binding"
+));
+
+// Compute SHA256(ASCII(domain) || 00 || payload). Domain must be nonempty
+// ASCII without an embedded zero byte. The separator is exactly one zero byte;
+// payload bytes are not interpreted, normalised or re-encoded.
+pub fn domain_sha256(domain: Str, payload: Blob): Digest = fail(error(
+    code: "ORNA-EVAL-UNSUPPORTED",
+    message: "std.hash.domain_sha256 requires its domain-separated binding"
+));
+
+// Render a Digest as exactly 64 lowercase hexadecimal characters. Digest has
+// no implicit conversion to Str; this is an explicit presentation helper.
+pub fn to_hex(digest: Digest): Str = fail(error(
+    code: "ORNA-EVAL-UNSUPPORTED",
+    message: "std.hash.to_hex requires its canonical digest formatter"
+));
+
+// Parse exactly 64 lowercase hexadecimal characters. Return null for uppercase,
+// whitespace, invalid characters or any other length; do not trim or repair.
+pub fn from_hex(value: Str): Digest? = fail(error(
+    code: "ORNA-EVAL-UNSUPPORTED",
+    message: "std.hash.from_hex requires its canonical digest parser"
+));
