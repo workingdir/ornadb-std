@@ -1,0 +1,7 @@
+// Environment reads return a Unicode value when present. Missing variables
+// and host values that are not valid Unicode both map to None, since Str
+// cannot faithfully represent the latter and this module has no byte API.
+pub fn get(name: Str): Str? = fail(error(
+    code: "ORNA-EVAL-UNSUPPORTED",
+    message: "std.io.environment.get requires its evaluator binding"
+));
