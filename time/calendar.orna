@@ -1,0 +1,38 @@
+// Gregorian civil dates use positive year numbers and one-based month/day
+// values. These pure helpers do not infer a time zone or turn calendar days
+// into fixed elapsed seconds.
+pub fn is_leap_year(year: Int): Bool =
+    year > 0 && year % 4 == 0 && (year % 100 != 0 || year % 400 == 0);
+
+fn month_length(year: Int, month: Int): Int =
+    if month == 2 {
+        if is_leap_year(year) { 29 } else { 28 }
+    } else if month == 4 || month == 6 || month == 9 || month == 11 {
+        30
+    } else {
+        31
+    };
+
+pub fn days_in_month(year: Int, month: Int): Int? =
+    if year < 1 || month < 1 || month > 12 {
+        null
+    } else {
+        first([month_length(year, month)])
+    };
+
+pub fn is_valid_date(year: Int, month: Int, day: Int): Bool =
+    year >= 1 && month >= 1 && month <= 12 && day >= 1 && day <= month_length(year, month);
+
+fn days_before_month(year: Int, month: Int): Int =
+    if month <= 1 {
+        0
+    } else {
+        month_length(year, month - 1) + days_before_month(year, month - 1)
+    };
+
+pub fn day_of_year(year: Int, month: Int, day: Int): Int? =
+    if is_valid_date(year, month, day) {
+        first([days_before_month(year, month) + day])
+    } else {
+        null
+    };

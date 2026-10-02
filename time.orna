@@ -24,6 +24,9 @@ pub fn resolve_local(local: Str, zone: Str, ambiguous: Str): Instant = fail(erro
 // independently and cannot acquire one from an installed library later.
 // Elapsed decimal unit literals must resolve exactly to core nanoseconds;
 // calendar day periods stay distinct and cannot be formatted as elapsed time.
+// Gregorian civil-date helpers are source-level functions with no zone or
+// elapsed-clock dependency.
+use std.time.calendar as calendar;
 use std.time.duration.compact;
 use std.time.duration.clock;
 use std.time.duration.words;
