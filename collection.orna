@@ -2,12 +2,7 @@
 // leaves below are evaluator primitives for immutable list size/assembly and
 // numeric or relation operations whose source types are intentionally erased.
 // Public collection behavior is expressed by the functions that follow.
-// Contract summary: partition returns (matching, remaining); zip stops at the
-// shorter input; unique keeps each lawful equality class's first occurrence;
-// lawful group_by keys preserve input order inside each group; pairs are
-// adjacent and overlapping; window emits complete windows only; split_when
-// starts a group before a matching item; competition ranks (ties share a rank
-// and later ranks skip the tied positions).
+// Contracts: partition returns (matching, remaining); zip stops at the shorter input; unique keeps each lawful equality class's first occurrence; lawful keys while preserving input order inside each group; adjacent and overlapping pairs; window emits complete windows only; split_when starts a group before a matching item; competition ranks (ties share a rank and later ranks skip tied positions).
 fn __list_length<T>(values: [T]): Int = 0;
 fn __list_concat<T>(left: [T], right: [T]): [T] = [];
 fn __numeric_sum<T>(values: [T]): T = 0;
