@@ -79,28 +79,32 @@ pub fn join(base: Str, child: Str): Str =
 pub fn basename(path: Str): Str? = std.list.last(components(path));
 
 pub fn parent(path: Str): Str? =
-    let parts = components(path);
-    if std.collection.count(parts) == 0 {
-        null
-    } else {
-        let prefix = std.collection.drop(parts, std.collection.count(parts) - 1);
-        if std.collection.count(prefix) == 0 {
-            first(["."])
+    {
+        let parts = components(path);
+        if std.collection.count(parts) == 0 {
+            null
         } else {
-            first([std.text.join(prefix, "/")])
+            let prefix = std.collection.drop(parts, std.collection.count(parts) - 1);
+            if std.collection.count(prefix) == 0 {
+                first(["."])
+            } else {
+                first([std.text.join(prefix, "/")])
+            }
         }
     };
 
 fn extension_from_name(name: Str): Str? =
-    let parts = std.text.split(name, ".");
-    let count = std.collection.count(parts);
-    let suffix = std.list.last(parts);
-    if count <= 1 || suffix == null || suffix == Some("") {
-        null
-    } else if std.text.starts_with(name, ".") && count == 2 {
-        null
-    } else {
-        suffix
+    {
+        let parts = std.text.split(name, ".");
+        let count = std.collection.count(parts);
+        let suffix = std.list.last(parts);
+        if count <= 1 || suffix == null || suffix == Some("") {
+            null
+        } else if std.text.starts_with(name, ".") && count == 2 {
+            null
+        } else {
+            suffix
+        }
     };
 
 pub fn extension(path: Str): Str? =
@@ -114,11 +118,13 @@ pub fn stem(path: Str): Str? =
         Some(name):
             case extension_from_name(name) {
                 Some(_):
-                    let parts = std.text.split(name, ".");
-                    first([std.text.join(
-                        std.collection.take(parts, std.collection.count(parts) - 1),
-                        "."
-                    )]),
+                    {
+                        let parts = std.text.split(name, ".");
+                        first([std.text.join(
+                            std.collection.take(parts, std.collection.count(parts) - 1),
+                            "."
+                        )])
+                    },
                 null: first([name]),
             },
         null: null,
