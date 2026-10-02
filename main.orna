@@ -7,6 +7,8 @@ use map;
 use set;
 use text;
 use encoding;
+use url;
+use net;
 use bits;
 use stats;
 use time;
