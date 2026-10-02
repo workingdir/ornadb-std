@@ -290,6 +290,7 @@ pub fn window<T>(values: [T], size: Int, step: Int = 1): [[T]] =
         windows_from(values, size, step, 0, __list_length(values), [])
     };
 
+// Produces consecutive nonempty groups; each matching item starts a new group.
 pub fn split_when<T>(values: [T], predicate: fn(T): Bool): [[T]] =
     split_when_from(values, predicate, 0, __list_length(values), [], []);
 
