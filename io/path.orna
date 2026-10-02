@@ -74,7 +74,7 @@ pub fn join(prefix_path: Str, child: Str): Str =
     } else if child == "" || child == "." {
         normalize(prefix_path)
     } else {
-        normalize(prefix_path + "/" + child)
+        normalize(std.text.join([prefix_path, child], "/"))
     };
 
 pub fn basename(path: Str): Str? = std.list.last(components(path));
