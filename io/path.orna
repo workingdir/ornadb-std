@@ -4,6 +4,10 @@
 // the root. Backslashes are rejected so a path cannot change meaning when a
 // snapshot moves between hosts. The empty path and the root itself normalize
 // to `.`; this value names the authorized root and never the process CWD.
+// `components` returns normalized non-root segments. `basename` returns the
+// final segment and `dirname` returns the normalized parent (`.` for a direct
+// child); both return null for the root. `extension` ignores a leading dot
+// on a dotfile, and `stem` keeps earlier dots while removing the last suffix.
 use std.text;
 use std.collection;
 
@@ -86,12 +90,26 @@ pub fn basename(path: Str): Str? {
     }
 }
 
+fn take_prefix(remaining: [Str], wanted: Int, collected: [Str]): [Str] =
+    if wanted <= 0 {
+        collected
+    } else {
+        case std.collection.first(remaining) {
+            Some(segment): take_prefix(
+                std.collection.drop(remaining, 1),
+                wanted - 1,
+                std.collection.union(collected, [segment])
+            ),
+            null: collected,
+        }
+    };
+
 pub fn dirname(path: Str): Str? {
     let parts = components(path);
     if std.collection.count(parts) == 0 {
         null
     } else {
-        let prefix = std.collection.take(parts, std.collection.count(parts) - 1);
+        let prefix = take_prefix(parts, std.collection.count(parts) - 1, []);
         if std.collection.count(prefix) == 0 {
             std.collection.first(["."])
         } else {
@@ -108,7 +126,7 @@ fn extension_from_name(name: Str): Str? {
     } else {
         std.collection.first(std.collection.drop(parts, count - 1))
     };
-    if count <= 1 || suffix == null || suffix == Some("") {
+    if count <= 1 || suffix == null || suffix == std.collection.first([""]) {
         null
     } else if std.text.starts_with(name, ".") && count == 2 {
         null
@@ -125,7 +143,7 @@ pub fn extension(path: Str): Str? =
 
 fn stem_from_name(name: Str): Str {
     let parts = std.text.split(name, ".");
-    std.text.join(std.collection.take(parts, std.collection.count(parts) - 1), ".")
+    std.text.join(take_prefix(parts, std.collection.count(parts) - 1, []), ".")
 }
 
 pub fn stem(path: Str): Str? = case basename(path) {
