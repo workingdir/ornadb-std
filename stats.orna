@@ -13,26 +13,36 @@
 // selecting an implicit rate or area. `rate` returns endpoint change per
 // elapsed time, `derivative` returns each adjacent slope timestamped at the
 // right endpoint, and `integrate` uses trapezoidal integration (value × time).
-// Implementations are admitted only as bindings for these captured exports.
-// Every source fallback fails closed instead of calling an ambient host
-// library when its corresponding binding is unavailable.
+// Exact integer, Decimal, and Float arithmetic is provided through these
+// private evaluator primitives. Public aggregate calls are ordinary source
+// functions and use only the operation registered by this captured snapshot.
+fn __mean<T>(rows: [T], scale: Int?, rounding: Str?): T? = null;
+fn __median<T>(rows: [T], scale: Int?, rounding: Str?): T? = null;
+fn __percentile<T, P>(
+    rows: [T], p: P, interpolation: Str, scale: Int?, rounding: Str?
+): T? = null;
+fn __sum<T>(rows: [T]): T = 0;
+fn __min<T>(rows: [T]): T? = null;
+fn __max<T>(rows: [T]): T? = null;
+fn __range<T>(rows: [T]): T? = null;
+fn __mode<T>(rows: [T]): [T] = [];
+fn __variance<T>(rows: [T], scale: Int?, rounding: Str?): T? = null;
+fn __standard_deviation<T>(rows: [T], scale: Int?, rounding: Str?): T? = null;
+fn __histogram<T>(rows: [T], bins: [(T, T)], include_final_upper: Bool): [Int] = [];
+fn __rate<T>(points: [(Instant, T)]): T? = null;
+fn __derivative<T>(points: [(Instant, T)]): [(Instant, T)] = [];
+fn __integrate<T>(points: [(Instant, T)]): T? = null;
 pub fn mean<T>(
     rows: [T],
     scale: Int? = null,
     rounding: Str? = null
-): T? = fail(error(
-    code: "ORNA-EVAL-UNSUPPORTED",
-    message: "std.stats.mean requires its evaluator binding"
-));
+): T? = __mean(rows, scale, rounding);
 
 pub fn median<T>(
     rows: [T],
     scale: Int? = null,
     rounding: Str? = null
-): T? = fail(error(
-    code: "ORNA-EVAL-UNSUPPORTED",
-    message: "std.stats.median requires its evaluator binding"
-));
+): T? = __median(rows, scale, rounding);
 
 pub fn percentile<T, P>(
     rows: [T],
@@ -40,43 +50,25 @@ pub fn percentile<T, P>(
     interpolation: Str,
     scale: Int? = null,
     rounding: Str? = null
-): T? = fail(error(
-    code: "ORNA-EVAL-UNSUPPORTED",
-    message: "std.stats.percentile requires its evaluator binding"
-));
+): T? = __percentile(rows, p, interpolation, scale, rounding);
 
 // Empty sum is the additive zero. Summing affine absolute quantities is
 // invalid; summing linear or delta quantities preserves their dimensions.
-pub fn sum<T>(rows: [T]): T = fail(error(
-    code: "ORNA-EVAL-UNSUPPORTED",
-    message: "std.stats.sum requires its evaluator binding"
-));
+pub fn sum<T>(rows: [T]): T = __sum(rows);
 
 // Empty selection aggregates return null. Float min/max use the canonical
 // NaN rule when any NaN is present; otherwise min selects -0.0 and max +0.0
 // when both signed zeros occur.
-pub fn min<T>(rows: [T]): T? = fail(error(
-    code: "ORNA-EVAL-UNSUPPORTED",
-    message: "std.stats.min requires its evaluator binding"
-));
+pub fn min<T>(rows: [T]): T? = __min(rows);
 
-pub fn max<T>(rows: [T]): T? = fail(error(
-    code: "ORNA-EVAL-UNSUPPORTED",
-    message: "std.stats.max requires its evaluator binding"
-));
+pub fn max<T>(rows: [T]): T? = __max(rows);
 
 // Range is max - min and returns a delta for affine absolute quantities.
-pub fn range<T>(rows: [T]): T? = fail(error(
-    code: "ORNA-EVAL-UNSUPPORTED",
-    message: "std.stats.range requires its evaluator binding"
-));
+pub fn range<T>(rows: [T]): T? = __range(rows);
 
 // Every mode is returned once, ordered by first appearance in the input.
 // Empty input has no modes.
-pub fn mode<T>(rows: [T]): [T] = fail(error(
-    code: "ORNA-EVAL-UNSUPPORTED",
-    message: "std.stats.mode requires its evaluator binding"
-));
+pub fn mode<T>(rows: [T]): [T] = __mode(rows);
 
 // Variance is the population variance (sum of squared deltas divided by n).
 // Empty input returns null. A sample estimate is a separately named API and
@@ -85,10 +77,7 @@ pub fn variance<T>(
     rows: [T],
     scale: Int? = null,
     rounding: Str? = null
-): T? = fail(error(
-    code: "ORNA-EVAL-UNSUPPORTED",
-    message: "std.stats.variance requires its evaluator binding"
-));
+): T? = __variance(rows, scale, rounding);
 
 // Exact square roots are preserved. An inexact result requires explicit
 // scale and rounding, and the result has the input's delta dimension.
@@ -96,10 +85,7 @@ pub fn standard_deviation<T>(
     rows: [T],
     scale: Int? = null,
     rounding: Str? = null
-): T? = fail(error(
-    code: "ORNA-EVAL-UNSUPPORTED",
-    message: "std.stats.standard_deviation requires its evaluator binding"
-));
+): T? = __standard_deviation(rows, scale, rounding);
 
 // Each bin is (inclusive lower bound, exclusive upper bound). The optional
 // flag applies only to the final bin's upper bound. Rows outside all bins are
@@ -108,26 +94,14 @@ pub fn histogram<T>(
     rows: [T],
     bins: [(T, T)],
     include_final_upper: Bool = false
-): [Int] = fail(error(
-    code: "ORNA-EVAL-UNSUPPORTED",
-    message: "std.stats.histogram requires its evaluator binding"
-));
+): [Int] = __histogram(rows, bins, include_final_upper);
 
 // A series has at least two points for rate/derivative/integration. All
 // timestamps must be strictly increasing; equal timestamps are an error.
 // Rate and derivative have value/time dimensions; integration has
 // value×time dimensions and rejects affine absolute input values.
-pub fn rate<T>(points: [(Instant, T)]): T? = fail(error(
-    code: "ORNA-EVAL-UNSUPPORTED",
-    message: "std.stats.rate requires its evaluator binding"
-));
+pub fn rate<T>(points: [(Instant, T)]): T? = __rate(points);
 
-pub fn derivative<T>(points: [(Instant, T)]): [(Instant, T)] = fail(error(
-    code: "ORNA-EVAL-UNSUPPORTED",
-    message: "std.stats.derivative requires its evaluator binding"
-));
+pub fn derivative<T>(points: [(Instant, T)]): [(Instant, T)] = __derivative(points);
 
-pub fn integrate<T>(points: [(Instant, T)]): T? = fail(error(
-    code: "ORNA-EVAL-UNSUPPORTED",
-    message: "std.stats.integrate requires its evaluator binding"
-));
+pub fn integrate<T>(points: [(Instant, T)]): T? = __integrate(points);

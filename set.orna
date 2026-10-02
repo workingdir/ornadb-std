@@ -2,6 +2,8 @@
 // std.collection's lawful-equality semantics. The first equal value is kept,
 // so traversal and set-operation results have deterministic insertion order.
 // Membership is linear and does not use host hashing or ordering.
+use collection;
+
 pub fn from_list<T>(values: [T]): [T] = std.collection.unique(values);
 
 pub fn size<T>(values: [T]): Int = std.collection.count(from_list(values));

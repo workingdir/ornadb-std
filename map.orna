@@ -5,6 +5,8 @@
 // host hash table or ambient key ordering. from_entries keeps the first key
 // position and the last value for duplicates; merge lets right-hand values
 // replace left-hand values while preserving left-hand key positions.
+use collection;
+
 pub fn size<K, V>(entries: [(K, V)]): Int =
     std.collection.count(from_entries(entries));
 

@@ -1,185 +1,301 @@
-// These public signatures identify the portable collection intrinsics. The
-// evaluator binds this exact pinned export to its bounded implementation;
-// calling a stub without that binding fails closed instead of substituting a
-// host collection library. Stream operations stay separate because they own
-// waiting, checkpoint and cancellation effects rather than finite values.
-// Relation<T> uses the same intrinsic identity as this [T] declaration; the
-// semantic/runtime overload is selected from the supplied relation value.
-pub fn filter<T>(rows: [T], predicate: fn(T): Bool): [T] = fail(error(
-    code: "ORNA-EVAL-UNSUPPORTED",
-    message: "std.collection.filter requires its evaluator binding"
-));
+// Finite list operations are ordinary Orna functions. The small private
+// leaves below are evaluator primitives for immutable list size/assembly and
+// numeric or relation operations whose source types are intentionally erased.
+// Public collection behavior is expressed by the functions that follow.
+fn __list_length<T>(values: [T]): Int = 0;
+fn __list_concat<T>(left: [T], right: [T]): [T] = [];
+fn __numeric_sum<T>(values: [T]): T = 0;
+fn __stable_sort<T, K>(values: [T], key: fn(T): K): [T] = values;
+fn __minimum<T>(values: [T]): T? = null;
+fn __maximum<T>(values: [T]): T? = null;
+fn __group_by<T, K>(values: [T], key: fn(T): K): [(K, [T])] = [];
+fn __rank<T, K>(values: [T], key: fn(T): K): [(T, Int)] = [];
+fn __asof_join<T, Time, Key>(
+    left: [T], right: [T], time: fn(T): Time, by: fn(T): Key
+): [(T, T?)] = [];
+fn __bucket_by<T, P>(rows: [T], period: P, zone: Str): [[T]] = [];
 
-pub fn map<T, U>(rows: [T], transform: fn(T): U): [U] = fail(error(
-    code: "ORNA-EVAL-UNSUPPORTED",
-    message: "std.collection.map requires its evaluator binding"
-));
+fn append<T>(values: [T], value: T): [T] = __list_concat(values, [value]);
 
-pub fn flat_map<T, U>(rows: [T], transform: fn(T): [U]): [U] = fail(error(
-    code: "ORNA-EVAL-UNSUPPORTED",
-    message: "std.collection.flat_map requires its evaluator binding"
-));
+fn slice_range<T>(values: [T], index: Int, end: Int, output: [T]): [T] =
+    if index >= end {
+        output
+    } else {
+        slice_range(values, index + 1, end, append(output, values[index]))
+    };
 
-pub fn sort_by<T, K>(rows: [T], key: fn(T): K): [T] = fail(error(
-    code: "ORNA-EVAL-UNSUPPORTED",
-    message: "std.collection.sort_by requires its evaluator binding"
-));
+fn filter_from<T>(
+    values: [T], predicate: fn(T): Bool, index: Int, end: Int, output: [T]
+): [T] =
+    if index >= end {
+        output
+    } else {
+        let value = values[index];
+        filter_from(
+            values,
+            predicate,
+            index + 1,
+            end,
+            if predicate(value) { append(output, value) } else { output }
+        )
+    };
 
-pub fn take<T>(rows: [T], count: Int): [T] = fail(error(
-    code: "ORNA-EVAL-UNSUPPORTED",
-    message: "std.collection.take requires its evaluator binding"
-));
+fn map_from<T, U>(
+    values: [T], transform: fn(T): U, index: Int, end: Int, output: [U]
+): [U] =
+    if index >= end {
+        output
+    } else {
+        map_from(values, transform, index + 1, end, append(output, transform(values[index])))
+    };
 
-pub fn drop<T>(rows: [T], count: Int): [T] = fail(error(
-    code: "ORNA-EVAL-UNSUPPORTED",
-    message: "std.collection.drop requires its evaluator binding"
-));
+fn flat_map_from<T, U>(
+    values: [T], transform: fn(T): [U], index: Int, end: Int, output: [U]
+): [U] =
+    if index >= end {
+        output
+    } else {
+        flat_map_from(
+            values,
+            transform,
+            index + 1,
+            end,
+            __list_concat(output, transform(values[index]))
+        )
+    };
 
-pub fn distinct<T>(rows: [T]): [T] = fail(error(
-    code: "ORNA-EVAL-UNSUPPORTED",
-    message: "std.collection.distinct requires its evaluator binding"
-));
+fn contains_from<T>(values: [T], value: T, index: Int, end: Int): Bool =
+    if index >= end {
+        false
+    } else if values[index] == value {
+        true
+    } else {
+        contains_from(values, value, index + 1, end)
+    };
 
-pub fn union<T>(left: [T], right: [T]): [T] = fail(error(
-    code: "ORNA-EVAL-UNSUPPORTED",
-    message: "std.collection.union requires its evaluator binding"
-));
+fn distinct_from<T>(values: [T], index: Int, end: Int, output: [T]): [T] =
+    if index >= end {
+        output
+    } else {
+        let value = values[index];
+        distinct_from(
+            values,
+            index + 1,
+            end,
+            if contains_from(output, value, 0, __list_length(output)) {
+                output
+            } else {
+                append(output, value)
+            }
+        )
+    };
 
-pub fn count<T>(rows: [T]): Int = fail(error(
-    code: "ORNA-EVAL-UNSUPPORTED",
-    message: "std.collection.count requires its evaluator binding"
-));
+fn every_from<T>(values: [T], predicate: fn(T): Bool, index: Int, end: Int): Bool =
+    if index >= end {
+        true
+    } else if predicate(values[index]) {
+        every_from(values, predicate, index + 1, end)
+    } else {
+        false
+    };
 
-pub fn first<T>(rows: [T]): T? = fail(error(
-    code: "ORNA-EVAL-UNSUPPORTED",
-    message: "std.collection.first requires its evaluator binding"
-));
+fn exists_from<T>(values: [T], predicate: fn(T): Bool, index: Int, end: Int): Bool =
+    if index >= end {
+        false
+    } else if predicate(values[index]) {
+        true
+    } else {
+        exists_from(values, predicate, index + 1, end)
+    };
 
-// The intrinsic also exposes one(rows) without a predicate. A default true
-// callback keeps that arity visible to ordinary named imports while the
-// evaluator binding preserves the distinct zero/multiple cardinality errors.
-pub fn one<T>(
-    rows: [T],
-    predicate: fn(T): Bool = value => true
-): T = fail(error(
-    code: "ORNA-EVAL-UNSUPPORTED",
-    message: "std.collection.one requires its evaluator binding"
-));
+fn partition_from<T>(
+    values: [T], predicate: fn(T): Bool, index: Int, end: Int, yes: [T], no: [T]
+): ([T], [T]) =
+    if index >= end {
+        (yes, no)
+    } else {
+        let value = values[index];
+        if predicate(value) {
+            partition_from(values, predicate, index + 1, end, append(yes, value), no)
+        } else {
+            partition_from(values, predicate, index + 1, end, yes, append(no, value))
+        }
+    };
 
-pub fn sum<T>(rows: [T]): T = fail(error(
-    code: "ORNA-EVAL-UNSUPPORTED",
-    message: "std.collection.sum requires its evaluator binding"
-));
+fn flatten_from<T>(values: [[T]], index: Int, end: Int, output: [T]): [T] =
+    if index >= end {
+        output
+    } else {
+        flatten_from(values, index + 1, end, __list_concat(output, values[index]))
+    };
 
-pub fn min<T>(rows: [T]): T? = fail(error(
-    code: "ORNA-EVAL-UNSUPPORTED",
-    message: "std.collection.min requires its evaluator binding"
-));
+fn zip_from<T, U>(left: [T], right: [U], index: Int, end: Int, output: [(T, U)]): [(T, U)] =
+    if index >= end {
+        output
+    } else {
+        zip_from(left, right, index + 1, end, append(output, (left[index], right[index])))
+    };
 
-pub fn max<T>(rows: [T]): T? = fail(error(
-    code: "ORNA-EVAL-UNSUPPORTED",
-    message: "std.collection.max requires its evaluator binding"
-));
+fn chunk_from<T>(values: [T], size: Int, index: Int, end: Int, output: [[T]]): [[T]] =
+    if index >= end {
+        output
+    } else {
+        let next = if index + size < end { index + size } else { end };
+        chunk_from(values, size, next, end, append(output, slice_range(values, index, next, [])))
+    };
 
-pub fn every<T>(rows: [T], predicate: fn(T): Bool): Bool = fail(error(
-    code: "ORNA-EVAL-UNSUPPORTED",
-    message: "std.collection.every requires its evaluator binding"
-));
+fn pairs_from<T>(values: [T], index: Int, end: Int, output: [(T, T)]): [(T, T)] =
+    if index + 1 >= end {
+        output
+    } else {
+        pairs_from(values, index + 1, end, append(output, (values[index], values[index + 1])))
+    };
 
-pub fn exists<T>(rows: [T], predicate: fn(T): Bool): Bool = fail(error(
-    code: "ORNA-EVAL-UNSUPPORTED",
-    message: "std.collection.exists requires its evaluator binding"
-));
+fn windows_from<T>(
+    values: [T], size: Int, step: Int, index: Int, end: Int, output: [[T]]
+): [[T]] =
+    if index + size > end {
+        output
+    } else {
+        windows_from(
+            values,
+            size,
+            step,
+            index + step,
+            end,
+            append(output, slice_range(values, index, index + size, []))
+        )
+    };
 
-// `asof_join`'s reference entry leaves the selector and result shapes open.
-// This profile applies each selector to both lists' rows and returns one
-// `(left, right?)` pair per left row. The bounded evaluator selects by nearest
-// absolute time distance, preserves left order, uses null for a missing match,
-// and resolves equal distances to the last matching right source row.
-// Its time callback returns Int, Decimal, Date, or Instant values.
+fn split_when_from<T>(
+    values: [T], predicate: fn(T): Bool, index: Int, end: Int,
+    groups: [[T]], current: [T]
+): [[T]] =
+    if index >= end {
+        if __list_length(current) == 0 { groups } else { append(groups, current) }
+    } else {
+        let value = values[index];
+        if predicate(value) && __list_length(current) > 0 {
+            split_when_from(values, predicate, index + 1, end, append(groups, current), [value])
+        } else {
+            split_when_from(values, predicate, index + 1, end, groups, append(current, value))
+        }
+    };
+
+// The evaluator chooses the finite-list implementation from this exact
+// source overload; Relation<T> calls remain relation plans in the core.
+pub fn filter<T>(rows: [T], predicate: fn(T): Bool): [T] =
+    filter_from(rows, predicate, 0, __list_length(rows), []);
+
+pub fn map<T, U>(rows: [T], transform: fn(T): U): [U] =
+    map_from(rows, transform, 0, __list_length(rows), []);
+
+pub fn flat_map<T, U>(rows: [T], transform: fn(T): [U]): [U] =
+    flat_map_from(rows, transform, 0, __list_length(rows), []);
+
+// Key ordering and numeric total-order details are delegated to the leaf
+// sorter; the exported function is an ordinary source function.
+pub fn sort_by<T, K>(rows: [T], key: fn(T): K): [T] = __stable_sort(rows, key);
+
+pub fn take<T>(rows: [T], count: Int): [T] =
+    if count < 0 {
+        fail(error(code: "std.collection.negative_count", message: "take count must be nonnegative"))
+    } else {
+        slice_range(rows, 0, if count < __list_length(rows) { count } else { __list_length(rows) }, [])
+    };
+
+pub fn drop<T>(rows: [T], count: Int): [T] =
+    if count < 0 {
+        fail(error(code: "std.collection.negative_count", message: "drop count must be nonnegative"))
+    } else {
+        let end = __list_length(rows);
+        slice_range(rows, if count < end { count } else { end }, end, [])
+    };
+
+pub fn distinct<T>(rows: [T]): [T] =
+    distinct_from(rows, 0, __list_length(rows), []);
+
+pub fn union<T>(left: [T], right: [T]): [T] = __list_concat(left, right);
+
+pub fn count<T>(rows: [T]): Int = __list_length(rows);
+
+pub fn first<T>(rows: [T]): T? =
+    if __list_length(rows) == 0 { null } else { Some(rows[0]) };
+
+pub fn one<T>(rows: [T], predicate: fn(T): Bool = value => true): T =
+    case filter(rows, predicate) {
+        []: fail(error(code: "std.collection.one.none", message: "one requires exactly one matching value")),
+        [value]: value,
+        _: fail(error(code: "std.collection.one.multiple", message: "one found multiple matching values")),
+    };
+
+pub fn sum<T>(rows: [T]): T = __numeric_sum(rows);
+
+pub fn min<T>(rows: [T]): T? = __minimum(rows);
+
+pub fn max<T>(rows: [T]): T? = __maximum(rows);
+
+pub fn every<T>(rows: [T], predicate: fn(T): Bool): Bool =
+    every_from(rows, predicate, 0, __list_length(rows));
+
+pub fn exists<T>(rows: [T], predicate: fn(T): Bool): Bool =
+    exists_from(rows, predicate, 0, __list_length(rows));
+
 pub fn asof_join<T, Time, Key>(
-    left: [T],
-    right: [T],
-    time: fn(T): Time,
-    by: fn(T): Key
-): [(T, T?)] = fail(error(
-    code: "ORNA-EVAL-UNSUPPORTED",
-    message: "std.collection.asof_join requires its evaluator binding"
-));
+    left: [T], right: [T], time: fn(T): Time, by: fn(T): Key
+): [(T, T?)] = __asof_join(left, right, time, by);
 
-// Portable finite helpers preserve source order except where the contract
-// explicitly sorts keys. All callback failures propagate, and a callback is
-// evaluated once per visited value.
-//
-// chunk emits consecutive nonempty groups of positive size; only the final
-// group may be short. flatten concatenates one level in outer/inner order.
-// partition returns (matching, remaining), preserving each side's input
-// order. zip stops at the shorter input; zip_exact fails on unequal lengths.
-// unique keeps each lawful equality class's first occurrence. group_by sorts
-// lawful keys while preserving input order inside each group. pairs are
-// adjacent and overlapping. window emits complete windows only and requires
-// positive size and step. split_when starts a group before a matching item,
-// without inserting empty groups. rank is a stable key sort with one-based
-// competition ranks (ties share a rank and later ranks skip their count).
-// The bounded evaluator binds these declarations to those exact operations.
-pub fn chunk<T>(values: [T], size: Int): [[T]] = fail(error(
-    code: "ORNA-EVAL-UNSUPPORTED",
-    message: "std.collection.chunk requires its evaluator binding"
-));
+pub fn chunk<T>(values: [T], size: Int): [[T]] =
+    if size <= 0 {
+        fail(error(code: "std.collection.invalid_chunk_size", message: "chunk size must be positive"))
+    } else {
+        chunk_from(values, size, 0, __list_length(values), [])
+    };
 
-pub fn flatten<T>(values: [[T]]): [T] = fail(error(
-    code: "ORNA-EVAL-UNSUPPORTED",
-    message: "std.collection.flatten requires its evaluator binding"
-));
+pub fn flatten<T>(values: [[T]]): [T] =
+    flatten_from(values, 0, __list_length(values), []);
 
-pub fn partition<T>(values: [T], predicate: fn(T): Bool): ([T], [T]) = fail(error(
-    code: "ORNA-EVAL-UNSUPPORTED",
-    message: "std.collection.partition requires its evaluator binding"
-));
+pub fn partition<T>(values: [T], predicate: fn(T): Bool): ([T], [T]) =
+    partition_from(values, predicate, 0, __list_length(values), [], []);
 
-pub fn zip<T, U>(left: [T], right: [U]): [(T, U)] = fail(error(
-    code: "ORNA-EVAL-UNSUPPORTED",
-    message: "std.collection.zip requires its evaluator binding"
-));
+pub fn zip<T, U>(left: [T], right: [U]): [(T, U)] =
+    zip_from(
+        left,
+        right,
+        0,
+        if __list_length(left) < __list_length(right) { __list_length(left) } else { __list_length(right) },
+        []
+    );
 
-pub fn zip_exact<T, U>(left: [T], right: [U]): [(T, U)] = fail(error(
-    code: "ORNA-EVAL-UNSUPPORTED",
-    message: "std.collection.zip_exact requires its evaluator binding"
-));
+pub fn zip_exact<T, U>(left: [T], right: [U]): [(T, U)] =
+    if __list_length(left) != __list_length(right) {
+        fail(error(code: "std.collection.zip_length_mismatch", message: "zip_exact requires equal lengths"))
+    } else {
+        zip_from(left, right, 0, __list_length(left), [])
+    };
 
-pub fn unique<T>(values: [T]): [T] = fail(error(
-    code: "ORNA-EVAL-UNSUPPORTED",
-    message: "std.collection.unique requires its evaluator binding"
-));
+pub fn unique<T>(values: [T]): [T] = distinct(values);
 
-pub fn group_by<T, K>(values: [T], key: fn(T): K): [(K, [T])] = fail(error(
-    code: "ORNA-EVAL-UNSUPPORTED",
-    message: "std.collection.group_by requires its evaluator binding"
-));
+pub fn group_by<T, K>(values: [T], key: fn(T): K): [(K, [T])] = __group_by(values, key);
 
-pub fn pairs<T>(values: [T]): [(T, T)] = fail(error(
-    code: "ORNA-EVAL-UNSUPPORTED",
-    message: "std.collection.pairs requires its evaluator binding"
-));
+pub fn pairs<T>(values: [T]): [(T, T)] =
+    pairs_from(values, 0, __list_length(values), []);
 
-pub fn window<T>(values: [T], size: Int, step: Int = 1): [[T]] = fail(error(
-    code: "ORNA-EVAL-UNSUPPORTED",
-    message: "std.collection.window requires its evaluator binding"
-));
+pub fn window<T>(values: [T], size: Int, step: Int = 1): [[T]] =
+    if size <= 0 {
+        fail(error(code: "std.collection.invalid_window_size", message: "window size must be positive"))
+    } else if step <= 0 {
+        fail(error(code: "std.collection.invalid_window_step", message: "window step must be positive"))
+    } else {
+        windows_from(values, size, step, 0, __list_length(values), [])
+    };
 
-pub fn split_when<T>(values: [T], predicate: fn(T): Bool): [[T]] = fail(error(
-    code: "ORNA-EVAL-UNSUPPORTED",
-    message: "std.collection.split_when requires its evaluator binding"
-));
+pub fn split_when<T>(values: [T], predicate: fn(T): Bool): [[T]] =
+    split_when_from(values, predicate, 0, __list_length(values), [], []);
 
-pub fn rank<T, K>(values: [T], key: fn(T): K): [(T, Int)] = fail(error(
-    code: "ORNA-EVAL-UNSUPPORTED",
-    message: "std.collection.rank requires its evaluator binding"
-));
+pub fn rank<T, K>(values: [T], key: fn(T): K): [(T, Int)] = __rank(values, key);
 
-// Calendar bucketing is a relation plan operation. The relation runtime owns
-// its explicit zone and checkpoint-safe ordering semantics.
-pub fn bucket_by<T>(rows: [T], period: Duration, zone: Str): [T] = fail(error(
-    code: "ORNA-EVAL-UNSUPPORTED",
-    message: "std.collection.bucket_by requires its evaluator binding"
-));
+// Finite lists are grouped by the same explicit elapsed/calendar boundaries
+// used by relation bucketing. Input order must be nondecreasing by time.
+pub fn bucket_by<T, P>(rows: [T], period: P, zone: Str): [[T]] =
+    __bucket_by(rows, period, zone);
