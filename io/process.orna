@@ -10,8 +10,9 @@
 // the child already performed are not undone by an Orna rollback. The output
 // limit is positive and counts stdout plus stderr; exceeding it terminates the
 // child and fails rather than returning truncated output. A nonzero exit is a
-// normal result. Null exit status means the host could not provide an exit
-// code. The host policy validates executable and working-directory access.
+// normal result tuple `(exit_status, stdout, stderr)`. Null exit status means
+// the host could not provide an exit code. The host policy validates
+// executable and working-directory access.
 // This effect is unavailable to assertions, read-only watches, presenters,
 // and historical evaluation.
 pub fn run(
