@@ -1,0 +1,42 @@
+// Structured concurrency helpers. Every callback is a child task owned by
+// the caller's activation or session; retaining or discarding a callback
+// result never detaches that child. Runtime bindings implement the scheduling
+// and cancellation boundary while this pinned module fixes the portable API.
+//
+// Callback arrays use one common successful result type. `parallel` preserves
+// input order in its result stream even when children finish in another order.
+// Each child is a separate activation: a sibling failure does not undo writes
+// already committed by another child. The first observed failure cancels
+// unfinished siblings; after joining, the lowest input-index ordinary failure
+// is primary and remaining failures are ordered causes.
+pub fn parallel<T>(callbacks: [fn(): T]): Stream<T> = fail(error(
+    code: "ORNA-EVAL-UNSUPPORTED",
+    message: "std.concurrent.parallel requires its structured-task evaluator binding"
+));
+
+// Return the first observed successful result, then cancel and join every
+// losing child. If all children fail, report the lowest input-index ordinary
+// failure. An empty callback array fails without scheduling work.
+pub fn race<T>(callbacks: [fn(): T]): T = fail(error(
+    code: "ORNA-EVAL-UNSUPPORTED",
+    message: "std.concurrent.race requires its structured-task evaluator binding"
+));
+
+// Run one zero-argument callback as an owned child. A negative elapsed
+// duration is an argument error. On expiry, request cancellation and join the
+// child before raising the timeout diagnostic; no partial result is returned.
+// Zero duration observes already-terminal work before cancelling unfinished
+// work. A timeout does not detach or transfer the child.
+pub fn timeout<T>(callback: fn(): T, duration: Duration): T = fail(error(
+    code: "ORNA-EVAL-UNSUPPORTED",
+    message: "std.concurrent.timeout requires its structured-task evaluator binding"
+));
+
+// Wait for a nonnegative elapsed duration. Waiting is cancellation-aware and
+// has a clock/waiting effect, so this operation is unavailable to declaration
+// assertions. The requested instant is a lower-bound target, not an exact
+// scheduling guarantee.
+pub fn sleep(duration: Duration): Unit = fail(error(
+    code: "ORNA-EVAL-UNSUPPORTED",
+    message: "std.concurrent.sleep requires its cancellation-aware clock binding"
+));
