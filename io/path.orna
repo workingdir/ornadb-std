@@ -6,7 +6,6 @@
 // to `.`; this value names the authorized root and never the process CWD.
 use std.text;
 use std.collection;
-use std.list;
 
 fn normalize_segments(remaining: [Str], normalized: [Str]): [Str] =
     case std.collection.first(remaining) {
@@ -77,7 +76,16 @@ pub fn join(prefix_path: Str, child: Str): Str =
         normalize(std.text.join([prefix_path, child], "/"))
     };
 
-pub fn basename(path: Str): Str? = std.list.last(components(path));
+fn last_item<T>(values: [T]): T? {
+    let count = std.collection.count(values);
+    if count == 0 {
+        null
+    } else {
+        std.collection.first(std.collection.drop(values, count - 1))
+    }
+}
+
+pub fn basename(path: Str): Str? = last_item(components(path));
 
 pub fn parent(path: Str): Str? {
     let parts = components(path);
@@ -96,7 +104,7 @@ pub fn parent(path: Str): Str? {
 fn extension_from_name(name: Str): Str? {
     let parts = std.text.split(name, ".");
     let count = std.collection.count(parts);
-    let suffix = std.list.last(parts);
+    let suffix = last_item(parts);
     if count <= 1 || suffix == null || suffix == Some("") {
         null
     } else if std.text.starts_with(name, ".") && count == 2 {
