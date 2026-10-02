@@ -1,5 +1,8 @@
-// std.bits is optional library API. The pinned declarations admit the exact
-// bounded evaluator intrinsics; the core database does not depend on them.
+// std.bits is optional library API over Int's unbounded signed two's
+// complement model. Shifts reject negative counts, right shift is arithmetic,
+// and left shift remains exact subject to resource limits. `|` remains the
+// source pipeline operator. These declarations pin the exact bounded
+// evaluator exports; core database integrity does not depend on std.bits.
 pub fn bit_or(left: Int, right: Int): Int = fail(error(
     code: "ORNA-EVAL-UNSUPPORTED",
     message: "std.bits.bit_or requires its evaluator binding"

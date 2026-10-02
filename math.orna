@@ -1,3 +1,5 @@
+// These helpers keep their inputs and outputs in exact core Int arithmetic.
+// They do not convert through Float or select ambient decimal precision.
 pub fn increment(value: Int): Int = value + 1;
 pub fn decrement(value: Int): Int = value - 1;
 pub fn is_zero(value: Int): Bool = value == 0;

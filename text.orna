@@ -1,6 +1,13 @@
-// std.text exports pin these pure Unicode text intrinsics as ordinary library
-// functions. The evaluator binds the exact captured exports to the bounded
-// implementation; without that binding these bodies fail closed.
+// std.text pins its Unicode 16.0.0 behavior as ordinary library exports.
+// Indices and lengths use Unicode scalar positions, not UTF-8 bytes or
+// grapheme clusters. Casing and normalization are locale independent.
+// split preserves empty fields, including trailing fields; an empty
+// separator splits into Unicode scalars. replace is non-overlapping and
+// scans left to right. Normalization forms are explicitly selected by name.
+// The evaluator binds these exact captured exports; without that binding the
+// bodies fail closed instead of falling back to host text behavior.
+pub fn unicode_version(): Str = "16.0.0";
+
 pub fn trim(value: Str): Str = fail(error(
     code: "ORNA-EVAL-UNSUPPORTED",
     message: "std.text.trim requires its evaluator binding"

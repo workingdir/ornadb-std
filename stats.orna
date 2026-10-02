@@ -1,8 +1,10 @@
-// These declarations are the snapshot admission record for the bounded stats
-// intrinsics. Generic signatures keep the portable numeric representations
-// open; runtime checks enforce homogeneous Int, Decimal, or Float inputs.
-// Mean may promote Int to Decimal when its exact quotient requires it, so its
-// source result is kept generic until numeric-union types are available.
+// These declarations pin the bounded statistics exports. Each operation
+// accepts homogeneous Int, Decimal, or Float inputs and observes input order
+// for Float aggregation. Mean returns null on empty input. Exact inputs keep
+// exact sums; a nonterminating quotient requires explicit scale and rounding.
+// Float ordering uses totalOrder where sorting is required. Percentile
+// requires p in [0, 1] and a named interpolation method rather than a host
+// default.
 pub fn mean<T>(
     rows: [T],
     scale: Int? = null,
