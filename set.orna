@@ -1,44 +1,35 @@
-// An immutable set represented by unique values in first-insertion order.
-// Membership is linear and uses Orna equality, so values must have a lawful
-// equality relation. Set operations preserve deterministic source order and
-// do not depend on host hashing or ordering.
-pub type Set<T> {
-    values: [T],
-}
+// A set value is an immutable [T] list with duplicates removed by
+// std.collection's lawful-equality semantics. The first equal value is kept,
+// so traversal and set-operation results have deterministic insertion order.
+// Membership is linear and does not use host hashing or ordering.
+pub fn from_list<T>(values: [T]): [T] = std.collection.unique(values);
 
-pub fn empty<T>(): Set<T> = Set { values: [] };
+pub fn size<T>(values: [T]): Int = std.collection.count(from_list(values));
 
-pub fn from_list<T>(values: [T]): Set<T> = Set {
-    values: std.collection.unique(values),
-};
+pub fn is_empty<T>(values: [T]): Bool = size(values) == 0;
 
-pub fn size<T>(set: Set<T>): Int = std.collection.count(set.values);
+pub fn contains<T>(values: [T], value: T): Bool =
+    std.collection.exists(from_list(values), item => item == value);
 
-pub fn is_empty<T>(set: Set<T>): Bool = size(set) == 0;
+pub fn insert<T>(values: [T], value: T): [T] =
+    from_list(std.collection.union(from_list(values), [value]));
 
-pub fn contains<T>(set: Set<T>, value: T): Bool =
-    std.collection.exists(set.values, item => item == value);
+pub fn remove<T>(values: [T], value: T): [T] =
+    std.collection.filter(from_list(values), item => item != value);
 
-pub fn insert<T>(set: Set<T>, value: T): Set<T> =
-    if contains(set, value) {
-        set
-    } else {
-        Set { values: std.collection.union(set.values, [value]) }
-    };
+pub fn union<T>(left: [T], right: [T]): [T] =
+    from_list(std.collection.union(from_list(left), from_list(right)));
 
-pub fn remove<T>(set: Set<T>, value: T): Set<T> = Set {
-    values: std.collection.filter(set.values, item => item != value),
-};
+pub fn intersection<T>(left: [T], right: [T]): [T] =
+    std.collection.filter(
+        from_list(left),
+        item => contains(right, item)
+    );
 
-pub fn union<T>(left: Set<T>, right: Set<T>): Set<T> =
-    from_list(std.collection.union(left.values, right.values));
+pub fn difference<T>(left: [T], right: [T]): [T] =
+    std.collection.filter(
+        from_list(left),
+        item => !contains(right, item)
+    );
 
-pub fn intersection<T>(left: Set<T>, right: Set<T>): Set<T> = Set {
-    values: std.collection.filter(left.values, item => contains(right, item)),
-};
-
-pub fn difference<T>(left: Set<T>, right: Set<T>): Set<T> = Set {
-    values: std.collection.filter(left.values, item => !contains(right, item)),
-};
-
-pub fn to_list<T>(set: Set<T>): [T] = set.values;
+pub fn to_list<T>(values: [T]): [T] = from_list(values);

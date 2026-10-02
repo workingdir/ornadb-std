@@ -1,8 +1,6 @@
-// Finite-list helpers over Orna's immutable [T] value type. Operations that
-// also belong to std.collection delegate to that pinned implementation so
-// their callback order and failure behavior remain identical.
-pub fn empty<T>(): [T] = [];
-
+// Finite-list helpers over Orna's immutable [T] value type. Positional
+// operations preserve duplicates and input order; unique is the explicit
+// duplicate-removing operation. Generic transforms remain in std.collection.
 pub fn singleton<T>(value: T): [T] = [value];
 
 pub fn length<T>(values: [T]): Int = std.collection.count(values);
@@ -33,15 +31,6 @@ pub fn contains<T>(values: [T], value: T): Bool =
 pub fn take<T>(values: [T], count: Int): [T] = std.collection.take(values, count);
 
 pub fn drop<T>(values: [T], count: Int): [T] = std.collection.drop(values, count);
-
-pub fn map<T, U>(values: [T], transform: fn(T): U): [U] =
-    std.collection.map(values, transform);
-
-pub fn filter<T>(values: [T], predicate: fn(T): Bool): [T] =
-    std.collection.filter(values, predicate);
-
-pub fn flat_map<T, U>(values: [T], transform: fn(T): [U]): [U] =
-    std.collection.flat_map(values, transform);
 
 pub fn unique<T>(values: [T]): [T] = std.collection.unique(values);
 
