@@ -1,65 +1,28 @@
-// Filesystem metadata is a snapshot of one root-relative entry. Optional
-// timestamps mean the host does not expose that timestamp; creation time is
-// never inferred from a change-time field. Size is provided only for regular
-// files. Owner names, permission bits, device paths, and absolute host paths
-// are excluded from this portable value.
-pub enum EntryKind {
-    File,
-    Directory,
-    Symlink,
-    Other,
-}
-
-pub enum EntryMetadata {
-    File {
-        size_bytes: Int,
-        modified_at: Instant?,
-        created_at: Instant?,
-    },
-    Directory {
-        modified_at: Instant?,
-        created_at: Instant?,
-    },
-    Symlink {
-        modified_at: Instant?,
-        created_at: Instant?,
-    },
-    Other {
-        modified_at: Instant?,
-        created_at: Instant?,
-    },
-}
-
-pub fn kind(value: EntryMetadata): EntryKind = case value {
-    EntryMetadata.File { size_bytes: _, modified_at: _, created_at: _ }: EntryKind.File,
-    EntryMetadata.Directory { modified_at: _, created_at: _ }: EntryKind.Directory,
-    EntryMetadata.Symlink { modified_at: _, created_at: _ }: EntryKind.Symlink,
-    EntryMetadata.Other { modified_at: _, created_at: _ }: EntryKind.Other,
+// Portable filesystem metadata is the tuple
+// (kind, size_bytes, modified_at, created_at). `kind` is one of "file",
+// "directory", "symlink", or "other". Size is present only for regular
+// files; timestamps are optional when a host does not expose them. Creation
+// time is never inferred from a change-time field. Owner names, permission
+// bits, device paths, symlink targets, and absolute host paths are excluded.
+pub fn kind(value: (Str, Int?, Instant?, Instant?)): Str = case value {
+    (entry_kind, _, _, _): entry_kind,
 };
 
-pub fn is_file(value: EntryMetadata): Bool = kind(value) == EntryKind.File;
+pub fn is_file(value: (Str, Int?, Instant?, Instant?)): Bool = kind(value) == "file";
 
-pub fn is_directory(value: EntryMetadata): Bool = kind(value) == EntryKind.Directory;
+pub fn is_directory(value: (Str, Int?, Instant?, Instant?)): Bool = kind(value) == "directory";
 
-pub fn is_symlink(value: EntryMetadata): Bool = kind(value) == EntryKind.Symlink;
+pub fn is_symlink(value: (Str, Int?, Instant?, Instant?)): Bool = kind(value) == "symlink";
 
-pub fn size_bytes(value: EntryMetadata): Int? = case value {
-    EntryMetadata.File { size_bytes, modified_at: _, created_at: _ }: first([size_bytes]),
-    EntryMetadata.Directory { modified_at: _, created_at: _ }: null,
-    EntryMetadata.Symlink { modified_at: _, created_at: _ }: null,
-    EntryMetadata.Other { modified_at: _, created_at: _ }: null,
+pub fn size_bytes(value: (Str, Int?, Instant?, Instant?)): Int? = case value {
+    ("file", size, _, _): size,
+    (_, _, _, _): null,
 };
 
-pub fn modified_at(value: EntryMetadata): Instant? = case value {
-    EntryMetadata.File { size_bytes: _, modified_at, created_at: _ }: modified_at,
-    EntryMetadata.Directory { modified_at, created_at: _ }: modified_at,
-    EntryMetadata.Symlink { modified_at, created_at: _ }: modified_at,
-    EntryMetadata.Other { modified_at, created_at: _ }: modified_at,
+pub fn modified_at(value: (Str, Int?, Instant?, Instant?)): Instant? = case value {
+    (_, _, modified, _): modified,
 };
 
-pub fn created_at(value: EntryMetadata): Instant? = case value {
-    EntryMetadata.File { size_bytes: _, modified_at: _, created_at }: created_at,
-    EntryMetadata.Directory { modified_at: _, created_at }: created_at,
-    EntryMetadata.Symlink { modified_at: _, created_at }: created_at,
-    EntryMetadata.Other { modified_at: _, created_at }: created_at,
+pub fn created_at(value: (Str, Int?, Instant?, Instant?)): Instant? = case value {
+    (_, _, _, created): created,
 };
