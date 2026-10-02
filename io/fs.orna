@@ -1,3 +1,5 @@
+use std.io.metadata as file_metadata;
+
 // Filesystem operations require an evaluator binding. `root` identifies the
 // caller-authorized filesystem root and `path` is always relative to it; an
 // absolute path, parent traversal, or symlink escape fails. No operation uses
@@ -17,6 +19,9 @@
 // existing directory only when `exist_ok` is true. `remove_file` does not
 // remove directories. `copy_file` and `move_file` stay inside one root and
 // apply the same explicit destination overwrite rule as `write_text`.
+// `metadata` follows symbolic links after verifying that resolution remains
+// beneath root. `symlink_metadata` reports the final link itself instead of
+// following it. Neither call reports an absolute host path, owner, or mode.
 
 pub fn read_text(root: Str, path: Str): Str = fail(error(
     code: "ORNA-EVAL-UNSUPPORTED",
@@ -41,6 +46,16 @@ pub fn exists(root: Str, path: Str): Bool = fail(error(
 pub fn is_directory(root: Str, path: Str): Bool = fail(error(
     code: "ORNA-EVAL-UNSUPPORTED",
     message: "std.io.fs.is_directory requires its filesystem evaluator binding"
+));
+
+pub fn metadata(root: Str, path: Str): file_metadata.EntryMetadata = fail(error(
+    code: "ORNA-EVAL-UNSUPPORTED",
+    message: "std.io.fs.metadata requires its filesystem evaluator binding"
+));
+
+pub fn symlink_metadata(root: Str, path: Str): file_metadata.EntryMetadata = fail(error(
+    code: "ORNA-EVAL-UNSUPPORTED",
+    message: "std.io.fs.symlink_metadata requires its filesystem evaluator binding"
 ));
 
 // Return immediate child names in Unicode scalar order, independent of the

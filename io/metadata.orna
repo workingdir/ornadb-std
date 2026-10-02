@@ -1,0 +1,65 @@
+// Filesystem metadata is a snapshot of one root-relative entry. Optional
+// timestamps mean the host does not expose that timestamp; creation time is
+// never inferred from a change-time field. Size is provided only for regular
+// files. Owner names, permission bits, device paths, and absolute host paths
+// are excluded from this portable value.
+pub enum EntryKind {
+    File,
+    Directory,
+    Symlink,
+    Other,
+}
+
+pub enum EntryMetadata {
+    File {
+        size_bytes: Int,
+        modified_at: Instant?,
+        created_at: Instant?,
+    },
+    Directory {
+        modified_at: Instant?,
+        created_at: Instant?,
+    },
+    Symlink {
+        modified_at: Instant?,
+        created_at: Instant?,
+    },
+    Other {
+        modified_at: Instant?,
+        created_at: Instant?,
+    },
+}
+
+pub fn kind(value: EntryMetadata): EntryKind = case value {
+    EntryMetadata.File { size_bytes: _, modified_at: _, created_at: _ }: EntryKind.File,
+    EntryMetadata.Directory { modified_at: _, created_at: _ }: EntryKind.Directory,
+    EntryMetadata.Symlink { modified_at: _, created_at: _ }: EntryKind.Symlink,
+    EntryMetadata.Other { modified_at: _, created_at: _ }: EntryKind.Other,
+};
+
+pub fn is_file(value: EntryMetadata): Bool = kind(value) == EntryKind.File;
+
+pub fn is_directory(value: EntryMetadata): Bool = kind(value) == EntryKind.Directory;
+
+pub fn is_symlink(value: EntryMetadata): Bool = kind(value) == EntryKind.Symlink;
+
+pub fn size_bytes(value: EntryMetadata): Int? = case value {
+    EntryMetadata.File { size_bytes, modified_at: _, created_at: _ }: first([size_bytes]),
+    EntryMetadata.Directory { modified_at: _, created_at: _ }: null,
+    EntryMetadata.Symlink { modified_at: _, created_at: _ }: null,
+    EntryMetadata.Other { modified_at: _, created_at: _ }: null,
+};
+
+pub fn modified_at(value: EntryMetadata): Instant? = case value {
+    EntryMetadata.File { size_bytes: _, modified_at, created_at: _ }: modified_at,
+    EntryMetadata.Directory { modified_at, created_at: _ }: modified_at,
+    EntryMetadata.Symlink { modified_at, created_at: _ }: modified_at,
+    EntryMetadata.Other { modified_at, created_at: _ }: modified_at,
+};
+
+pub fn created_at(value: EntryMetadata): Instant? = case value {
+    EntryMetadata.File { size_bytes: _, modified_at: _, created_at }: created_at,
+    EntryMetadata.Directory { modified_at: _, created_at }: created_at,
+    EntryMetadata.Symlink { modified_at: _, created_at }: created_at,
+    EntryMetadata.Other { modified_at: _, created_at }: created_at,
+};
