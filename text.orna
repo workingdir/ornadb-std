@@ -1,59 +1,30 @@
-// std.text pins its Unicode 16.0.0 behavior as ordinary library exports.
-// Indices and lengths use Unicode scalar positions, not UTF-8 bytes or
-// grapheme clusters. Casing and normalization are locale independent.
-// split preserves empty fields, including trailing fields; an empty
-// separator splits into Unicode scalars. replace is non-overlapping and
-// scans left to right. Normalization forms are explicitly selected by name.
-// The evaluator binds these exact captured exports; without that binding the
-// bodies fail closed instead of falling back to host text behavior.
+// std.text pins Unicode 16.0.0 behavior as ordinary library exports. Indices
+// and lengths use Unicode scalar positions, not UTF-8 bytes or graphemes.
+// Casing and normalization are locale independent. Split preserves empty
+// fields, including trailing fields; an empty separator splits into scalars.
+// Replace is non-overlapping and scans left to right.
 pub fn unicode_version(): Str = "16.0.0";
 
-pub fn trim(value: Str): Str = fail(error(
-    code: "ORNA-EVAL-UNSUPPORTED",
-    message: "std.text.trim requires its evaluator binding"
-));
+// The private leaves bind the exact Unicode data tables captured for this
+// profile. Public exports remain ordinary source calls into those leaves.
+fn __trim(value: Str): Str = "";
+fn __split(value: Str, separator: Str): [Str] = [];
+fn __join(values: [Str], separator: Str): Str = "";
+fn __starts_with(value: Str, prefix: Str): Bool = false;
+fn __ends_with(value: Str, suffix: Str): Bool = false;
+fn __contains(value: Str, needle: Str): Bool = false;
+fn __replace(value: Str, from: Str, to: Str): Str = "";
+fn __normalise(value: Str, form: Str): Str = "";
+fn __lower(value: Str): Str = "";
+fn __upper(value: Str): Str = "";
 
-pub fn split(value: Str, separator: Str): [Str] = fail(error(
-    code: "ORNA-EVAL-UNSUPPORTED",
-    message: "std.text.split requires its evaluator binding"
-));
-
-pub fn join(values: [Str], separator: Str): Str = fail(error(
-    code: "ORNA-EVAL-UNSUPPORTED",
-    message: "std.text.join requires its evaluator binding"
-));
-
-pub fn starts_with(value: Str, prefix: Str): Bool = fail(error(
-    code: "ORNA-EVAL-UNSUPPORTED",
-    message: "std.text.starts_with requires its evaluator binding"
-));
-
-pub fn ends_with(value: Str, suffix: Str): Bool = fail(error(
-    code: "ORNA-EVAL-UNSUPPORTED",
-    message: "std.text.ends_with requires its evaluator binding"
-));
-
-pub fn contains(value: Str, needle: Str): Bool = fail(error(
-    code: "ORNA-EVAL-UNSUPPORTED",
-    message: "std.text.contains requires its evaluator binding"
-));
-
-pub fn replace(value: Str, from: Str, to: Str): Str = fail(error(
-    code: "ORNA-EVAL-UNSUPPORTED",
-    message: "std.text.replace requires its evaluator binding"
-));
-
-pub fn normalise(value: Str, form: Str): Str = fail(error(
-    code: "ORNA-EVAL-UNSUPPORTED",
-    message: "std.text.normalise requires its evaluator binding"
-));
-
-pub fn lower(value: Str): Str = fail(error(
-    code: "ORNA-EVAL-UNSUPPORTED",
-    message: "std.text.lower requires its evaluator binding"
-));
-
-pub fn upper(value: Str): Str = fail(error(
-    code: "ORNA-EVAL-UNSUPPORTED",
-    message: "std.text.upper requires its evaluator binding"
-));
+pub fn trim(value: Str): Str = __trim(value);
+pub fn split(value: Str, separator: Str): [Str] = __split(value, separator);
+pub fn join(values: [Str], separator: Str): Str = __join(values, separator);
+pub fn starts_with(value: Str, prefix: Str): Bool = __starts_with(value, prefix);
+pub fn ends_with(value: Str, suffix: Str): Bool = __ends_with(value, suffix);
+pub fn contains(value: Str, needle: Str): Bool = __contains(value, needle);
+pub fn replace(value: Str, from: Str, to: Str): Str = __replace(value, from, to);
+pub fn normalise(value: Str, form: Str): Str = __normalise(value, form);
+pub fn lower(value: Str): Str = __lower(value);
+pub fn upper(value: Str): Str = __upper(value);

@@ -1,5 +1,6 @@
 use math;
 use collection;
+use algorithm;
 use query;
 use stream;
 use list;

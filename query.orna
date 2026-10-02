@@ -1,176 +1,80 @@
-// The reference library permits std.query to re-export portable collection
-// intrinsics. Source declarations record the pinned public API; the evaluator
-// maps these exact exports to the same intrinsic identities as std.collection
-// so pipelines, order, failures, effects and resource bounds cannot diverge.
-// Stream<T> operators are deliberately not aliases of these finite collection
-// intrinsics: they have distinct waiting/checkpoint identities under
-// std.stream, so the evaluator never coerces a stream through a list operator.
-// Relation<T> selects the shared intrinsic overload from its input value.
-pub fn filter<T>(rows: [T], predicate: fn(T): Bool): [T] = fail(error(
-    code: "ORNA-EVAL-UNSUPPORTED",
-    message: "std.query.filter requires its evaluator binding"
-));
+// Query is the explicitly named finite-collection facade. These ordinary
+// Orna functions share the exact collection implementation and therefore keep
+// callback order, failures, and stable ordering aligned across both modules.
+use collection;
 
-pub fn map<T, U>(rows: [T], transform: fn(T): U): [U] = fail(error(
-    code: "ORNA-EVAL-UNSUPPORTED",
-    message: "std.query.map requires its evaluator binding"
-));
+pub fn filter<T>(rows: [T], predicate: fn(T): Bool): [T] =
+    std.collection.filter(rows, predicate);
 
-pub fn flat_map<T, U>(rows: [T], transform: fn(T): [U]): [U] = fail(error(
-    code: "ORNA-EVAL-UNSUPPORTED",
-    message: "std.query.flat_map requires its evaluator binding"
-));
+pub fn map<T, U>(rows: [T], transform: fn(T): U): [U] =
+    std.collection.map(rows, transform);
 
-pub fn sort_by<T, K>(rows: [T], key: fn(T): K): [T] = fail(error(
-    code: "ORNA-EVAL-UNSUPPORTED",
-    message: "std.query.sort_by requires its evaluator binding"
-));
+pub fn flat_map<T, U>(rows: [T], transform: fn(T): [U]): [U] =
+    std.collection.flat_map(rows, transform);
 
-pub fn take<T>(rows: [T], count: Int): [T] = fail(error(
-    code: "ORNA-EVAL-UNSUPPORTED",
-    message: "std.query.take requires its evaluator binding"
-));
+pub fn sort_by<T, K>(rows: [T], key: fn(T): K): [T] =
+    std.collection.sort_by(rows, key);
 
-pub fn drop<T>(rows: [T], count: Int): [T] = fail(error(
-    code: "ORNA-EVAL-UNSUPPORTED",
-    message: "std.query.drop requires its evaluator binding"
-));
+pub fn take<T>(rows: [T], count: Int): [T] = std.collection.take(rows, count);
 
-pub fn distinct<T>(rows: [T]): [T] = fail(error(
-    code: "ORNA-EVAL-UNSUPPORTED",
-    message: "std.query.distinct requires its evaluator binding"
-));
+pub fn drop<T>(rows: [T], count: Int): [T] = std.collection.drop(rows, count);
 
-pub fn union<T>(left: [T], right: [T]): [T] = fail(error(
-    code: "ORNA-EVAL-UNSUPPORTED",
-    message: "std.query.union requires its evaluator binding"
-));
+pub fn distinct<T>(rows: [T]): [T] = std.collection.distinct(rows);
 
-pub fn count<T>(rows: [T]): Int = fail(error(
-    code: "ORNA-EVAL-UNSUPPORTED",
-    message: "std.query.count requires its evaluator binding"
-));
+pub fn union<T>(left: [T], right: [T]): [T] = std.collection.union(left, right);
 
-pub fn first<T>(rows: [T]): T? = fail(error(
-    code: "ORNA-EVAL-UNSUPPORTED",
-    message: "std.query.first requires its evaluator binding"
-));
+pub fn count<T>(rows: [T]): Int = std.collection.count(rows);
 
-pub fn one<T>(
-    rows: [T],
-    predicate: fn(T): Bool = value => true
-): T = fail(error(
-    code: "ORNA-EVAL-UNSUPPORTED",
-    message: "std.query.one requires its evaluator binding"
-));
+pub fn first<T>(rows: [T]): T? = std.collection.first(rows);
 
-pub fn sum<T>(rows: [T]): T = fail(error(
-    code: "ORNA-EVAL-UNSUPPORTED",
-    message: "std.query.sum requires its evaluator binding"
-));
+pub fn one<T>(rows: [T], predicate: fn(T): Bool = value => true): T =
+    std.collection.one(rows, predicate);
 
-pub fn min<T>(rows: [T]): T? = fail(error(
-    code: "ORNA-EVAL-UNSUPPORTED",
-    message: "std.query.min requires its evaluator binding"
-));
+pub fn sum<T>(rows: [T]): T = std.collection.sum(rows);
 
-pub fn max<T>(rows: [T]): T? = fail(error(
-    code: "ORNA-EVAL-UNSUPPORTED",
-    message: "std.query.max requires its evaluator binding"
-));
+pub fn min<T>(rows: [T]): T? = std.collection.min(rows);
 
-pub fn every<T>(rows: [T], predicate: fn(T): Bool): Bool = fail(error(
-    code: "ORNA-EVAL-UNSUPPORTED",
-    message: "std.query.every requires its evaluator binding"
-));
+pub fn max<T>(rows: [T]): T? = std.collection.max(rows);
 
-pub fn exists<T>(rows: [T], predicate: fn(T): Bool): Bool = fail(error(
-    code: "ORNA-EVAL-UNSUPPORTED",
-    message: "std.query.exists requires its evaluator binding"
-));
+pub fn every<T>(rows: [T], predicate: fn(T): Bool): Bool =
+    std.collection.every(rows, predicate);
 
-// Portable finite helpers preserve source order except where the contract
-// explicitly sorts keys. All callback failures propagate, and a callback is
-// evaluated once per visited value.
-//
-// chunk emits consecutive nonempty groups of positive size; only the final
-// group may be short. flatten concatenates one level in outer/inner order.
-// partition returns (matching, remaining), preserving each side's input
-// order. zip stops at the shorter input; zip_exact fails on unequal lengths.
-// unique keeps each lawful equality class's first occurrence. group_by sorts
-// lawful keys while preserving input order inside each group. pairs are
-// adjacent and overlapping. window emits complete windows only and requires
-// positive size and step. split_when starts a group before a matching item,
-// without inserting empty groups. rank is a stable key sort with one-based
-// competition ranks (ties share a rank and later ranks skip their count).
-// These declarations bind to the same identities as std.collection; stream
-// operators remain distinct, checkpointed operations.
-pub fn chunk<T>(values: [T], size: Int): [[T]] = fail(error(
-    code: "ORNA-EVAL-UNSUPPORTED",
-    message: "std.query.chunk requires its evaluator binding"
-));
+pub fn exists<T>(rows: [T], predicate: fn(T): Bool): Bool =
+    std.collection.exists(rows, predicate);
 
-pub fn flatten<T>(values: [[T]]): [T] = fail(error(
-    code: "ORNA-EVAL-UNSUPPORTED",
-    message: "std.query.flatten requires its evaluator binding"
-));
+pub fn chunk<T>(values: [T], size: Int): [[T]] =
+    std.collection.chunk(values, size);
 
-pub fn partition<T>(values: [T], predicate: fn(T): Bool): ([T], [T]) = fail(error(
-    code: "ORNA-EVAL-UNSUPPORTED",
-    message: "std.query.partition requires its evaluator binding"
-));
+pub fn flatten<T>(values: [[T]]): [T] = std.collection.flatten(values);
 
-pub fn zip<T, U>(left: [T], right: [U]): [(T, U)] = fail(error(
-    code: "ORNA-EVAL-UNSUPPORTED",
-    message: "std.query.zip requires its evaluator binding"
-));
+pub fn partition<T>(values: [T], predicate: fn(T): Bool): ([T], [T]) =
+    std.collection.partition(values, predicate);
 
-pub fn zip_exact<T, U>(left: [T], right: [U]): [(T, U)] = fail(error(
-    code: "ORNA-EVAL-UNSUPPORTED",
-    message: "std.query.zip_exact requires its evaluator binding"
-));
+pub fn zip<T, U>(left: [T], right: [U]): [(T, U)] =
+    std.collection.zip(left, right);
 
-pub fn unique<T>(values: [T]): [T] = fail(error(
-    code: "ORNA-EVAL-UNSUPPORTED",
-    message: "std.query.unique requires its evaluator binding"
-));
+pub fn zip_exact<T, U>(left: [T], right: [U]): [(T, U)] =
+    std.collection.zip_exact(left, right);
 
-pub fn group_by<T, K>(values: [T], key: fn(T): K): [(K, [T])] = fail(error(
-    code: "ORNA-EVAL-UNSUPPORTED",
-    message: "std.query.group_by requires its evaluator binding"
-));
+pub fn unique<T>(values: [T]): [T] = std.collection.unique(values);
 
-pub fn pairs<T>(values: [T]): [(T, T)] = fail(error(
-    code: "ORNA-EVAL-UNSUPPORTED",
-    message: "std.query.pairs requires its evaluator binding"
-));
+pub fn group_by<T, K>(values: [T], key: fn(T): K): [(K, [T])] =
+    std.collection.group_by(values, key);
 
-pub fn window<T>(values: [T], size: Int, step: Int = 1): [[T]] = fail(error(
-    code: "ORNA-EVAL-UNSUPPORTED",
-    message: "std.query.window requires its evaluator binding"
-));
+pub fn pairs<T>(values: [T]): [(T, T)] = std.collection.pairs(values);
 
-pub fn split_when<T>(values: [T], predicate: fn(T): Bool): [[T]] = fail(error(
-    code: "ORNA-EVAL-UNSUPPORTED",
-    message: "std.query.split_when requires its evaluator binding"
-));
+pub fn window<T>(values: [T], size: Int, step: Int = 1): [[T]] =
+    std.collection.window(values, size, step);
 
-pub fn rank<T, K>(values: [T], key: fn(T): K): [(T, Int)] = fail(error(
-    code: "ORNA-EVAL-UNSUPPORTED",
-    message: "std.query.rank requires its evaluator binding"
-));
+pub fn split_when<T>(values: [T], predicate: fn(T): Bool): [[T]] =
+    std.collection.split_when(values, predicate);
+
+pub fn rank<T, K>(values: [T], key: fn(T): K): [(T, Int)] =
+    std.collection.rank(values, key);
 
 pub fn asof_join<T, Time, Key>(
-    left: [T],
-    right: [T],
-    time: fn(T): Time,
-    by: fn(T): Key
-): [(T, T?)] = fail(error(
-    code: "ORNA-EVAL-UNSUPPORTED",
-    message: "std.query.asof_join requires its evaluator binding"
-));
+    left: [T], right: [T], time: fn(T): Time, by: fn(T): Key
+): [(T, T?)] = std.collection.asof_join(left, right, time, by);
 
-pub fn bucket_by<T>(rows: [T], period: Duration, zone: Str): [T] = fail(error(
-    code: "ORNA-EVAL-UNSUPPORTED",
-    message: "std.query.bucket_by requires its evaluator binding"
-));
+pub fn bucket_by<T, P>(rows: [T], period: P, zone: Str): [[T]] =
+    std.collection.bucket_by(rows, period, zone);
