@@ -93,9 +93,9 @@ pub fn parent(path: Str): Str? {
     } else {
         let prefix = std.collection.take(parts, std.collection.count(parts) - 1);
         if std.collection.count(prefix) == 0 {
-            first(["."])
+            std.collection.first(["."])
         } else {
-            first([std.text.join(prefix, "/")])
+            std.collection.first([std.text.join(prefix, "/")])
         }
     }
 }
@@ -131,9 +131,9 @@ fn stem_from_name(name: Str): Str {
 pub fn stem(path: Str): Str? = case basename(path) {
     Some(name):
         if extension_from_name(name) == null {
-            first([name])
+            std.collection.first([name])
         } else {
-            first([stem_from_name(name)])
+            std.collection.first([stem_from_name(name)])
         },
     null: null,
 };
