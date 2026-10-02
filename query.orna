@@ -66,6 +66,7 @@ pub fn pairs<T>(values: [T]): [(T, T)] = std.collection.pairs(values);
 pub fn window<T>(values: [T], size: Int, step: Int = 1): [[T]] =
     std.collection.window(values, size, step);
 
+// Produces consecutive nonempty groups; each matching item starts a new group.
 pub fn split_when<T>(values: [T], predicate: fn(T): Bool): [[T]] =
     std.collection.split_when(values, predicate);
 
