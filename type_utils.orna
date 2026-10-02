@@ -1,0 +1,50 @@
+// Generic, static value-shape helpers. They operate on declared tuple and
+// Option<T> types and preserve each component's inferred type. Runtime type
+// names, implicit coercion, and dynamic Any are not introduced.
+
+pub fn pair<A, B>(first: A, second: B): (A, B) = (first, second);
+
+pub fn first_of<A, B>(value: (A, B)): A = case value {
+    (first_value, _): first_value,
+};
+
+pub fn second_of<A, B>(value: (A, B)): B = case value {
+    (_, second_value): second_value,
+};
+
+pub fn swap_pair<A, B>(value: (A, B)): (B, A) = case value {
+    (first_value, second_value): (second_value, first_value),
+};
+
+pub fn map_first<A, B, C>(
+    value: (A, B),
+    transform: fn(A): C,
+): (C, B) = case value {
+    (first_value, second_value): (transform(first_value), second_value),
+};
+
+pub fn map_second<A, B, C>(
+    value: (A, B),
+    transform: fn(B): C,
+): (A, C) = case value {
+    (first_value, second_value): (first_value, transform(second_value)),
+};
+
+// Transform the first component before the second, once each.
+pub fn map_pair<A, B, C, D>(
+    value: (A, B),
+    transform_first: fn(A): C,
+    transform_second: fn(B): D,
+): (C, D) = case value {
+    (first_value, second_value): (
+        transform_first(first_value),
+        transform_second(second_value),
+    ),
+};
+
+pub fn some<T>(value: T): T? = first([value]);
+
+pub fn map_option<T, U>(value: T?, transform: fn(T): U): U? = case value {
+    Some(inner): first([transform(inner)]),
+    null: null,
+};
