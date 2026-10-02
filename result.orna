@@ -60,3 +60,39 @@ pub fn err<T, E>(result: Result<T, E>): E? = case result {
     Result.Ok { value: _ }: null,
     Result.Err { error }: first([error]),
 };
+
+// Fold both variants into one result type. Exactly one branch callback runs.
+pub fn fold<T, E, U>(
+    result: Result<T, E>,
+    on_ok: fn(T): U,
+    on_err: fn(E): U
+): U = case result {
+    Result.Ok { value }: on_ok(value),
+    Result.Err { error }: on_err(error),
+};
+
+// `map_or` uses an already-evaluated fallback; use `map_or_else` when
+// computing the fallback should be deferred until the Err branch is selected.
+pub fn map_or<T, E, U>(
+    result: Result<T, E>,
+    fallback: U,
+    transform: fn(T): U
+): U = case result {
+    Result.Ok { value }: transform(value),
+    Result.Err { error: _ }: fallback,
+};
+
+pub fn map_or_else<T, E, U>(
+    result: Result<T, E>,
+    fallback: fn(E): U,
+    transform: fn(T): U
+): U = case result {
+    Result.Ok { value }: transform(value),
+    Result.Err { error }: fallback(error),
+};
+
+// Collapse a nested Result when both layers use the same error type.
+pub fn flatten<T, E>(result: Result<Result<T, E>, E>): Result<T, E> = case result {
+    Result.Ok { value }: value,
+    Result.Err { error }: Result.Err { error: error },
+};
