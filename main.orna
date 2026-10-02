@@ -1,6 +1,9 @@
 use math;
 use collection;
 use query;
+use list;
+use map;
+use set;
 use text;
 use bits;
 use stats;

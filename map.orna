@@ -1,0 +1,76 @@
+// An immutable ordered map represented by unique keys in first-insertion
+// order. Lookup and updates are linear and use Orna equality; map keys must
+// therefore have a lawful equality relation. Replacing a key changes only its
+// value, while new keys are appended. No host hash table or ambient ordering
+// participates in the result.
+pub type MapEntry<K, V> {
+    pub key: K,
+    pub value: V,
+}
+
+pub type Map<K, V> {
+    entries: [MapEntry<K, V>],
+}
+
+pub fn empty<K, V>(): Map<K, V> = Map { entries: [] };
+
+pub fn size<K, V>(map: Map<K, V>): Int = std.collection.count(map.entries);
+
+pub fn is_empty<K, V>(map: Map<K, V>): Bool = size(map) == 0;
+
+pub fn to_entries<K, V>(map: Map<K, V>): [MapEntry<K, V>] = map.entries;
+
+pub fn keys<K, V>(map: Map<K, V>): [K] =
+    std.collection.map(map.entries, entry => entry.key);
+
+pub fn values<K, V>(map: Map<K, V>): [V] =
+    std.collection.map(map.entries, entry => entry.value);
+
+pub fn contains_key<K, V>(map: Map<K, V>, key: K): Bool =
+    std.collection.exists(map.entries, entry => entry.key == key);
+
+pub fn get<K, V>(map: Map<K, V>, key: K): V? =
+    case std.collection.first(
+        std.collection.filter(map.entries, entry => entry.key == key)
+    ) {
+        Some(entry): first([entry.value]),
+        null: null,
+    };
+
+fn replace_entry<K, V>(entry: MapEntry<K, V>, key: K, value: V): MapEntry<K, V> =
+    if entry.key == key {
+        MapEntry { key: entry.key, value: value }
+    } else {
+        entry
+    };
+
+pub fn insert<K, V>(map: Map<K, V>, key: K, value: V): Map<K, V> =
+    if contains_key(map, key) {
+        Map { entries: std.collection.map(map.entries, entry => replace_entry(entry, key, value)) }
+    } else {
+        Map {
+            entries: std.collection.union(
+                map.entries,
+                [MapEntry { key: key, value: value }]
+            )
+        }
+    };
+
+pub fn remove<K, V>(map: Map<K, V>, key: K): Map<K, V> = Map {
+    entries: std.collection.filter(map.entries, entry => entry.key != key),
+};
+
+fn insert_entries<K, V>(remaining: [MapEntry<K, V>], map: Map<K, V>): Map<K, V> =
+    case std.collection.first(remaining) {
+        Some(entry): insert_entries(
+            std.collection.drop(remaining, 1),
+            insert(map, entry.key, entry.value)
+        ),
+        null: map,
+    };
+
+pub fn from_entries<K, V>(entries: [MapEntry<K, V>]): Map<K, V> =
+    insert_entries(entries, empty());
+
+pub fn merge<K, V>(left: Map<K, V>, right: Map<K, V>): Map<K, V> =
+    insert_entries(right.entries, left);

@@ -1,0 +1,44 @@
+// An immutable set represented by unique values in first-insertion order.
+// Membership is linear and uses Orna equality, so values must have a lawful
+// equality relation. Set operations preserve deterministic source order and
+// do not depend on host hashing or ordering.
+pub type Set<T> {
+    values: [T],
+}
+
+pub fn empty<T>(): Set<T> = Set { values: [] };
+
+pub fn from_list<T>(values: [T]): Set<T> = Set {
+    values: std.collection.unique(values),
+};
+
+pub fn size<T>(set: Set<T>): Int = std.collection.count(set.values);
+
+pub fn is_empty<T>(set: Set<T>): Bool = size(set) == 0;
+
+pub fn contains<T>(set: Set<T>, value: T): Bool =
+    std.collection.exists(set.values, item => item == value);
+
+pub fn insert<T>(set: Set<T>, value: T): Set<T> =
+    if contains(set, value) {
+        set
+    } else {
+        Set { values: std.collection.union(set.values, [value]) }
+    };
+
+pub fn remove<T>(set: Set<T>, value: T): Set<T> = Set {
+    values: std.collection.filter(set.values, item => item != value),
+};
+
+pub fn union<T>(left: Set<T>, right: Set<T>): Set<T> =
+    from_list(std.collection.union(left.values, right.values));
+
+pub fn intersection<T>(left: Set<T>, right: Set<T>): Set<T> = Set {
+    values: std.collection.filter(left.values, item => contains(right, item)),
+};
+
+pub fn difference<T>(left: Set<T>, right: Set<T>): Set<T> = Set {
+    values: std.collection.filter(left.values, item => !contains(right, item)),
+};
+
+pub fn to_list<T>(set: Set<T>): [T] = set.values;
