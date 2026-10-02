@@ -1,12 +1,7 @@
 // Query is the explicitly named finite-collection facade. These ordinary
 // Orna functions share the exact collection implementation and therefore keep
 // callback order, failures, and stable ordering aligned across both modules.
-// Contract summary: partition returns (matching, remaining); zip stops at the
-// shorter input; unique keeps each lawful equality class's first occurrence;
-// lawful group_by keys preserve input order inside each group; pairs are
-// adjacent and overlapping; window emits complete windows only; split_when
-// starts a group before a matching item; competition ranks (ties share a rank
-// and later ranks skip the tied positions).
+// Contracts: partition returns (matching, remaining); zip stops at the shorter input; unique keeps each lawful equality class's first occurrence; lawful keys while preserving input order inside each group; adjacent and overlapping pairs; window emits complete windows only; split_when starts a group before a matching item; competition ranks (ties share a rank and later ranks skip tied positions).
 use collection;
 
 pub fn filter<T>(rows: [T], predicate: fn(T): Bool): [T] =
