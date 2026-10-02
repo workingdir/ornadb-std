@@ -51,6 +51,16 @@ pub fn find(regex: Regex, text: Str): Match? = fail(error(
     message: "std.regex.find requires its orna.regex/1 evaluator binding"
 ));
 
+// Return non-overlapping matches in scalar order. After a positive-width
+// match, scanning resumes at its end. After a zero-width match, scanning
+// advances one scalar; a zero-width match at end-of-input is included once.
+// The list is complete or the configured work bound fails; it is never
+// silently truncated.
+pub fn find_all(regex: Regex, text: Str): [Match] = fail(error(
+    code: "ORNA-EVAL-UNSUPPORTED",
+    message: "std.regex.find_all requires its orna.regex/1 evaluator binding"
+));
+
 pub fn matched_text(value: Match): Str = case value {
     Match.Found { text, start: _, end: _, captures: _ }: text,
 };
