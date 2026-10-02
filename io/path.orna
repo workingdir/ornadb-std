@@ -63,18 +63,18 @@ pub fn components(path: Str): [Str] {
     if normalized == "." { [] } else { std.text.split(normalized, "/") }
 }
 
-pub fn join(base: Str, child: Str): Str =
+pub fn join(prefix_path: Str, child: Str): Str =
     if is_absolute(child) {
         fail(error(
             code: "std.io.path.absolute",
             message: "a joined filesystem path must remain relative to its root"
         ))
-    } else if base == "" || base == "." {
+    } else if prefix_path == "" || prefix_path == "." {
         normalize(child)
     } else if child == "" || child == "." {
-        normalize(base)
+        normalize(prefix_path)
     } else {
-        normalize(base + "/" + child)
+        normalize(prefix_path + "/" + child)
     };
 
 pub fn basename(path: Str): Str? = std.list.last(components(path));
@@ -112,13 +112,10 @@ pub fn extension(path: Str): Str? =
         null: null,
     };
 
-fn stem_from_name(name: Str): Str = std.text.join(
-    std.collection.take(
-        std.text.split(name, "."),
-        std.collection.count(std.text.split(name, ".")) - 1
-    ),
-    "."
-);
+fn stem_from_name(name: Str): Str {
+    let parts = std.text.split(name, ".");
+    std.text.join(std.collection.take(parts, std.collection.count(parts) - 1), ".")
+}
 
 pub fn stem(path: Str): Str? = case basename(path) {
     Some(name):
