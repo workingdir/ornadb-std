@@ -12,10 +12,14 @@ fn __offset_at(instant: Instant, zone: Str): Int = offset_at(instant, zone);
 // `local` is ISO civil text without an offset: YYYY-MM-DDTHH:MM:SS with an
 // optional 1..9 digit fractional second. `ambiguous` must explicitly be
 // "earlier", "later", or "reject". The first two choices select an overlap
-// occurrence; "reject" accepts only unique local times. Nonexistent local
-// times fail because this profile has no named gap-adjustment policy.
-pub fn resolve_local(local: Str, zone: Str, ambiguous: Str): Instant = __resolve_local(local, zone, ambiguous);
-fn __resolve_local(local: Str, zone: Str, ambiguous: Str): Instant = resolve_local(local, zone, ambiguous);
+// occurrence; "reject" accepts only unique local times. `gap` defaults to
+// "reject" and may be "shift_forward" or "shift_backward" for a nonexistent
+// local time. A shift preserves the position within the gap using the offset
+// before or after the transition, respectively.
+pub fn resolve_local(local: Str, zone: Str, ambiguous: Str, gap: Str? = null): Instant =
+    __resolve_local(local, zone, ambiguous, gap);
+fn __resolve_local(local: Str, zone: Str, ambiguous: Str, gap: Str?): Instant =
+    resolve_local(local, zone, ambiguous, gap);
 
 // Keep the four elapsed-duration presentations reachable from std.time. Their
 // sources are separate pinned modules, so a snapshot captures each formatter

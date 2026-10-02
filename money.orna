@@ -1,6 +1,9 @@
 // Exact settlement helpers. The amount's decimal precision is retained until
 // a caller explicitly supplies the currency minor-unit scale and rounding
-// rule. Allocation uses the exact integer minor-unit method specified by
+// rule. `half_even` rounds ties to the even minor unit, `half_up` rounds ties
+// away from zero, `toward_zero` truncates, `away_from_zero` expands, `floor`
+// rounds toward negative infinity, and `ceil` rounds toward positive infinity.
+// Allocation uses the exact integer minor-unit method specified by
 // ORNA-MONEY-006. Formatting takes a currency code, minor-unit scale,
 // rounding rule and explicit locale; symbols, grouping and decimal marks come
 // from this captured locale profile.
