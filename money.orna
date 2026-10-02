@@ -1,0 +1,24 @@
+// Exact settlement helpers. The amount's decimal precision is retained until
+// a caller explicitly supplies the currency minor-unit scale and rounding
+// rule. Allocation uses the exact integer minor-unit method specified by
+// ORNA-MONEY-006 and the standard-library contract.
+
+pub fn quantize<T>(amount: T, minor_digits: Int, rounding: Str): T =
+    __quantize(amount, minor_digits, rounding);
+
+fn __quantize<T>(amount: T, minor_digits: Int, rounding: Str): T =
+    quantize(amount, minor_digits, rounding);
+
+pub fn allocate<T>(
+    amount: T,
+    weights: [Int],
+    minor_digits: Int,
+    rounding: Str? = null
+): [T] = __allocate(amount, weights, minor_digits, rounding);
+
+fn __allocate<T>(
+    amount: T,
+    weights: [Int],
+    minor_digits: Int,
+    rounding: Str?
+): [T] = allocate(amount, weights, minor_digits, rounding);

@@ -1,19 +1,11 @@
-// Environment access is an explicit host effect and requires the host's
-// per-name allowlist. Names use the portable ASCII form [A-Z_][A-Z0-9_]*.
-// `get` returns null only when an approved variable is unset; `require`
-// reports an ordinary missing-variable error. Denied names and invalid names
-// fail rather than exposing the host's whole environment. The host must deny
-// names that expose configured secrets; callers use the secret-reference API
-// for secret material. No enumeration or mutation API is provided. Values are
-// plain Str once exposed, not secret references. This effect is
-// unavailable to assertions, read-only watches, presenters, and historical
-// evaluation.
-pub fn get(name: Str): Str? = fail(error(
-    code: "ORNA-EVAL-UNSUPPORTED",
-    message: "std.io.environment.get requires its environment evaluator binding"
-));
+// Environment access is an explicit host effect and requires a per-name
+// allowlist. Names use [A-Z_][A-Z0-9_]*. `get` returns null only for an
+// approved unset variable; `require` reports an ordinary missing-variable
+// error. No enumeration or mutation API is exposed, and secret material uses
+// a separate secret-reference capability.
 
-pub fn require(name: Str): Str = fail(error(
-    code: "ORNA-EVAL-UNSUPPORTED",
-    message: "std.io.environment.require requires its environment evaluator binding"
-));
+pub fn get(name: Str): Str? = __get(name);
+fn __get(name: Str): Str? = std.io.environment.get(name);
+
+pub fn require(name: Str): Str = __require(name);
+fn __require(name: Str): Str = std.io.environment.require(name);

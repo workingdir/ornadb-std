@@ -1,7 +1,8 @@
 pub fn format(
     duration: Duration,
     context: { locale: Str, time_zone: Str } = { locale: "en", time_zone: "UTC" }
-): Str = fail(error(
-    code: "ORNA-EVAL-UNSUPPORTED",
-    message: "std.time.duration.iso.format requires its evaluator binding"
-));
+): Str = __format(duration, context);
+fn __format(
+    duration: Duration,
+    context: { locale: Str, time_zone: Str }
+): Str = format(duration, context);
