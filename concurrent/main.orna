@@ -4,19 +4,22 @@
 // and cancellation boundary while this pinned module fixes the portable API.
 //
 // Callback arrays use one common successful result type. `parallel` preserves
-// input order in its result stream even when children finish in another order.
+// input order in its result list even when children finish in another order;
+// an empty callback array returns an empty list.
 // Each child is a separate activation: a sibling failure does not undo writes
 // already committed by another child. The first observed failure cancels
 // unfinished siblings; after joining, the lowest input-index ordinary failure
 // is primary and remaining failures are ordered causes.
-pub fn parallel<T>(callbacks: [fn(): T]): Stream<T> = fail(error(
+pub fn parallel<T>(callbacks: [fn(): T]): [T] = fail(error(
     code: "ORNA-EVAL-UNSUPPORTED",
     message: "std.concurrent.parallel requires its structured-task evaluator binding"
 ));
 
 // Return the first observed successful result, then cancel and join every
 // losing child. If all children fail, report the lowest input-index ordinary
-// failure. An empty callback array fails without scheduling work.
+// failure. Simultaneous successes are resolved by recorded completion order;
+// no wall-clock order is promised. An empty callback array fails without
+// scheduling work.
 pub fn race<T>(callbacks: [fn(): T]): T = fail(error(
     code: "ORNA-EVAL-UNSUPPORTED",
     message: "std.concurrent.race requires its structured-task evaluator binding"
@@ -32,7 +35,7 @@ pub fn timeout<T>(callback: fn(): T, duration: Duration): T = fail(error(
     message: "std.concurrent.timeout requires its structured-task evaluator binding"
 ));
 
-// Wait for a nonnegative elapsed duration. Waiting is cancellation-aware and
+// Wait for a nonnegative elapsed duration and return null on success. Waiting is cancellation-aware and
 // has a clock/waiting effect, so this operation is unavailable to declaration
 // assertions. The requested instant is a lower-bound target, not an exact
 // scheduling guarantee.
