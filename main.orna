@@ -10,6 +10,7 @@ use stats;
 use time;
 use io;
 use concurrent;
+use error;
 use option;
 use result;
 
