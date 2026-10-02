@@ -12,7 +12,7 @@ pub fn is_none<T>(value: T?): Bool = case value {
 };
 
 pub fn map<T, U>(value: T?, transform: fn(T): U): U? = case value {
-    Some(inner): Some(transform(inner)),
+    Some(inner): first([transform(inner)]),
     null: null,
 };
 
@@ -22,7 +22,7 @@ pub fn and_then<T, U>(value: T?, transform: fn(T): U?): U? = case value {
 };
 
 pub fn filter<T>(value: T?, predicate: fn(T): Bool): T? = case value {
-    Some(inner) if predicate(inner): Some(inner),
+    Some(inner) if predicate(inner): value,
     Some(_): null,
     null: null,
 };
@@ -33,19 +33,14 @@ pub fn unwrap_or<T>(value: T?, fallback: T): T = case value {
 };
 
 pub fn or_else<T>(value: T?, fallback: fn(): T?): T? = case value {
-    Some(inner): Some(inner),
+    Some(_): value,
     null: fallback(),
 };
 
 pub fn zip<T, U>(left: T?, right: U?): (T, U)? = case left {
     Some(left_value): case right {
-        Some(right_value): Some((left_value, right_value)),
+        Some(right_value): first([(left_value, right_value)]),
         null: null,
     },
     null: null,
-};
-
-pub fn to_list<T>(value: T?): [T] = case value {
-    Some(inner): [inner],
-    null: [],
 };
