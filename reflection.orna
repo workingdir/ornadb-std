@@ -1,6 +1,6 @@
 // Typed reflective operations delegate to the mandatory `sys` boundary.
-// They accept only pinned FunctionRefs and explicit ArgumentMaps and do not
-// evaluate source text or implicitly retype records as argument maps.
+// They accept only pinned FunctionRefs and explicit ArgumentMaps. The
+// wrappers do not evaluate source text or implicitly retype records.
 
 // The result witness is explicit and checked before target effects. A null
 // `at` uses the FunctionRef's captured snapshot; transaction and idempotency
