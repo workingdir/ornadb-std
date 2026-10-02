@@ -76,7 +76,7 @@ pub fn join(prefix_path: Str, child: Str): Str =
         normalize(std.text.join([prefix_path, child], "/"))
     };
 
-fn last_item<T>(values: [T]): T? {
+fn last_segment(values: [Str]): Str? {
     let count = std.collection.count(values);
     if count == 0 {
         null
@@ -85,7 +85,7 @@ fn last_item<T>(values: [T]): T? {
     }
 }
 
-pub fn basename(path: Str): Str? = last_item(components(path));
+pub fn basename(path: Str): Str? = last_segment(components(path));
 
 pub fn parent(path: Str): Str? {
     let parts = components(path);
@@ -104,7 +104,7 @@ pub fn parent(path: Str): Str? {
 fn extension_from_name(name: Str): Str? {
     let parts = std.text.split(name, ".");
     let count = std.collection.count(parts);
-    let suffix = last_item(parts);
+    let suffix = last_segment(parts);
     if count <= 1 || suffix == null || suffix == Some("") {
         null
     } else if std.text.starts_with(name, ".") && count == 2 {
