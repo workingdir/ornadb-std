@@ -48,3 +48,26 @@ pub fn swap<L, R>(value: Either<L, R>): Either<R, L> = case value {
     Either.Left { value }: Either.Right { value: value },
     Either.Right { value }: Either.Left { value: value },
 };
+
+// These combinators keep branch selection explicit and preserve the inactive
+// payload without requiring callers to duplicate a case expression.
+pub fn fold<L, R, U>(
+    value: Either<L, R>,
+    on_left: fn(L): U,
+    on_right: fn(R): U,
+): U = case value {
+    Either.Left { value }: on_left(value),
+    Either.Right { value }: on_right(value),
+};
+
+pub fn map_left<L, R, U>(value: Either<L, R>, transform: fn(L): U): Either<U, R> =
+    case value {
+        Either.Left { value }: Either.Left { value: transform(value) },
+        Either.Right { value }: Either.Right { value: value },
+    };
+
+pub fn map_right<L, R, U>(value: Either<L, R>, transform: fn(R): U): Either<L, U> =
+    case value {
+        Either.Left { value }: Either.Left { value: value },
+        Either.Right { value }: Either.Right { value: transform(value) },
+    };
