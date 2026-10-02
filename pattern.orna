@@ -71,3 +71,12 @@ pub fn map_right<L, R, U>(value: Either<L, R>, transform: fn(R): U): Either<L, U
         Either.Left { value }: Either.Left { value: value },
         Either.Right { value }: Either.Right { value: transform(value) },
     };
+
+pub fn bimap<L, R, A, B>(
+    value: Either<L, R>,
+    on_left: fn(L): A,
+    on_right: fn(R): B,
+): Either<A, B> = case value {
+    Either.Left { value }: Either.Left { value: on_left(value) },
+    Either.Right { value }: Either.Right { value: on_right(value) },
+};
