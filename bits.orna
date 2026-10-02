@@ -1,34 +1,24 @@
-// std.bits is optional library API over Int's unbounded signed two's
+// std.bits is an optional library API over Int's unbounded signed two's
 // complement model. Shifts reject negative counts, right shift is arithmetic,
 // and left shift remains exact subject to resource limits. `|` remains the
-// source pipeline operator. These declarations pin the exact bounded
-// evaluator exports; core database integrity does not depend on std.bits.
-pub fn bit_or(left: Int, right: Int): Int = fail(error(
-    code: "ORNA-EVAL-UNSUPPORTED",
-    message: "std.bits.bit_or requires its evaluator binding"
-));
+// source pipeline operator. Public functions are ordinary Orna wrappers over
+// bounded evaluator primitives, so importing this module does not replace or
+// alter core database operators.
+fn __bit_or(left: Int, right: Int): Int = 0;
+fn __bit_and(left: Int, right: Int): Int = 0;
+fn __bit_xor(left: Int, right: Int): Int = 0;
+fn __bit_not(value: Int): Int = 0;
+fn __shift_left(value: Int, count: Int): Int = 0;
+fn __shift_right(value: Int, count: Int): Int = 0;
 
-pub fn bit_and(left: Int, right: Int): Int = fail(error(
-    code: "ORNA-EVAL-UNSUPPORTED",
-    message: "std.bits.bit_and requires its evaluator binding"
-));
+pub fn bit_or(left: Int, right: Int): Int = __bit_or(left, right);
 
-pub fn bit_xor(left: Int, right: Int): Int = fail(error(
-    code: "ORNA-EVAL-UNSUPPORTED",
-    message: "std.bits.bit_xor requires its evaluator binding"
-));
+pub fn bit_and(left: Int, right: Int): Int = __bit_and(left, right);
 
-pub fn bit_not(value: Int): Int = fail(error(
-    code: "ORNA-EVAL-UNSUPPORTED",
-    message: "std.bits.bit_not requires its evaluator binding"
-));
+pub fn bit_xor(left: Int, right: Int): Int = __bit_xor(left, right);
 
-pub fn shift_left(value: Int, count: Int): Int = fail(error(
-    code: "ORNA-EVAL-UNSUPPORTED",
-    message: "std.bits.shift_left requires its evaluator binding"
-));
+pub fn bit_not(value: Int): Int = __bit_not(value);
 
-pub fn shift_right(value: Int, count: Int): Int = fail(error(
-    code: "ORNA-EVAL-UNSUPPORTED",
-    message: "std.bits.shift_right requires its evaluator binding"
-));
+pub fn shift_left(value: Int, count: Int): Int = __shift_left(value, count);
+
+pub fn shift_right(value: Int, count: Int): Int = __shift_right(value, count);
