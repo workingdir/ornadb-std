@@ -1,0 +1,26 @@
+// Statically typed function combinators. These helpers preserve Orna's
+// inferred concrete types; they do not box values or add runtime reflection.
+// Callback failures propagate through the ordinary language failure channel.
+
+pub fn identity<T>(value: T): T = value;
+
+// Both arguments are evaluated by the normal left-to-right call rule. The
+// second value is ignored after evaluation; this helper is not lazy.
+pub fn constant<T, U>(value: T, ignored: U): T = value;
+
+pub fn apply<T, U>(value: T, transform: fn(T): U): U = transform(value);
+
+// Composition applies `first` before `then`, exactly once each.
+pub fn compose<T, U, V>(first: fn(T): U, then: fn(U): V): fn(T): V =
+    value => then(first(value));
+
+// The callback order is explicit: transform_left runs before transform_right.
+pub fn both<T, U, V>(
+    value: T,
+    transform_left: fn(T): U,
+    transform_right: fn(T): V,
+): (U, V) = (transform_left(value), transform_right(value));
+
+// Apply two unary transforms in sequence without allocating a composed value.
+pub fn pipe<T, U, V>(value: T, first: fn(T): U, then: fn(U): V): V =
+    then(first(value));

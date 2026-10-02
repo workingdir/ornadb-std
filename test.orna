@@ -1,0 +1,119 @@
+// Test helpers are ordinary optional library code. Core `assert` remains
+// available without importing std; this module adds expectations, deterministic
+// property cases, explicit fixtures, and isolated database execution.
+
+pub enum ExpectedOutcome {
+    Success,
+    // A null code accepts any ordinary failure; a string requires that code.
+    Failure { code: Str? },
+}
+
+// Deny is the default-safe choice. ReplayRecorded and Mocked require their
+// named, immutable cassette/profile and never resolve credentials or contact
+// a live service.
+pub enum ExternalEffectPolicy {
+    Deny,
+    ReplayRecorded { cassette: Str },
+    Mocked { profile: Str },
+}
+
+// Fixture inputs are carried as one explicit argument group: `source` is the
+// root Orna source text; each snapshot pair is (logical repository name,
+// immutable commit ID); `inputs[i]` is submitted after loading the source; and
+// `expected[i]` is its required success or failure. The input and outcome
+// lists must have the same length.
+
+// Expectations are pure predicates so they remain usable by the core `assert`
+// statement without making that statement depend on this optional module.
+// They never stringify values, including values whose safe presentation is
+// redacted.
+pub fn expect(condition: Bool): Bool = condition;
+pub fn expect_true(value: Bool): Bool = value;
+pub fn expect_false(value: Bool): Bool = !value;
+pub fn expect_equal<T>(actual: T, expected: T): Bool = actual == expected;
+pub fn expect_not_equal<T>(actual: T, unexpected: T): Bool = actual != unexpected;
+
+pub fn expect_some<T>(value: T?): Bool = case value {
+    Some(_): true,
+    null: false,
+};
+
+pub fn expect_none<T>(value: T?): Bool = case value {
+    Some(_): false,
+    null: true,
+};
+
+// The runner catches the callback's ordinary failure, compares its optional
+// stable code, and fails if it returns normally. This operation is local to a
+// test runner and is never a production failure-recovery primitive.
+pub fn expect_failure<T>(action: fn(): T, code: Str?): Bool = fail(error(
+    code: "ORNA-EVAL-UNSUPPORTED",
+    message: "std.test.expect_failure requires the isolated test-runner binding"
+));
+
+// Generators receive the captured seed and zero-based case index. The same
+// seed/index pair always produces the same value under this pinned snapshot.
+// `for_all` evaluates exactly `cases` values in index order; cases must be
+// positive. On failure it reports the seed, case index and safely presented
+// counterexample, and any shrinking is deterministic and bounded.
+pub fn for_all<T>(
+    name: Str,
+    cases: Int,
+    seed: Int,
+    generate: fn(Int, Int): T,
+    property: fn(T): Bool,
+): Bool = fail(error(
+    code: "ORNA-EVAL-UNSUPPORTED",
+    message: "std.test.for_all requires the isolated property-runner binding"
+));
+
+// The generator binding maps the same seed/index pair to the same value and
+// uses a deterministic bounded-integer schedule. Bounds are lower-inclusive,
+// upper-exclusive, and must form a nonempty range.
+pub fn integer_range(lower_inclusive: Int, upper_exclusive: Int): fn(Int, Int): Int = fail(error(
+    code: "ORNA-EVAL-UNSUPPORTED",
+    message: "std.test.integer_range requires the pinned generator binding"
+));
+
+// Finite-list generators preserve their source order and use this same seed / index schedule.
+// Their runner binding validates nonempty sources and nonnegative maximum lengths.
+pub fn elements<T>(values: [T]): fn(Int, Int): T = fail(error(
+    code: "ORNA-EVAL-UNSUPPORTED",
+    message: "std.test.elements requires the pinned generator binding"
+));
+
+pub fn list_of<T>(element: fn(Int, Int): T, maximum_length: Int): fn(Int, Int): [T] = fail(error(
+    code: "ORNA-EVAL-UNSUPPORTED",
+    message: "std.test.list_of requires the pinned generator binding"
+));
+
+// A fixture runner validates equal input/outcome lengths before execution,
+// mounts only the named immutable snapshots, and denies unlisted effects. A
+// recorded cassette or mock profile is explicit; developer credentials, local
+// databases, and live services are never implicit fixture dependencies. It
+// returns true only when every input matches its declared outcome.
+pub fn run_fixture(
+    source: Str,
+    initial_snapshots: [(Str, Str)],
+    inputs: [Str],
+    expected: [ExpectedOutcome],
+    external_effects: ExternalEffectPolicy,
+): Bool = fail(error(
+    code: "ORNA-EVAL-UNSUPPORTED",
+    message: "std.test.run_fixture requires isolated worktree and runtime ownership"
+));
+
+// Create a fresh worktree-local CWD and runtime owner from the fixture's exact
+// initial snapshots, run the callback, and remove the isolated state on every
+// terminal path. A temporary branch alone does not provide this isolation.
+pub fn with_isolated_database<T>(
+    source: Str,
+    initial_snapshots: [(Str, Str)],
+    inputs: [Str],
+    expected: [ExpectedOutcome],
+    external_effects: ExternalEffectPolicy,
+    action: fn(): T,
+): T = fail(error(
+    code: "ORNA-EVAL-UNSUPPORTED",
+    message: "std.test.with_isolated_database requires isolated worktree and runtime ownership"
+));

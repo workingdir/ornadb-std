@@ -1,0 +1,78 @@
+// Typed reflective operations delegate to the mandatory `sys` boundary.
+// They accept only pinned FunctionRefs and explicit ArgumentMaps. The
+// wrappers do not evaluate source text or implicitly retype records.
+
+// The result witness is explicit and checked before target effects. A null
+// `at` uses the FunctionRef's captured snapshot; transaction and idempotency
+// semantics are those of `sys.invoke`.
+pub fn invoke_as<T>(
+    function: sys.FunctionRef,
+    arguments: sys.ArgumentMap,
+    at: sys.SnapshotRef? = null,
+    transaction: sys.InvokeTransaction = sys.InvokeTransaction.inherit,
+    idempotency_key: Str? = null
+): T = sys.invoke<T>(
+    function,
+    arguments,
+    as: T,
+    at: at,
+    transaction: transaction,
+    idempotency_key: idempotency_key
+);
+
+// Explicitly erased invocation retains the sys.Value type envelope; callers
+// must not treat it as an implicit conversion or failed-inference fallback.
+pub fn invoke_value(
+    function: sys.FunctionRef,
+    arguments: sys.ArgumentMap,
+    at: sys.SnapshotRef? = null,
+    transaction: sys.InvokeTransaction = sys.InvokeTransaction.inherit,
+    idempotency_key: Str? = null
+): sys.Value = sys.invoke(
+    function,
+    arguments,
+    at: at,
+    transaction: transaction,
+    idempotency_key: idempotency_key
+);
+
+// Asynchronous starts use a separate transaction by default. Their handles
+// stay owned by the current operation/session and cannot be resumed elsewhere.
+pub fn start_as<T>(
+    function: sys.FunctionRef,
+    arguments: sys.ArgumentMap,
+    at: sys.SnapshotRef? = null,
+    transaction: sys.InvokeTransaction = sys.InvokeTransaction.separate,
+    idempotency_key: Str? = null
+): sys.InvocationHandle<T> = sys.start<T>(
+    function,
+    arguments,
+    as: T,
+    at: at,
+    transaction: transaction,
+    idempotency_key: idempotency_key
+);
+
+pub fn start_value(
+    function: sys.FunctionRef,
+    arguments: sys.ArgumentMap,
+    at: sys.SnapshotRef? = null,
+    transaction: sys.InvokeTransaction = sys.InvokeTransaction.separate,
+    idempotency_key: Str? = null
+): sys.InvocationHandle<sys.Value> = sys.start(
+    function,
+    arguments,
+    at: at,
+    transaction: transaction,
+    idempotency_key: idempotency_key
+);
+
+// Await returns one complete terminal result. A timeout does not cancel the
+// child; cancellation remains an explicit idempotent operation on its handle.
+pub fn await_result<T>(
+    invocation: sys.InvocationHandle<T>,
+    timeout: Duration? = null
+): sys.InvocationResult<T> = sys.await(invocation, timeout);
+
+pub fn cancel<T>(invocation: sys.InvocationHandle<T>, reason: Str? = null): Bool =
+    sys.cancel(invocation, reason);

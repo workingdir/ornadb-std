@@ -1,0 +1,83 @@
+// A map value is an immutable [ (K, V) ] list with at most one entry per key.
+// Constructors and updates keep first-insertion order; an update replaces the
+// old value in place, and a new key is appended. Lookup is linear and uses
+// Orna equality, so keys must have a lawful equality relation. There is no
+// host hash table or ambient key ordering. from_entries keeps the first key
+// position and the last value for duplicates; merge lets right-hand values
+// replace left-hand values while preserving left-hand key positions.
+pub fn size<K, V>(entries: [(K, V)]): Int =
+    std.collection.count(from_entries(entries));
+
+pub fn is_empty<K, V>(entries: [(K, V)]): Bool = size(entries) == 0;
+
+pub fn to_entries<K, V>(entries: [(K, V)]): [(K, V)] = from_entries(entries);
+
+pub fn keys<K, V>(entries: [(K, V)]): [K] =
+    std.collection.map(
+        from_entries(entries),
+        entry => case entry { (key, _): key, }
+    );
+
+pub fn values<K, V>(entries: [(K, V)]): [V] =
+    std.collection.map(
+        from_entries(entries),
+        entry => case entry { (_, value): value, }
+    );
+
+pub fn contains_key<K, V>(entries: [(K, V)], key: K): Bool =
+    std.collection.exists(
+        from_entries(entries),
+        entry => case entry { (entry_key, _): entry_key == key, }
+    );
+
+pub fn get<K, V>(entries: [(K, V)], key: K): V? =
+    case std.collection.first(
+        std.collection.filter(
+            from_entries(entries),
+            entry => case entry { (entry_key, _): entry_key == key, }
+        )
+    ) {
+        Some((_, value)): first([value]),
+        null: null,
+    };
+
+fn replace_entry<K, V>(entry: (K, V), key: K, value: V): (K, V) = case entry {
+    (existing_key, _): if existing_key == key { (existing_key, value) } else { entry },
+};
+
+fn insert_unique<K, V>(entries: [(K, V)], key: K, value: V): [(K, V)] =
+    if std.collection.exists(
+        entries,
+        entry => case entry { (entry_key, _): entry_key == key, }
+    ) {
+        std.collection.map(
+            entries,
+            entry => replace_entry(entry, key, value)
+        )
+    } else {
+        std.collection.union(entries, [(key, value)])
+    };
+
+pub fn insert<K, V>(entries: [(K, V)], key: K, value: V): [(K, V)] =
+    insert_unique(from_entries(entries), key, value);
+
+pub fn remove<K, V>(entries: [(K, V)], key: K): [(K, V)] =
+    std.collection.filter(
+        from_entries(entries),
+        entry => case entry { (entry_key, _): entry_key != key, }
+    );
+
+fn insert_entries<K, V>(remaining: [(K, V)], entries: [(K, V)]): [(K, V)] =
+    case std.collection.first(remaining) {
+        Some((key, value)): insert_entries(
+            std.collection.drop(remaining, 1),
+            insert_unique(entries, key, value)
+        ),
+        null: entries,
+    };
+
+pub fn from_entries<K, V>(entries: [(K, V)]): [(K, V)] =
+    insert_entries(entries, []);
+
+pub fn merge<K, V>(left: [(K, V)], right: [(K, V)]): [(K, V)] =
+    insert_entries(from_entries(right), from_entries(left));

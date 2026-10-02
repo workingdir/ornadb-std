@@ -1,0 +1,27 @@
+// Canonical Orna text is schema directed. Decoding accepts the data subset
+// for the supplied type only; it never executes declarations, imports,
+// interpolations or arbitrary functions. Refinements are revalidated before
+// a value is returned. Unsupported or private data fails instead of being
+// omitted or converted through a presentation string.
+//
+// Encoded output is UTF-8 without a BOM, uses LF, two-space record indentation,
+// one space after `:`, comma-separated array and tuple items, a trailing comma
+// after each record field, and exactly one final LF. Record order follows the
+// primary-key order followed by stable field-ID order for rows, and NFC field
+// name order for structural records. Arrays and tuples retain value order.
+// Int uses minimal decimal digits; Decimal uses its normalised coefficient
+// and exponent; finite Float uses 17 significant digits and preserves signed
+// zero. String controls use the canonical escapes. Blob values use quoted,
+// padded standard Base64. Locale formatting is never a serialization form.
+// Decode calls supply the required static type witness using the call form
+// `decode(input, as: T)`; `as` selects T and is not a runtime value argument.
+
+pub fn encode<T>(value: T): Str = fail(error(
+    code: "ORNA-EVAL-UNSUPPORTED",
+    message: "std.encoding.orna.encode requires its canonical text codec binding"
+));
+
+pub fn decode<T>(input: Str): T = fail(error(
+    code: "ORNA-EVAL-UNSUPPORTED",
+    message: "std.encoding.orna.decode requires its schema-directed codec binding"
+));

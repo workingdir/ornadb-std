@@ -1,0 +1,28 @@
+// Portable filesystem metadata is the tuple
+// (kind, size_bytes, modified_at, created_at). `kind` is one of "file",
+// "directory", "symlink", or "other". Size is present only for regular
+// files; timestamps are optional when a host does not expose them. Creation
+// time is never inferred from a change-time field. Owner names, permission
+// bits, device paths, symlink targets, and absolute host paths are excluded.
+pub fn kind(value: (Str, Int?, Instant?, Instant?)): Str = case value {
+    (entry_kind, _, _, _): entry_kind,
+};
+
+pub fn is_file(value: (Str, Int?, Instant?, Instant?)): Bool = kind(value) == "file";
+
+pub fn is_directory(value: (Str, Int?, Instant?, Instant?)): Bool = kind(value) == "directory";
+
+pub fn is_symlink(value: (Str, Int?, Instant?, Instant?)): Bool = kind(value) == "symlink";
+
+pub fn size_bytes(value: (Str, Int?, Instant?, Instant?)): Int? = case value {
+    ("file", size, _, _): size,
+    (_, _, _, _): null,
+};
+
+pub fn modified_at(value: (Str, Int?, Instant?, Instant?)): Instant? = case value {
+    (_, _, modified, _): modified,
+};
+
+pub fn created_at(value: (Str, Int?, Instant?, Instant?)): Instant? = case value {
+    (_, _, _, created): created,
+};

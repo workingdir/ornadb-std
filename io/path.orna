@@ -1,0 +1,157 @@
+// Portable filesystem paths use `/` as the only separator and are always
+// relative to an explicit filesystem root. Empty components and `.` are
+// removed. `..` removes one prior component and fails when it would escape
+// the root. Backslashes are rejected so a path cannot change meaning when a
+// snapshot moves between hosts. The empty path and the root itself normalize
+// to `.`; this value names the authorized root and never the process CWD.
+// `components` returns normalized non-root segments. `basename` returns the
+// final segment and `dirname` returns the normalized parent (`.` for a direct
+// child); both return null for the root. `extension` ignores a leading dot
+// on a dotfile, and `stem` keeps earlier dots while removing the last suffix.
+use std.text;
+use std.collection;
+
+fn normalize_segments(remaining: [Str], normalized: [Str]): [Str] =
+    case std.collection.first(remaining) {
+        Some(segment):
+            if segment == "" || segment == "." {
+                normalize_segments(std.collection.drop(remaining, 1), normalized)
+            } else if segment == ".." {
+                if std.collection.count(normalized) == 0 {
+                    fail(error(
+                        code: "std.io.path.root_escape",
+                        message: "relative filesystem path escapes its authorized root"
+                    ))
+                } else {
+                    normalize_segments(
+                        std.collection.drop(remaining, 1),
+                        std.collection.take(normalized, std.collection.count(normalized) - 1)
+                    )
+                }
+            } else {
+                normalize_segments(
+                    std.collection.drop(remaining, 1),
+                    std.collection.union(normalized, [segment])
+                )
+            },
+        null: normalized,
+    };
+
+pub fn is_absolute(path: Str): Bool = std.text.starts_with(path, "/");
+
+pub fn normalize(path: Str): Str =
+    if is_absolute(path) {
+        fail(error(
+            code: "std.io.path.absolute",
+            message: "filesystem paths must be relative to an authorized root"
+        ))
+    } else if std.text.contains(path, "\\") {
+        fail(error(
+            code: "std.io.path.ambiguous_separator",
+            message: "portable filesystem paths use `/` and reject backslashes"
+        ))
+    } else {
+        let segments = normalize_segments(std.text.split(path, "/"), []);
+        if std.collection.count(segments) == 0 {
+            "."
+        } else {
+            std.text.join(segments, "/")
+        }
+    };
+
+pub fn normalise(path: Str): Str = normalize(path);
+
+pub fn components(path: Str): [Str] {
+    let normalized = normalize(path);
+    if normalized == "." { [] } else { std.text.split(normalized, "/") }
+}
+
+pub fn join(prefix_path: Str, child: Str): Str =
+    if is_absolute(child) {
+        fail(error(
+            code: "std.io.path.absolute",
+            message: "a joined filesystem path must remain relative to its root"
+        ))
+    } else if prefix_path == "" || prefix_path == "." {
+        normalize(child)
+    } else if child == "" || child == "." {
+        normalize(prefix_path)
+    } else {
+        normalize(std.text.join([prefix_path, child], "/"))
+    };
+
+pub fn basename(path: Str): Str? {
+    let parts = components(path);
+    let count = std.collection.count(parts);
+    if count == 0 {
+        null
+    } else {
+        std.collection.first(std.collection.drop(parts, count - 1))
+    }
+}
+
+fn take_prefix(remaining: [Str], wanted: Int, collected: [Str]): [Str] =
+    if wanted <= 0 {
+        collected
+    } else {
+        case std.collection.first(remaining) {
+            Some(segment): take_prefix(
+                std.collection.drop(remaining, 1),
+                wanted - 1,
+                std.collection.union(collected, [segment])
+            ),
+            null: collected,
+        }
+    };
+
+pub fn dirname(path: Str): Str? {
+    let parts = components(path);
+    if std.collection.count(parts) == 0 {
+        null
+    } else {
+        let prefix = take_prefix(parts, std.collection.count(parts) - 1, []);
+        if std.collection.count(prefix) == 0 {
+            std.collection.first(["."])
+        } else {
+            std.collection.first([std.text.join(prefix, "/")])
+        }
+    }
+}
+
+fn extension_from_name(name: Str): Str? {
+    let parts = std.text.split(name, ".");
+    let count = std.collection.count(parts);
+    let suffix = if count == 0 {
+        null
+    } else {
+        std.collection.first(std.collection.drop(parts, count - 1))
+    };
+    if count <= 1 || suffix == null || suffix == std.collection.first([""]) {
+        null
+    } else if std.text.starts_with(name, ".") && count == 2 {
+        null
+    } else {
+        suffix
+    }
+}
+
+pub fn extension(path: Str): Str? =
+    case basename(path) {
+        Some(name): extension_from_name(name),
+        null: null,
+    };
+
+fn stem_from_name(name: Str): Str {
+    let parts = std.text.split(name, ".");
+    std.text.join(take_prefix(parts, std.collection.count(parts) - 1, []), ".")
+}
+
+pub fn stem(path: Str): Str? = case basename(path) {
+    Some(name):
+        if extension_from_name(name) == null {
+            std.collection.first([name])
+        } else {
+            std.collection.first([stem_from_name(name)])
+        },
+    null: null,
+};

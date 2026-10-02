@@ -89,6 +89,22 @@ pub fn exists<T>(rows: [T], predicate: fn(T): Bool): Bool = fail(error(
     message: "std.query.exists requires its evaluator binding"
 ));
 
+// Portable finite helpers preserve source order except where the contract
+// explicitly sorts keys. All callback failures propagate, and a callback is
+// evaluated once per visited value.
+//
+// chunk emits consecutive nonempty groups of positive size; only the final
+// group may be short. flatten concatenates one level in outer/inner order.
+// partition returns (matching, remaining), preserving each side's input
+// order. zip stops at the shorter input; zip_exact fails on unequal lengths.
+// unique keeps each lawful equality class's first occurrence. group_by sorts
+// lawful keys while preserving input order inside each group. pairs are
+// adjacent and overlapping. window emits complete windows only and requires
+// positive size and step. split_when starts a group before a matching item,
+// without inserting empty groups. rank is a stable key sort with one-based
+// competition ranks (ties share a rank and later ranks skip their count).
+// These declarations bind to the same identities as std.collection; stream
+// operators remain distinct, checkpointed operations.
 pub fn chunk<T>(values: [T], size: Int): [[T]] = fail(error(
     code: "ORNA-EVAL-UNSUPPORTED",
     message: "std.query.chunk requires its evaluator binding"
