@@ -23,6 +23,7 @@ use test;
 use generics;
 use type_utils;
 use pattern;
+use regex;
 use iterator;
 use lazy;
 use views;
