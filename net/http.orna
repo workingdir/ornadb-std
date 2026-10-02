@@ -1,0 +1,67 @@
+// HTTP headers remain an ordered list of name/value pairs so repeated fields
+// such as Set-Cookie are not collapsed. Field names use the ASCII token
+// grammar; values reject CR, LF, NUL, and disallowed controls. The transport
+// preserves duplicate-field order and does not synthesize cookies, auth, or
+// redirects from ambient process state.
+// `start` accepts one request and returns a host-minted UUID handle bound to
+// the current activation/session owner. The UUID is an identifier, not an
+// authority: every operation checks that it belongs to the caller. Owner
+// termination requests cancellation and joins/fences the transport. Only
+// http/https URLs are accepted. The `url` must be a canonical std.url.parse
+// result and is revalidated before connecting. HTTPS always validates the peer
+// certificate and host. timeout is null for no deadline or nonnegative;
+// max_header_bytes must be positive and max_body_bytes is nonnegative (zero
+// admits an empty entity).
+// Method tokens are validated and preserved exactly. The URL fragment is
+// omitted on the wire. No redirect is followed and no retry is implicit.
+// These external operations are unavailable to assertions, read-only watches,
+// presenters, and historical evaluation; database rollback cannot undo a
+// request that reached its peer.
+pub fn start(
+    method: Str,
+    url: Str,
+    headers: [(Str, Str)],
+    request_body: Blob?,
+    timeout: Duration?,
+    max_header_bytes: Int,
+    max_body_bytes: Int,
+): Uuid = fail(error(
+    code: "ORNA-EVAL-UNSUPPORTED",
+    message: "std.net.http.start requires its cancellable HTTP evaluator binding"
+));
+
+// Return (status, ordered headers, body) for the complete response, including
+// non-2xx status values. Interim 1xx protocol responses are consumed by the
+// adapter. If the final headers exceed max_header_bytes or the entity exceeds
+// max_body_bytes, fail without exposing a truncated response. Transfer
+// framing is removed, but Content-Encoding is
+// not transparently decompressed. A timeout fails this wait without cancelling
+// the request; the caller may cancel explicitly.
+pub fn wait(handle: Uuid, timeout: Duration?): (Int, [(Str, Str)], Blob) = fail(error(
+    code: "ORNA-EVAL-UNSUPPORTED",
+    message: "std.net.http.wait requires its cancellable HTTP evaluator binding"
+));
+
+// Return true only when this call first requested cancellation. Cancellation
+// cannot retract bytes already sent or undo a request already received by the
+// peer. No partial response is returned after cancellation is acknowledged.
+pub fn cancel(handle: Uuid): Bool = fail(error(
+    code: "ORNA-EVAL-UNSUPPORTED",
+    message: "std.net.http.cancel requires its cancellable HTTP evaluator binding"
+));
+
+// Synchronous convenience call with the same validation and bounded response
+// behavior as start + wait. The timeout and cancellation are owned by the
+// caller's activation.
+pub fn send(
+    method: Str,
+    url: Str,
+    headers: [(Str, Str)],
+    request_body: Blob?,
+    timeout: Duration?,
+    max_header_bytes: Int,
+    max_body_bytes: Int,
+): (Int, [(Str, Str)], Blob) = fail(error(
+    code: "ORNA-EVAL-UNSUPPORTED",
+    message: "std.net.http.send requires its cancellable HTTP evaluator binding"
+));

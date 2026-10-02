@@ -1,0 +1,91 @@
+// std.url is the pinned Orna URL profile. It accepts absolute http, https,
+// ws, and wss URLs and relative references only through resolve. User-info,
+// control characters, malformed percent escapes, invalid ports, and
+// non-ASCII host labels are rejected; callers must convert international
+// domain names to an ASCII IDNA form explicitly. Hosts and schemes are
+// canonical lower-case ASCII, IPv6 literals are stored without brackets and
+// formatted with brackets, default ports are omitted, and an empty network
+// path is represented by "/". Path, query, and fragment case and ordering are
+// preserved. A URL value is the canonical absolute URL string returned by
+// parse; every operation validates its input instead of trusting a
+// caller-built record. Non-ASCII path, query, and fragment scalars are UTF-8
+// percent encoded. Percent escapes are validated and emitted with uppercase
+// hex; reserved path/query delimiters are not decoded during parsing.
+//
+// Query parameters preserve source order and duplicates. A missing value is
+// distinct from an explicit empty value. Component decoding uses strict UTF-8;
+// '+' is a literal plus and is never treated as a form-space alias.
+pub fn parse(input: Str): Str = fail(error(
+    code: "ORNA-EVAL-UNSUPPORTED",
+    message: "std.url.parse requires its pinned URL evaluator binding"
+));
+
+// Resolve follows RFC 3986 reference resolution and dot-segment removal.
+// The result is revalidated under this module's supported network schemes.
+pub fn resolve(base_url: Str, reference: Str): Str = fail(error(
+    code: "ORNA-EVAL-UNSUPPORTED",
+    message: "std.url.resolve requires its pinned URL evaluator binding"
+));
+
+// Format emits the canonical network URL, including its fragment. HTTP and
+// WebSocket request adapters never transmit a fragment to the peer.
+pub fn format(value: Str): Str = fail(error(
+    code: "ORNA-EVAL-UNSUPPORTED",
+    message: "std.url.format requires its pinned URL evaluator binding"
+));
+
+pub fn scheme(value: Str): Str = fail(error(
+    code: "ORNA-EVAL-UNSUPPORTED",
+    message: "std.url.scheme requires its pinned URL evaluator binding"
+));
+
+pub fn host(value: Str): Str = fail(error(
+    code: "ORNA-EVAL-UNSUPPORTED",
+    message: "std.url.host requires its pinned URL evaluator binding"
+));
+
+pub fn port(value: Str): Int? = fail(error(
+    code: "ORNA-EVAL-UNSUPPORTED",
+    message: "std.url.port requires its pinned URL evaluator binding"
+));
+
+pub fn path(value: Str): Str = fail(error(
+    code: "ORNA-EVAL-UNSUPPORTED",
+    message: "std.url.path requires its pinned URL evaluator binding"
+));
+
+pub fn query(value: Str): Str? = fail(error(
+    code: "ORNA-EVAL-UNSUPPORTED",
+    message: "std.url.query requires its pinned URL evaluator binding"
+));
+
+pub fn fragment(value: Str): Str? = fail(error(
+    code: "ORNA-EVAL-UNSUPPORTED",
+    message: "std.url.fragment requires its pinned URL evaluator binding"
+));
+
+// Encode only RFC 3986 unreserved scalars literally. Every other scalar is
+// UTF-8 encoded and each resulting byte is emitted as %HH.
+pub fn encode_component(value: Str): Str = fail(error(
+    code: "ORNA-EVAL-UNSUPPORTED",
+    message: "std.url.encode_component requires its pinned URL evaluator binding"
+));
+
+// Reject malformed escapes and invalid UTF-8. Literal '+' remains '+' and
+// encoded reserved bytes remain data rather than becoming delimiters.
+pub fn decode_component(value: Str): Str = fail(error(
+    code: "ORNA-EVAL-UNSUPPORTED",
+    message: "std.url.decode_component requires its pinned URL evaluator binding"
+));
+
+pub fn query_parameters(value: Str): [(Str, Str?)] = fail(error(
+    code: "ORNA-EVAL-UNSUPPORTED",
+    message: "std.url.query_parameters requires its pinned URL evaluator binding"
+));
+
+// Append one parameter without reordering or collapsing existing pairs. A
+// null value emits a key without '=', while an empty string emits key=.
+pub fn with_query_parameter(value: Str, name: Str, parameter: Str?): Str = fail(error(
+    code: "ORNA-EVAL-UNSUPPORTED",
+    message: "std.url.with_query_parameter requires its pinned URL evaluator binding"
+));
