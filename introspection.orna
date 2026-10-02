@@ -1,0 +1,56 @@
+// Read-only helpers over the mandatory typed `sys` catalogue and observation
+// APIs. These wrappers preserve the caller's explicit snapshot and reference;
+// they do not evaluate source text or substitute missing retained data.
+
+// Return safe metadata for the value's exact static type. No dynamic Any
+// conversion or private-field disclosure is introduced by this helper.
+pub fn metadata<T>(value: T): sys.ValueMetadata<T> = sys.meta(value);
+
+// Resolve with the system's normal visibility and import rules at one pinned
+// snapshot. `from` supplies the optional calling module context.
+pub fn resolve_object(
+    name: Str,
+    kind: sys.ObjectKind? = null,
+    at: sys.SnapshotRef = sys.current.snapshot,
+    from: sys.ModuleRef? = null
+): sys.ObjectRef = sys.resolve(name, kind, at, from);
+
+pub fn resolve_function(
+    name: Str,
+    at: sys.SnapshotRef = sys.current.snapshot,
+    from: sys.ModuleRef? = null
+): sys.FunctionRef = sys.resolve_function(name, at, from);
+
+// Structured descriptions and retained source keep the system API's pin and
+// redaction rules. Unavailable or redacted source remains an ordinary result
+// or failure from `sys`; this module never invents replacement text.
+pub fn describe(object: sys.ObjectRef): sys.ObjectDescription = sys.describe(object);
+
+pub fn source(object: sys.ObjectRef): sys.SourceDocument = sys.source(object);
+
+pub fn file_source(file: sys.FileRef): sys.SourceDocument = sys.source(file);
+
+pub fn history(object: sys.ObjectRef): Relation<sys.Revision> = sys.history(object);
+
+pub fn file_history(file: sys.FileRef): Relation<sys.FileVersion> = sys.history(file);
+
+// Dependency traversal is cycle-safe and deterministic according to the
+// pinned `sys` contract; callers choose direct or transitive edges explicitly.
+pub fn dependencies(
+    object: sys.ObjectRef,
+    transitive: Bool = false,
+    kinds: [sys.DependencyKind]? = null
+): Relation<sys.Dependency> = sys.dependencies(object, transitive, kinds);
+
+pub fn dependents(
+    object: sys.ObjectRef,
+    transitive: Bool = false,
+    kinds: [sys.DependencyKind]? = null
+): Relation<sys.Dependency> = sys.dependents(object, transitive, kinds);
+
+pub fn explain_function(function: sys.FunctionRef): sys.Plan = sys.explain(function);
+
+pub fn explain_query<T>(query: Query<T>): sys.Plan = sys.explain(query);
+
+pub fn explain_diagnostic(diagnostic: sys.Diagnostic): sys.Explanation =
+    sys.explain(diagnostic);

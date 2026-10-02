@@ -26,5 +26,7 @@ use pattern;
 use iterator;
 use lazy;
 use views;
+use introspection;
+use reflection;
 
 pub fn version(): Str = "1.0.0";
