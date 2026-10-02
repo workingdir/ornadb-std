@@ -1,94 +1,54 @@
-// Filesystem operations require an evaluator binding. `root` identifies the
-// caller-authorized filesystem root and `path` is always relative to it; an
-// absolute path, parent traversal, or symlink escape fails. No operation uses
-// the process working directory implicitly. Text is UTF-8 and malformed text
-// fails rather than being replaced.
-//
-// Writes never create parent directories implicitly. `overwrite: false`
-// rejects an existing destination; `overwrite: true` replaces a regular-file
-// destination. Errors propagate normally, and a database rollback does not
-// undo a completed external filesystem operation. The filesystem effect is
-// unavailable to assertions, read-only watches, presenters, and historical
-// evaluation.
-// `exists` is false only when the target is absent; permission and I/O errors
-// still fail. `is_directory` is false for an absent or non-directory target.
-// `append_text` creates a missing file and otherwise appends without
-// truncating. `create_dir` creates parents only when requested and accepts an
-// existing directory only when `exist_ok` is true. `remove_file` does not
-// remove directories. `copy_file` and `move_file` stay inside one root and
-// apply the same explicit destination overwrite rule as `write_text`.
-// `metadata` follows symbolic links after verifying that resolution remains
-// beneath root. `symlink_metadata` reports the final link itself instead of
-// following it. Neither call reports an absolute host path, owner, or mode.
+// These functions cross the evaluator's registered filesystem effect
+// boundary. The root and path are explicit, and each operation receives a
+// host-installed provider with canonical containment and resource limits.
+// Writes never create parent directories implicitly; overwrite behavior is an
+// explicit argument. Effects are unavailable to assertions, read-only
+// watches, presenters, and historical evaluation.
 
-pub fn read_text(root: Str, path: Str): Str = fail(error(
-    code: "ORNA-EVAL-UNSUPPORTED",
-    message: "std.io.fs.read_text requires its filesystem evaluator binding"
-));
+pub fn read_text(root: Str, path: Str): Str = __read_text(root, path);
+fn __read_text(root: Str, path: Str): Str = std.io.fs.read_text(root, path);
 
-pub fn write_text(root: Str, path: Str, contents: Str, overwrite: Bool): Unit = fail(error(
-    code: "ORNA-EVAL-UNSUPPORTED",
-    message: "std.io.fs.write_text requires its filesystem evaluator binding"
-));
+pub fn write_text(root: Str, path: Str, contents: Str, overwrite: Bool): Unit =
+    __write_text(root, path, contents, overwrite);
+fn __write_text(root: Str, path: Str, contents: Str, overwrite: Bool): Unit =
+    std.io.fs.write_text(root, path, contents, overwrite);
 
-pub fn append_text(root: Str, path: Str, contents: Str): Unit = fail(error(
-    code: "ORNA-EVAL-UNSUPPORTED",
-    message: "std.io.fs.append_text requires its filesystem evaluator binding"
-));
+pub fn append_text(root: Str, path: Str, contents: Str): Unit =
+    __append_text(root, path, contents);
+fn __append_text(root: Str, path: Str, contents: Str): Unit =
+    std.io.fs.append_text(root, path, contents);
 
-pub fn exists(root: Str, path: Str): Bool = fail(error(
-    code: "ORNA-EVAL-UNSUPPORTED",
-    message: "std.io.fs.exists requires its filesystem evaluator binding"
-));
+pub fn exists(root: Str, path: Str): Bool = __exists(root, path);
+fn __exists(root: Str, path: Str): Bool = std.io.fs.exists(root, path);
 
-pub fn is_directory(root: Str, path: Str): Bool = fail(error(
-    code: "ORNA-EVAL-UNSUPPORTED",
-    message: "std.io.fs.is_directory requires its filesystem evaluator binding"
-));
+pub fn is_directory(root: Str, path: Str): Bool = __is_directory(root, path);
+fn __is_directory(root: Str, path: Str): Bool = std.io.fs.is_directory(root, path);
 
-pub fn metadata(root: Str, path: Str): (Str, Int?, Instant?, Instant?) = fail(error(
-    code: "ORNA-EVAL-UNSUPPORTED",
-    message: "std.io.fs.metadata requires its filesystem evaluator binding"
-));
+pub fn metadata(root: Str, path: Str): (Str, Int?, Instant?, Instant?) = __metadata(root, path);
+fn __metadata(root: Str, path: Str): (Str, Int?, Instant?, Instant?) = std.io.fs.metadata(root, path);
 
-pub fn symlink_metadata(root: Str, path: Str): (Str, Int?, Instant?, Instant?) = fail(error(
-    code: "ORNA-EVAL-UNSUPPORTED",
-    message: "std.io.fs.symlink_metadata requires its filesystem evaluator binding"
-));
+pub fn symlink_metadata(root: Str, path: Str): (Str, Int?, Instant?, Instant?) =
+    __symlink_metadata(root, path);
+fn __symlink_metadata(root: Str, path: Str): (Str, Int?, Instant?, Instant?) =
+    std.io.fs.symlink_metadata(root, path);
 
-// Return immediate child names in Unicode scalar order, independent of the
-// host filesystem's enumeration order.
-pub fn list(root: Str, path: Str): [Str] = fail(error(
-    code: "ORNA-EVAL-UNSUPPORTED",
-    message: "std.io.fs.list requires its filesystem evaluator binding"
-));
+pub fn list(root: Str, path: Str): [Str] = __list(root, path);
+fn __list(root: Str, path: Str): [Str] = std.io.fs.list(root, path);
 
-pub fn create_dir(root: Str, path: Str, parents: Bool, exist_ok: Bool): Unit = fail(error(
-    code: "ORNA-EVAL-UNSUPPORTED",
-    message: "std.io.fs.create_dir requires its filesystem evaluator binding"
-));
+pub fn create_dir(root: Str, path: Str, parents: Bool, exist_ok: Bool): Unit =
+    __create_dir(root, path, parents, exist_ok);
+fn __create_dir(root: Str, path: Str, parents: Bool, exist_ok: Bool): Unit =
+    std.io.fs.create_dir(root, path, parents, exist_ok);
 
-pub fn remove_file(root: Str, path: Str): Unit = fail(error(
-    code: "ORNA-EVAL-UNSUPPORTED",
-    message: "std.io.fs.remove_file requires its filesystem evaluator binding"
-));
+pub fn remove_file(root: Str, path: Str): Unit = __remove_file(root, path);
+fn __remove_file(root: Str, path: Str): Unit = std.io.fs.remove_file(root, path);
 
-pub fn copy_file(
-    root: Str,
-    source_path: Str,
-    destination_path: Str,
-    overwrite: Bool,
-): Unit = fail(error(
-    code: "ORNA-EVAL-UNSUPPORTED",
-    message: "std.io.fs.copy_file requires its filesystem evaluator binding"
-));
+pub fn copy_file(root: Str, source_path: Str, destination_path: Str, overwrite: Bool): Unit =
+    __copy_file(root, source_path, destination_path, overwrite);
+fn __copy_file(root: Str, source_path: Str, destination_path: Str, overwrite: Bool): Unit =
+    std.io.fs.copy_file(root, source_path, destination_path, overwrite);
 
-pub fn move_file(
-    root: Str,
-    source_path: Str,
-    destination_path: Str,
-    overwrite: Bool,
-): Unit = fail(error(
-    code: "ORNA-EVAL-UNSUPPORTED",
-    message: "std.io.fs.move_file requires its filesystem evaluator binding"
-));
+pub fn move_file(root: Str, source_path: Str, destination_path: Str, overwrite: Bool): Unit =
+    __move_file(root, source_path, destination_path, overwrite);
+fn __move_file(root: Str, source_path: Str, destination_path: Str, overwrite: Bool): Unit =
+    std.io.fs.move_file(root, source_path, destination_path, overwrite);

@@ -15,12 +15,8 @@
 // snapshot provide the schema and context needed to validate nominal values.
 // Decode calls use the required static type witness form `decode(input, as: T)`.
 
-pub fn encode<T>(value: T): Blob = fail(error(
-    code: "ORNA-EVAL-UNSUPPORTED",
-    message: "std.encoding.ovb.encode requires its OVB-1 codec binding"
-));
+pub fn encode<T>(value: T): Blob = __encode(value);
+fn __encode<T>(value: T): Blob = encode(value);
 
-pub fn decode<T>(input: Blob): T = fail(error(
-    code: "ORNA-EVAL-UNSUPPORTED",
-    message: "std.encoding.ovb.decode requires its strict OVB-1 codec binding"
-));
+pub fn decode<T>(input: Blob): T = __decode(input);
+fn __decode<T>(input: Blob): T = decode(input);

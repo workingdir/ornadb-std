@@ -6,20 +6,16 @@ pub fn timezone_data_version(): Str = "orna-iana-2024a";
 // `zone` is an IANA identifier interpreted using this captured edition.
 // Offsets are signed seconds east of UTC at the requested Instant; callers
 // always supply a zone and never inherit a process-local default.
-pub fn offset_at(instant: Instant, zone: Str): Int = fail(error(
-    code: "ORNA-EVAL-UNSUPPORTED",
-    message: "std.time.offset_at requires its evaluator binding"
-));
+pub fn offset_at(instant: Instant, zone: Str): Int = __offset_at(instant, zone);
+fn __offset_at(instant: Instant, zone: Str): Int = offset_at(instant, zone);
 
 // `local` is ISO civil text without an offset: YYYY-MM-DDTHH:MM:SS with an
 // optional 1..9 digit fractional second. `ambiguous` must explicitly be
 // "earlier", "later", or "reject". The first two choices select an overlap
 // occurrence; "reject" accepts only unique local times. Nonexistent local
 // times fail because this profile has no named gap-adjustment policy.
-pub fn resolve_local(local: Str, zone: Str, ambiguous: Str): Instant = fail(error(
-    code: "ORNA-EVAL-UNSUPPORTED",
-    message: "std.time.resolve_local requires its evaluator binding"
-));
+pub fn resolve_local(local: Str, zone: Str, ambiguous: Str): Instant = __resolve_local(local, zone, ambiguous);
+fn __resolve_local(local: Str, zone: Str, ambiguous: Str): Instant = resolve_local(local, zone, ambiguous);
 
 // Keep the four elapsed-duration presentations reachable from std.time. Their
 // sources are separate pinned modules, so a snapshot captures each formatter

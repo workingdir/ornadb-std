@@ -16,22 +16,22 @@
 // Exact integer, Decimal, and Float arithmetic is provided through these
 // private evaluator primitives. Public aggregate calls are ordinary source
 // functions and use only the operation registered by this captured snapshot.
-fn __mean<T>(rows: [T], scale: Int?, rounding: Str?): T? = null;
-fn __median<T>(rows: [T], scale: Int?, rounding: Str?): T? = null;
+fn __mean<T>(rows: [T], scale: Int?, rounding: Str?): T? = mean(rows, scale, rounding);
+fn __median<T>(rows: [T], scale: Int?, rounding: Str?): T? = median(rows, scale, rounding);
 fn __percentile<T, P>(
     rows: [T], p: P, interpolation: Str, scale: Int?, rounding: Str?
-): T? = null;
-fn __sum<T>(rows: [T]): T = 0;
-fn __min<T>(rows: [T]): T? = null;
-fn __max<T>(rows: [T]): T? = null;
-fn __range<T>(rows: [T]): T? = null;
-fn __mode<T>(rows: [T]): [T] = [];
-fn __variance<T>(rows: [T], scale: Int?, rounding: Str?): T? = null;
-fn __standard_deviation<T>(rows: [T], scale: Int?, rounding: Str?): T? = null;
-fn __histogram<T>(rows: [T], bins: [(T, T)], include_final_upper: Bool): [Int] = [];
-fn __rate<T>(points: [(Instant, T)]): T? = null;
-fn __derivative<T>(points: [(Instant, T)]): [(Instant, T)] = [];
-fn __integrate<T>(points: [(Instant, T)]): T? = null;
+): T? = percentile(rows, p, interpolation, scale, rounding);
+fn __sum<T>(rows: [T]): T = sum(rows);
+fn __min<T>(rows: [T]): T? = min(rows);
+fn __max<T>(rows: [T]): T? = max(rows);
+fn __range<T>(rows: [T]): T? = range(rows);
+fn __mode<T>(rows: [T]): [T] = mode(rows);
+fn __variance<T>(rows: [T], scale: Int?, rounding: Str?): T? = variance(rows, scale, rounding);
+fn __standard_deviation<T>(rows: [T], scale: Int?, rounding: Str?): T? = standard_deviation(rows, scale, rounding);
+fn __histogram<T>(rows: [T], bins: [(T, T)], include_final_upper: Bool): [Int] = histogram(rows, bins, include_final_upper);
+fn __rate<T>(points: [(Instant, T)]): T? = rate(points);
+fn __derivative<T>(points: [(Instant, T)]): [(Instant, T)] = derivative(points);
+fn __integrate<T>(points: [(Instant, T)]): T? = integrate(points);
 pub fn mean<T>(
     rows: [T],
     scale: Int? = null,

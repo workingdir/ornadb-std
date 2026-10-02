@@ -1,20 +1,9 @@
-// Process launch is an explicit host effect. `executable` and each argument
-// are passed as separate values; no shell parses or interpolates them. The
-// caller supplies the working directory and complete child environment, so
-// no process inherits an implicit CWD or unlisted ambient variables. Child
-// environment names use the portable ASCII form [A-Z_][A-Z0-9_]*; duplicate
-// names, invalid names, and NUL-containing values fail. A null input closes
-// stdin immediately; supplied bytes are written and then closed.
-// `timeout` is null for no deadline and otherwise nonnegative. A timeout
-// terminates and joins the child before returning an ordinary error; effects
-// the child already performed are not undone by an Orna rollback. The output
-// limit is positive and counts stdout plus stderr; exceeding it terminates the
-// child and fails rather than returning truncated output. A nonzero exit is a
-// normal result tuple `(exit_status, stdout, stderr)`. Null exit status means
-// the host could not provide an exit code. The host policy validates
-// executable and working-directory access.
-// This effect is unavailable to assertions, read-only watches, presenters,
-// and historical evaluation.
+// Process launch is an explicit host effect. Executable and argument strings
+// stay separate, and callers provide the working directory and complete child
+// environment. A null stdin closes immediately; a positive output bound
+// applies to stdout plus stderr. Timeouts terminate and join the child before
+// reporting failure. No shell, CWD, or ambient environment is inherited.
+
 pub fn run(
     executable: Str,
     arguments: [Str],
@@ -23,7 +12,18 @@ pub fn run(
     input: Blob?,
     timeout: Duration?,
     max_output_bytes: Int,
-): (Int?, Blob, Blob) = fail(error(
-    code: "ORNA-EVAL-UNSUPPORTED",
-    message: "std.io.process.run requires its process evaluator binding"
-));
+): (Int?, Blob, Blob) = __run(
+    executable, arguments, working_directory, environment, input, timeout, max_output_bytes
+);
+
+fn __run(
+    executable: Str,
+    arguments: [Str],
+    working_directory: Str,
+    environment: [(Str, Str)],
+    input: Blob?,
+    timeout: Duration?,
+    max_output_bytes: Int,
+): (Int?, Blob, Blob) = std.io.process.run(
+    executable, arguments, working_directory, environment, input, timeout, max_output_bytes
+);
