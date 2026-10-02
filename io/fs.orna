@@ -1,4 +1,4 @@
-use std.io.metadata as file_metadata;
+use std.io.metadata.{EntryMetadata};
 
 // Filesystem operations require an evaluator binding. `root` identifies the
 // caller-authorized filesystem root and `path` is always relative to it; an
@@ -48,12 +48,12 @@ pub fn is_directory(root: Str, path: Str): Bool = fail(error(
     message: "std.io.fs.is_directory requires its filesystem evaluator binding"
 ));
 
-pub fn metadata(root: Str, path: Str): file_metadata.EntryMetadata = fail(error(
+pub fn metadata(root: Str, path: Str): EntryMetadata = fail(error(
     code: "ORNA-EVAL-UNSUPPORTED",
     message: "std.io.fs.metadata requires its filesystem evaluator binding"
 ));
 
-pub fn symlink_metadata(root: Str, path: Str): file_metadata.EntryMetadata = fail(error(
+pub fn symlink_metadata(root: Str, path: Str): EntryMetadata = fail(error(
     code: "ORNA-EVAL-UNSUPPORTED",
     message: "std.io.fs.symlink_metadata requires its filesystem evaluator binding"
 ));
