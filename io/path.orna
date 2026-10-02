@@ -1,0 +1,125 @@
+// Portable filesystem paths use `/` as the only separator and are always
+// relative to an explicit filesystem root. Empty components and `.` are
+// removed. `..` removes one prior component and fails when it would escape
+// the root. Backslashes are rejected so a path cannot change meaning when a
+// snapshot moves between hosts. The empty path and the root itself normalize
+// to `.`; this value names the authorized root and never the process CWD.
+use std.text;
+use std.collection;
+use std.list;
+
+fn normalize_segments(remaining: [Str], normalized: [Str]): [Str] =
+    case std.collection.first(remaining) {
+        Some(segment):
+            if segment == "" || segment == "." {
+                normalize_segments(std.collection.drop(remaining, 1), normalized)
+            } else if segment == ".." {
+                if std.collection.count(normalized) == 0 {
+                    fail(error(
+                        code: "std.io.path.root_escape",
+                        message: "relative filesystem path escapes its authorized root"
+                    ))
+                } else {
+                    normalize_segments(
+                        std.collection.drop(remaining, 1),
+                        std.collection.drop(normalized, std.collection.count(normalized) - 1)
+                    )
+                }
+            } else {
+                normalize_segments(
+                    std.collection.drop(remaining, 1),
+                    std.collection.union(normalized, [segment])
+                )
+            },
+        null: normalized,
+    };
+
+pub fn is_absolute(path: Str): Bool = std.text.starts_with(path, "/");
+
+pub fn normalize(path: Str): Str =
+    if is_absolute(path) {
+        fail(error(
+            code: "std.io.path.absolute",
+            message: "filesystem paths must be relative to an authorized root"
+        ))
+    } else if std.text.contains(path, "\\") {
+        fail(error(
+            code: "std.io.path.ambiguous_separator",
+            message: "portable filesystem paths use `/` and reject backslashes"
+        ))
+    } else {
+        let segments = normalize_segments(std.text.split(path, "/"), []);
+        if std.collection.count(segments) == 0 {
+            "."
+        } else {
+            std.text.join(segments, "/")
+        }
+    };
+
+pub fn normalise(path: Str): Str = normalize(path);
+
+pub fn components(path: Str): [Str] =
+    let normalized = normalize(path);
+    if normalized == "." { [] } else { std.text.split(normalized, "/") };
+
+pub fn join(base: Str, child: Str): Str =
+    if is_absolute(child) {
+        fail(error(
+            code: "std.io.path.absolute",
+            message: "a joined filesystem path must remain relative to its root"
+        ))
+    } else if base == "" || base == "." {
+        normalize(child)
+    } else if child == "" || child == "." {
+        normalize(base)
+    } else {
+        normalize(base + "/" + child)
+    };
+
+pub fn basename(path: Str): Str? = std.list.last(components(path));
+
+pub fn parent(path: Str): Str? =
+    let parts = components(path);
+    if std.collection.count(parts) == 0 {
+        null
+    } else {
+        let prefix = std.collection.drop(parts, std.collection.count(parts) - 1);
+        if std.collection.count(prefix) == 0 {
+            first(["."])
+        } else {
+            first([std.text.join(prefix, "/")])
+        }
+    };
+
+fn extension_from_name(name: Str): Str? =
+    let parts = std.text.split(name, ".");
+    let count = std.collection.count(parts);
+    let suffix = std.list.last(parts);
+    if count <= 1 || suffix == null || suffix == Some("") {
+        null
+    } else if std.text.starts_with(name, ".") && count == 2 {
+        null
+    } else {
+        suffix
+    };
+
+pub fn extension(path: Str): Str? =
+    case basename(path) {
+        Some(name): extension_from_name(name),
+        null: null,
+    };
+
+pub fn stem(path: Str): Str? =
+    case basename(path) {
+        Some(name):
+            case extension_from_name(name) {
+                Some(_):
+                    let parts = std.text.split(name, ".");
+                    first([std.text.join(
+                        std.collection.take(parts, std.collection.count(parts) - 1),
+                        "."
+                    )]),
+                null: first([name]),
+            },
+        null: null,
+    };

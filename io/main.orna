@@ -1,3 +1,5 @@
 // std.io contains explicit host-effect boundaries. Importing this namespace
 // only names its child modules; it performs no I/O.
 use fs;
+use path;
+use metadata;
