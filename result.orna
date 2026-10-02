@@ -17,11 +17,11 @@ pub fn is_err<T, E>(result: Result<T, E>): Bool = case result {
 
 pub fn map<T, U, E>(result: Result<T, E>, transform: fn(T): U): Result<U, E> = case result {
     Result.Ok { value }: Result.Ok { value: transform(value) },
-    Result.Err { error }: Result.Err { error },
+    Result.Err { error }: Result.Err { error: error },
 };
 
 pub fn map_error<T, E, F>(result: Result<T, E>, transform: fn(E): F): Result<T, F> = case result {
-    Result.Ok { value }: Result.Ok { value },
+    Result.Ok { value }: Result.Ok { value: value },
     Result.Err { error }: Result.Err { error: transform(error) },
 };
 
@@ -30,14 +30,14 @@ pub fn and_then<T, U, E>(
     next: fn(T): Result<U, E>
 ): Result<U, E> = case result {
     Result.Ok { value }: next(value),
-    Result.Err { error }: Result.Err { error },
+    Result.Err { error }: Result.Err { error: error },
 };
 
 pub fn or_else<T, E, F>(
     result: Result<T, E>,
     recover: fn(E): Result<T, F>
 ): Result<T, F> = case result {
-    Result.Ok { value }: Result.Ok { value },
+    Result.Ok { value }: Result.Ok { value: value },
     Result.Err { error }: recover(error),
 };
 
@@ -52,11 +52,11 @@ pub fn unwrap_or_else<T, E>(result: Result<T, E>, fallback: fn(E): T): T = case 
 };
 
 pub fn ok<T, E>(result: Result<T, E>): T? = case result {
-    Result.Ok { value }: Some(value),
+    Result.Ok { value }: first([value]),
     Result.Err { error: _ }: null,
 };
 
 pub fn err<T, E>(result: Result<T, E>): E? = case result {
     Result.Ok { value: _ }: null,
-    Result.Err { error }: Some(error),
+    Result.Err { error }: first([error]),
 };
