@@ -8,6 +8,7 @@ use text;
 use bits;
 use stats;
 use time;
+use io;
 use option;
 use result;
 
