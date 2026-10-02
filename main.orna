@@ -5,5 +5,7 @@ use text;
 use bits;
 use stats;
 use time;
+use option;
+use result;
 
 pub fn version(): Str = "1.0.0";

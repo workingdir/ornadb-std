@@ -1,0 +1,62 @@
+// Result is an ordinary closed enum in the optional std package. Orna's own
+// failures continue through the language Error channel and are not wrapped.
+pub enum Result<T, E> {
+    Ok { value: T },
+    Err { error: E },
+}
+
+pub fn is_ok<T, E>(result: Result<T, E>): Bool = case result {
+    Result.Ok { value: _ }: true,
+    Result.Err { error: _ }: false,
+};
+
+pub fn is_err<T, E>(result: Result<T, E>): Bool = case result {
+    Result.Ok { value: _ }: false,
+    Result.Err { error: _ }: true,
+};
+
+pub fn map<T, U, E>(result: Result<T, E>, transform: fn(T): U): Result<U, E> = case result {
+    Result.Ok { value }: Result.Ok { value: transform(value) },
+    Result.Err { error }: Result.Err { error },
+};
+
+pub fn map_error<T, E, F>(result: Result<T, E>, transform: fn(E): F): Result<T, F> = case result {
+    Result.Ok { value }: Result.Ok { value },
+    Result.Err { error }: Result.Err { error: transform(error) },
+};
+
+pub fn and_then<T, U, E>(
+    result: Result<T, E>,
+    next: fn(T): Result<U, E>
+): Result<U, E> = case result {
+    Result.Ok { value }: next(value),
+    Result.Err { error }: Result.Err { error },
+};
+
+pub fn or_else<T, E, F>(
+    result: Result<T, E>,
+    recover: fn(E): Result<T, F>
+): Result<T, F> = case result {
+    Result.Ok { value }: Result.Ok { value },
+    Result.Err { error }: recover(error),
+};
+
+pub fn unwrap_or<T, E>(result: Result<T, E>, fallback: T): T = case result {
+    Result.Ok { value }: value,
+    Result.Err { error: _ }: fallback,
+};
+
+pub fn unwrap_or_else<T, E>(result: Result<T, E>, fallback: fn(E): T): T = case result {
+    Result.Ok { value }: value,
+    Result.Err { error }: fallback(error),
+};
+
+pub fn ok<T, E>(result: Result<T, E>): T? = case result {
+    Result.Ok { value }: Some(value),
+    Result.Err { error: _ }: null,
+};
+
+pub fn err<T, E>(result: Result<T, E>): E? = case result {
+    Result.Ok { value: _ }: null,
+    Result.Err { error }: Some(error),
+};
