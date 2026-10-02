@@ -13,7 +13,8 @@
 // validation matches std.net.http. Extensions and compression are not
 // negotiated implicitly. timeout is null for no deadline or nonnegative;
 // max_handshake_bytes and max_message_bytes must be positive. The URL fragment
-// is never sent to the peer.
+// is never sent to the peer. Success returns (connection, status, ordered
+// handshake headers); status is 101 and repeated headers are preserved.
 pub fn connect(
     url: Str,
     headers: [(Str, Str)],
@@ -21,7 +22,7 @@ pub fn connect(
     timeout: Duration?,
     max_handshake_bytes: Int,
     max_message_bytes: Int,
-): Uuid = fail(error(
+): (Uuid, Int, [(Str, Str)]) = fail(error(
     code: "ORNA-EVAL-UNSUPPORTED",
     message: "std.net.websocket.connect requires its cancellable WebSocket evaluator binding"
 ));
