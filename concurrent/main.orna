@@ -36,7 +36,7 @@ pub fn timeout<T>(callback: fn(): T, duration: Duration): T = fail(error(
 // has a clock/waiting effect, so this operation is unavailable to declaration
 // assertions. The requested instant is a lower-bound target, not an exact
 // scheduling guarantee.
-pub fn sleep(duration: Duration): Unit = fail(error(
+pub fn sleep(duration: Duration): Null = fail(error(
     code: "ORNA-EVAL-UNSUPPORTED",
     message: "std.concurrent.sleep requires its cancellation-aware clock binding"
 ));
