@@ -1,0 +1,13 @@
+// Language failures use the core Error channel and `|?` recovery boundary.
+// These optional helpers construct Error values for explicit failure paths;
+// they do not convert a failure into a Result or catch cancellation.
+
+pub fn make(code: Str, message: Str): Error = error(code: code, message: message);
+
+// Attach an ordinary failure as a cause while retaining the caller's
+// stable top-level code and safe message.
+pub fn caused_by(code: Str, message: Str, cause: Error): Error = error(
+    code: code,
+    message: message,
+    cause: cause,
+);

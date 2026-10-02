@@ -1,0 +1,14 @@
+// Standard Base64 uses the RFC 4648 alphabet with required `=` padding and no
+// inserted whitespace. Decoding rejects invalid characters, noncanonical
+// padding, and nonzero unused trailing bits. URL-safe Base64 is a separate
+// profile and is not silently accepted here.
+
+pub fn encode(input: Blob): Str = fail(error(
+    code: "ORNA-EVAL-UNSUPPORTED",
+    message: "std.encoding.base64.encode requires its RFC 4648 binding"
+));
+
+pub fn decode(input: Str): Blob = fail(error(
+    code: "ORNA-EVAL-UNSUPPORTED",
+    message: "std.encoding.base64.decode requires its strict RFC 4648 binding"
+));

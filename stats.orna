@@ -1,8 +1,21 @@
-// These declarations are the snapshot admission record for the bounded stats
-// intrinsics. Generic signatures keep the portable numeric representations
-// open; runtime checks enforce homogeneous Int, Decimal, or Float inputs.
-// Mean may promote Int to Decimal when its exact quotient requires it, so its
-// source result is kept generic until numeric-union types are available.
+// These declarations pin the statistics and aggregation surface. Numeric
+// aggregates accept homogeneous Int, Decimal, Float, or dimension-compatible
+// quantity inputs. Float aggregates preserve input order, and Float sorting
+// uses IEEE-754 totalOrder. Exact Decimal arithmetic stays exact; a
+// nonterminating quotient or irrational square root requires explicit scale
+// and rounding. Affine absolute quantities follow the aggregation algebra:
+// sum is rejected, mean is translated through a selected input base, range
+// and standard deviation return deltas, and variance returns a squared delta.
+//
+// Histogram bins are ordered, nonoverlapping [lower, upper) ranges. Only the
+// final upper bound may be made inclusive. Time-series operations require
+// strictly increasing timestamps; equal adjacent timestamps fail rather than
+// selecting an implicit rate or area. `rate` returns endpoint change per
+// elapsed time, `derivative` returns each adjacent slope timestamped at the
+// right endpoint, and `integrate` uses trapezoidal integration (value × time).
+// Implementations are admitted only as bindings for these captured exports.
+// Every source fallback fails closed instead of calling an ambient host
+// library when its corresponding binding is unavailable.
 pub fn mean<T>(
     rows: [T],
     scale: Int? = null,
@@ -30,4 +43,91 @@ pub fn percentile<T, P>(
 ): T? = fail(error(
     code: "ORNA-EVAL-UNSUPPORTED",
     message: "std.stats.percentile requires its evaluator binding"
+));
+
+// Empty sum is the additive zero. Summing affine absolute quantities is
+// invalid; summing linear or delta quantities preserves their dimensions.
+pub fn sum<T>(rows: [T]): T = fail(error(
+    code: "ORNA-EVAL-UNSUPPORTED",
+    message: "std.stats.sum requires its evaluator binding"
+));
+
+// Empty selection aggregates return null. Float min/max use the canonical
+// NaN rule when any NaN is present; otherwise min selects -0.0 and max +0.0
+// when both signed zeros occur.
+pub fn min<T>(rows: [T]): T? = fail(error(
+    code: "ORNA-EVAL-UNSUPPORTED",
+    message: "std.stats.min requires its evaluator binding"
+));
+
+pub fn max<T>(rows: [T]): T? = fail(error(
+    code: "ORNA-EVAL-UNSUPPORTED",
+    message: "std.stats.max requires its evaluator binding"
+));
+
+// Range is max - min and returns a delta for affine absolute quantities.
+pub fn range<T>(rows: [T]): T? = fail(error(
+    code: "ORNA-EVAL-UNSUPPORTED",
+    message: "std.stats.range requires its evaluator binding"
+));
+
+// Every mode is returned once, ordered by first appearance in the input.
+// Empty input has no modes.
+pub fn mode<T>(rows: [T]): [T] = fail(error(
+    code: "ORNA-EVAL-UNSUPPORTED",
+    message: "std.stats.mode requires its evaluator binding"
+));
+
+// Variance is the population variance (sum of squared deltas divided by n).
+// Empty input returns null. A sample estimate is a separately named API and
+// is not silently substituted.
+pub fn variance<T>(
+    rows: [T],
+    scale: Int? = null,
+    rounding: Str? = null
+): T? = fail(error(
+    code: "ORNA-EVAL-UNSUPPORTED",
+    message: "std.stats.variance requires its evaluator binding"
+));
+
+// Exact square roots are preserved. An inexact result requires explicit
+// scale and rounding, and the result has the input's delta dimension.
+pub fn standard_deviation<T>(
+    rows: [T],
+    scale: Int? = null,
+    rounding: Str? = null
+): T? = fail(error(
+    code: "ORNA-EVAL-UNSUPPORTED",
+    message: "std.stats.standard_deviation requires its evaluator binding"
+));
+
+// Each bin is (inclusive lower bound, exclusive upper bound). The optional
+// flag applies only to the final bin's upper bound. Rows outside all bins are
+// omitted from the returned per-bin counts.
+pub fn histogram<T>(
+    rows: [T],
+    bins: [(T, T)],
+    include_final_upper: Bool = false
+): [Int] = fail(error(
+    code: "ORNA-EVAL-UNSUPPORTED",
+    message: "std.stats.histogram requires its evaluator binding"
+));
+
+// A series has at least two points for rate/derivative/integration. All
+// timestamps must be strictly increasing; equal timestamps are an error.
+// Rate and derivative have value/time dimensions; integration has
+// value×time dimensions and rejects affine absolute input values.
+pub fn rate<T>(points: [(Instant, T)]): T? = fail(error(
+    code: "ORNA-EVAL-UNSUPPORTED",
+    message: "std.stats.rate requires its evaluator binding"
+));
+
+pub fn derivative<T>(points: [(Instant, T)]): [(Instant, T)] = fail(error(
+    code: "ORNA-EVAL-UNSUPPORTED",
+    message: "std.stats.derivative requires its evaluator binding"
+));
+
+pub fn integrate<T>(points: [(Instant, T)]): T? = fail(error(
+    code: "ORNA-EVAL-UNSUPPORTED",
+    message: "std.stats.integrate requires its evaluator binding"
 ));

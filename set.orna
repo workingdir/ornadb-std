@@ -1,0 +1,35 @@
+// A set value is an immutable [T] list with duplicates removed by
+// std.collection's lawful-equality semantics. The first equal value is kept,
+// so traversal and set-operation results have deterministic insertion order.
+// Membership is linear and does not use host hashing or ordering.
+pub fn from_list<T>(values: [T]): [T] = std.collection.unique(values);
+
+pub fn size<T>(values: [T]): Int = std.collection.count(from_list(values));
+
+pub fn is_empty<T>(values: [T]): Bool = size(values) == 0;
+
+pub fn contains<T>(values: [T], value: T): Bool =
+    std.collection.exists(from_list(values), item => item == value);
+
+pub fn insert<T>(values: [T], value: T): [T] =
+    from_list(std.collection.union(from_list(values), [value]));
+
+pub fn remove<T>(values: [T], value: T): [T] =
+    std.collection.filter(from_list(values), item => item != value);
+
+pub fn union<T>(left: [T], right: [T]): [T] =
+    from_list(std.collection.union(from_list(left), from_list(right)));
+
+pub fn intersection<T>(left: [T], right: [T]): [T] =
+    std.collection.filter(
+        from_list(left),
+        item => contains(right, item)
+    );
+
+pub fn difference<T>(left: [T], right: [T]): [T] =
+    std.collection.filter(
+        from_list(left),
+        item => !contains(right, item)
+    );
+
+pub fn to_list<T>(values: [T]): [T] = from_list(values);

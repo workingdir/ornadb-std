@@ -1,0 +1,46 @@
+// Finite-list helpers over Orna's immutable [T] value type. Positional
+// operations preserve duplicates and input order; unique is the explicit
+// duplicate-removing operation. Generic transforms remain in std.collection.
+pub fn singleton<T>(value: T): [T] = [value];
+
+pub fn length<T>(values: [T]): Int = std.collection.count(values);
+
+pub fn is_empty<T>(values: [T]): Bool = length(values) == 0;
+
+pub fn append<T>(values: [T], value: T): [T] =
+    std.collection.union(values, [value]);
+
+pub fn prepend<T>(values: [T], value: T): [T] =
+    std.collection.union([value], values);
+
+pub fn concat<T>(left: [T], right: [T]): [T] =
+    std.collection.union(left, right);
+
+pub fn first<T>(values: [T]): T? = std.collection.first(values);
+
+pub fn last<T>(values: [T]): T? =
+    if is_empty(values) {
+        null
+    } else {
+        first(std.collection.drop(values, length(values) - 1))
+    };
+
+pub fn contains<T>(values: [T], value: T): Bool =
+    std.collection.exists(values, item => item == value);
+
+pub fn take<T>(values: [T], count: Int): [T] = std.collection.take(values, count);
+
+pub fn drop<T>(values: [T], count: Int): [T] = std.collection.drop(values, count);
+
+pub fn unique<T>(values: [T]): [T] = std.collection.unique(values);
+
+fn reverse_into<T>(remaining: [T], reversed: [T]): [T] =
+    case std.collection.first(remaining) {
+        Some(value): reverse_into(
+            std.collection.drop(remaining, 1),
+            std.collection.union([value], reversed)
+        ),
+        null: reversed,
+    };
+
+pub fn reverse<T>(values: [T]): [T] = reverse_into(values, []);

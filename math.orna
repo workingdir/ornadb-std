@@ -1,6 +1,34 @@
+// Integer utilities keep their inputs and outputs in exact core Int arithmetic.
+// They do not convert through Float or select ambient decimal precision.
 pub fn increment(value: Int): Int = value + 1;
 pub fn decrement(value: Int): Int = value - 1;
 pub fn is_zero(value: Int): Bool = value == 0;
+pub fn abs(value: Int): Int = if value < 0 { -value } else { value };
+pub fn signum(value: Int): Int =
+    if value < 0 { -1 } else { if value > 0 { 1 } else { 0 } };
+pub fn is_positive(value: Int): Bool = value > 0;
+pub fn is_negative(value: Int): Bool = value < 0;
+pub fn is_even(value: Int): Bool = value % 2 == 0;
+pub fn is_odd(value: Int): Bool = value % 2 != 0;
 pub fn min(left: Int, right: Int): Int = if left < right { left } else { right };
 pub fn max(left: Int, right: Int): Int = if left > right { left } else { right };
 pub fn clamp(value: Int, lower: Int, upper: Int): Int = max(lower, min(value, upper));
+pub fn square(value: Int): Int = value * value;
+pub fn cube(value: Int): Int = value * value * value;
+
+fn gcd_nonnegative(left: Int, right: Int): Int =
+    if right == 0 { left } else { gcd_nonnegative(right, left % right) };
+
+pub fn gcd(left: Int, right: Int): Int = gcd_nonnegative(abs(left), abs(right));
+
+pub fn lcm(left: Int, right: Int): Int =
+    if is_zero(left) || is_zero(right) {
+        0
+    } else {
+        (abs(left) / gcd(left, right)) * abs(right)
+    };
+
+// Negative exponents have non-integer results in this exact Int helper and
+// return null. Nonnegative powers use core exact Int exponentiation.
+pub fn pow_nonnegative(value: Int, exponent: Int): Int? =
+    if exponent < 0 { null } else { first([value ^ exponent]) };

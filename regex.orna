@@ -1,0 +1,107 @@
+// std.regex implements the explicitly versioned `orna.regex/1` dialect.
+// Matching is over Unicode scalar positions using Unicode 16.0.0 properties;
+// it is independent of locale, host regex syntax, and host Unicode settings.
+// The dialect includes literals and escaped metacharacters, `.`, `^`/`$`,
+// bracket classes and ranges, alternation, capturing and noncapturing groups,
+// `*`, `+`, `?`, `{m}`, `{m,}`, `{m,n}` (including lazy suffix `?`), and the
+// escapes `\d`, `\s`, `\w`, `\b`, `\n`, `\r`, and `\t`. `\d` is Unicode
+// General_Category Nd, `\s` is Unicode White_Space, and `\w` is Alphabetic,
+// Mark, Number, or Connector_Punctuation. Look-around, backreferences,
+// recursion, conditionals, and locale-dependent constructs are rejected.
+// Engines must implement this dialect exactly; no host-default dialect is
+// selected. Compilation and operations are bounded; limit exhaustion fails
+// instead of returning partial matches or rewritten text.
+//
+// `Regex.Compiled` carries the exact source pattern. Its public constructor is
+// data, not proof of validity: every operation validates the source under this
+// dialect, including values constructed directly by a caller.
+pub enum Regex {
+    Compiled { pattern: Str },
+}
+
+// Match offsets are zero-based Unicode scalar positions with a half-open end.
+// `captures[0]` is the complete match; later entries follow opening-group
+// order and are null when that group did not participate. The whole match is
+// leftmost-longest. At the same start, alternation and subexpression choices
+// follow source order; quantifiers are greedy unless suffixed by `?`.
+pub enum Match {
+    Found { text: Str, start: Int, end: Int, captures: [Str?] },
+}
+
+// Return the stable grammar identity for manifests and diagnostics.
+pub fn dialect_version(): Str = "orna.regex/1";
+
+// Invalid syntax and unsupported constructs fail with a regex syntax error
+// that identifies the scalar position. The returned source is immutable.
+pub fn compile(pattern: Str): Regex = fail(error(
+    code: "ORNA-EVAL-UNSUPPORTED",
+    message: "std.regex.compile requires its orna.regex/1 evaluator binding"
+));
+
+// A directly constructed Regex is validated just like one returned by compile.
+pub fn is_match(regex: Regex, text: Str): Bool = fail(error(
+    code: "ORNA-EVAL-UNSUPPORTED",
+    message: "std.regex.is_match requires its orna.regex/1 evaluator binding"
+));
+
+// Return the earliest-starting match, choosing the longest end at that start.
+// A nonparticipating capture remains null; no match returns null.
+pub fn find(regex: Regex, text: Str): Match? = fail(error(
+    code: "ORNA-EVAL-UNSUPPORTED",
+    message: "std.regex.find requires its orna.regex/1 evaluator binding"
+));
+
+// Return non-overlapping matches in scalar order. After a positive-width
+// match, scanning resumes at its end. After a zero-width match, scanning
+// advances one scalar; a zero-width match at end-of-input is included once.
+// The list is complete or the configured work bound fails; it is never
+// silently truncated.
+pub fn find_all(regex: Regex, text: Str): [Match] = fail(error(
+    code: "ORNA-EVAL-UNSUPPORTED",
+    message: "std.regex.find_all requires its orna.regex/1 evaluator binding"
+));
+
+// Count the complete ordered match list. Resource exhaustion propagates from
+// find_all; this helper never reports a count for a truncated scan.
+pub fn count_matches(regex: Regex, text: Str): Int =
+    std.collection.count(find_all(regex, text));
+
+pub fn matched_text(value: Match): Str = case value {
+    Match.Found { text, start: _, end: _, captures: _ }: text,
+};
+
+pub fn start(value: Match): Int = case value {
+    Match.Found { text: _, start, end: _, captures: _ }: start,
+};
+
+pub fn end(value: Match): Int = case value {
+    Match.Found { text: _, start: _, end, captures: _ }: end,
+};
+
+pub fn captures(value: Match): [Str?] = case value {
+    Match.Found { text: _, start: _, end: _, captures }: captures,
+};
+
+// Replacement references use `$0` for the full match, `$1` onward for capture
+// groups, and `$$` for a literal dollar. An unknown capture reference fails.
+// Replacements are non-overlapping, left to right. Zero-width matches advance
+// by one scalar and the terminal boundary is considered at most once.
+pub fn replace_all(regex: Regex, text: Str, replacement: Str): Str = fail(error(
+    code: "ORNA-EVAL-UNSUPPORTED",
+    message: "std.regex.replace_all requires its orna.regex/1 evaluator binding"
+));
+
+// Split on non-overlapping positive-width matches and preserve empty fields,
+// including leading and trailing fields. Zero-width matches are ignored; an
+// empty-matching expression therefore returns the original text as one field.
+pub fn split(regex: Regex, text: Str): [Str] = fail(error(
+    code: "ORNA-EVAL-UNSUPPORTED",
+    message: "std.regex.split requires its orna.regex/1 evaluator binding"
+));
+
+// Escape every scalar that has syntax in orna.regex/1 so the result matches
+// the supplied text literally when used as a complete expression.
+pub fn escape_literal(text: Str): Str = fail(error(
+    code: "ORNA-EVAL-UNSUPPORTED",
+    message: "std.regex.escape_literal requires its orna.regex/1 evaluator binding"
+));

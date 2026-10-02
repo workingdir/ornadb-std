@@ -1,0 +1,5 @@
+// std.net groups explicit host-effect networking APIs. Importing this
+// namespace only names child modules; it never opens a connection. Network
+// results are external observations and are not undone by a database rollback.
+use http;
+use websocket;
