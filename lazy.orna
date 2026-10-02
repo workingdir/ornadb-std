@@ -1,0 +1,19 @@
+// Lazy computations are ordinary zero-argument functions. `defer`, `map`,
+// `and_then`, and `zip` return thunks without evaluating their computations.
+// Every `force` call invokes its thunk again. This is call-by-name with no memoization.
+pub fn defer<T>(computation: fn(): T): fn(): T = computation;
+
+pub fn force<T>(computation: fn(): T): T = computation();
+
+pub fn map<T, U>(computation: fn(): T, transform: fn(T): U): fn(): U =
+    () => transform(computation());
+
+pub fn and_then<T, U>(
+    computation: fn(): T,
+    next: fn(T): fn(): U,
+): fn(): U = () => next(computation())();
+
+pub fn zip<T, U>(left: fn(): T, right: fn(): U): fn(): (T, U) =
+    () => (left(), right());
+
+pub fn constant<T>(value: T): fn(): T = () => value;
