@@ -67,15 +67,16 @@ pub fn for_all<T>(
     message: "std.test.for_all requires the isolated property-runner binding"
 ));
 
-// The returned generators are pure functions of seed and case index. Integer
-// ranges are lower-inclusive/upper-exclusive and must be nonempty. `elements`
-// samples one original value and fails for an empty list. `list_of` selects a
-// length in 0..=maximum_length, which must be nonnegative.
+// The generator binding maps the same seed/index pair to the same value and
+// uses a deterministic bounded-integer schedule. Bounds are lower-inclusive,
+// upper-exclusive, and must form a nonempty range.
 pub fn integer_range(lower_inclusive: Int, upper_exclusive: Int): fn(Int, Int): Int = fail(error(
     code: "ORNA-EVAL-UNSUPPORTED",
     message: "std.test.integer_range requires the pinned generator binding"
 ));
 
+// Finite-list generators preserve their source order and use this same seed / index schedule.
+// Their runner binding validates nonempty sources and nonnegative maximum lengths.
 pub fn elements<T>(values: [T]): fn(Int, Int): T = fail(error(
     code: "ORNA-EVAL-UNSUPPORTED",
     message: "std.test.elements requires the pinned generator binding"
