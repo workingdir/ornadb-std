@@ -1,0 +1,50 @@
+// A closed two-way sum for values whose alternatives carry different types.
+// Orna's `case` expression remains the matching syntax; this module supplies
+// ordinary destructuring helpers over a pinned nominal enum.
+pub enum Either<LeftValue, RightValue> {
+    Left { value: LeftValue },
+    Right { value: RightValue },
+}
+
+pub fn is_left<L, R>(value: Either<L, R>): Bool = case value {
+    Either.Left { value: _ }: true,
+    Either.Right { value: _ }: false,
+};
+
+pub fn is_right<L, R>(value: Either<L, R>): Bool = case value {
+    Either.Left { value: _ }: false,
+    Either.Right { value: _ }: true,
+};
+
+// Return null when the requested branch is inactive. `first([value])`
+// constructs Some(value) without changing the payload's type.
+pub fn left_value<L, R>(value: Either<L, R>): L? = case value {
+    Either.Left { value }: first([value]),
+    Either.Right { value: _ }: null,
+};
+
+pub fn right_value<L, R>(value: Either<L, R>): R? = case value {
+    Either.Left { value: _ }: null,
+    Either.Right { value }: first([value]),
+};
+
+// Split into two optional projections; exactly one component is present.
+pub fn split<L, R>(value: Either<L, R>): (L?, R?) = case value {
+    Either.Left { value }: (first([value]), null),
+    Either.Right { value }: (null, first([value])),
+};
+
+pub fn left_or<L, R>(value: Either<L, R>, fallback: L): L = case value {
+    Either.Left { value }: value,
+    Either.Right { value: _ }: fallback,
+};
+
+pub fn right_or<L, R>(value: Either<L, R>, fallback: R): R = case value {
+    Either.Left { value: _ }: fallback,
+    Either.Right { value }: value,
+};
+
+pub fn swap<L, R>(value: Either<L, R>): Either<R, L> = case value {
+    Either.Left { value }: Either.Right { value: value },
+    Either.Right { value }: Either.Left { value: value },
+};

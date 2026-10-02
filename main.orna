@@ -22,5 +22,6 @@ use random;
 use test;
 use generics;
 use type_utils;
+use pattern;
 
 pub fn version(): Str = "1.0.0";
