@@ -23,5 +23,7 @@ use test;
 use generics;
 use type_utils;
 use pattern;
+use iterator;
+use lazy;
 
 pub fn version(): Str = "1.0.0";
