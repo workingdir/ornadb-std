@@ -1,6 +1,7 @@
 use math;
 use collection;
 use query;
+use stream;
 use list;
 use map;
 use set;
