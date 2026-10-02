@@ -1,0 +1,28 @@
+// Process launch is an explicit host effect. `executable` and each argument
+// are passed as separate values; no shell parses or interpolates them. The
+// caller supplies the working directory and complete child environment, so
+// no process inherits an implicit CWD or unlisted ambient variables. Child
+// environment names use the portable ASCII form [A-Z_][A-Z0-9_]*; duplicate
+// names, invalid names, and NUL-containing values fail. A null input closes
+// stdin immediately; supplied bytes are written and then closed.
+// `timeout` is null for no deadline and otherwise nonnegative. A timeout
+// terminates and joins the child before returning an ordinary error; effects
+// the child already performed are not undone by an Orna rollback. The output
+// limit is positive and counts stdout plus stderr; exceeding it terminates the
+// child and fails rather than returning truncated output. A nonzero exit is a
+// normal result. Null exit status means the host could not provide an exit
+// code. The host policy validates executable and working-directory access.
+// This effect is unavailable to assertions, read-only watches, presenters,
+// and historical evaluation.
+pub fn run(
+    executable: Str,
+    arguments: [Str],
+    working_directory: Str,
+    environment: [(Str, Str)],
+    input: Blob?,
+    timeout: Duration?,
+    max_output_bytes: Int,
+): (Int?, Blob, Blob) = fail(error(
+    code: "ORNA-EVAL-UNSUPPORTED",
+    message: "std.io.process.run requires its process evaluator binding"
+));
