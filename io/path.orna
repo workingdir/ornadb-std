@@ -86,7 +86,7 @@ pub fn basename(path: Str): Str? {
     }
 }
 
-pub fn parent(path: Str): Str? {
+pub fn dirname(path: Str): Str? {
     let parts = components(path);
     if std.collection.count(parts) == 0 {
         null
