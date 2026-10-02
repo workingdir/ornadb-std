@@ -58,9 +58,10 @@ pub fn normalize(path: Str): Str =
 
 pub fn normalise(path: Str): Str = normalize(path);
 
-pub fn components(path: Str): [Str] =
+pub fn components(path: Str): [Str] {
     let normalized = normalize(path);
-    if normalized == "." { [] } else { std.text.split(normalized, "/") };
+    if normalized == "." { [] } else { std.text.split(normalized, "/") }
+}
 
 pub fn join(base: Str, child: Str): Str =
     if is_absolute(child) {
@@ -78,34 +79,32 @@ pub fn join(base: Str, child: Str): Str =
 
 pub fn basename(path: Str): Str? = std.list.last(components(path));
 
-pub fn parent(path: Str): Str? =
-    {
-        let parts = components(path);
-        if std.collection.count(parts) == 0 {
-            null
+pub fn parent(path: Str): Str? {
+    let parts = components(path);
+    if std.collection.count(parts) == 0 {
+        null
+    } else {
+        let prefix = std.collection.drop(parts, std.collection.count(parts) - 1);
+        if std.collection.count(prefix) == 0 {
+            first(["."])
         } else {
-            let prefix = std.collection.drop(parts, std.collection.count(parts) - 1);
-            if std.collection.count(prefix) == 0 {
-                first(["."])
-            } else {
-                first([std.text.join(prefix, "/")])
-            }
+            first([std.text.join(prefix, "/")])
         }
-    };
+    }
+}
 
-fn extension_from_name(name: Str): Str? =
-    {
-        let parts = std.text.split(name, ".");
-        let count = std.collection.count(parts);
-        let suffix = std.list.last(parts);
-        if count <= 1 || suffix == null || suffix == Some("") {
-            null
-        } else if std.text.starts_with(name, ".") && count == 2 {
-            null
-        } else {
-            suffix
-        }
-    };
+fn extension_from_name(name: Str): Str? {
+    let parts = std.text.split(name, ".");
+    let count = std.collection.count(parts);
+    let suffix = std.list.last(parts);
+    if count <= 1 || suffix == null || suffix == Some("") {
+        null
+    } else if std.text.starts_with(name, ".") && count == 2 {
+        null
+    } else {
+        suffix
+    }
+}
 
 pub fn extension(path: Str): Str? =
     case basename(path) {
@@ -113,19 +112,20 @@ pub fn extension(path: Str): Str? =
         null: null,
     };
 
-pub fn stem(path: Str): Str? =
-    case basename(path) {
-        Some(name):
-            case extension_from_name(name) {
-                Some(_):
-                    {
-                        let parts = std.text.split(name, ".");
-                        first([std.text.join(
-                            std.collection.take(parts, std.collection.count(parts) - 1),
-                            "."
-                        )])
-                    },
-                null: first([name]),
-            },
-        null: null,
-    };
+fn stem_from_name(name: Str): Str = std.text.join(
+    std.collection.take(
+        std.text.split(name, "."),
+        std.collection.count(std.text.split(name, ".")) - 1
+    ),
+    "."
+);
+
+pub fn stem(path: Str): Str? = case basename(path) {
+    Some(name):
+        if extension_from_name(name) == null {
+            first([name])
+        } else {
+            first([stem_from_name(name)])
+        },
+    null: null,
+};
