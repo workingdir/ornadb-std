@@ -1,8 +1,9 @@
-// Gregorian civil dates use positive year numbers and one-based month/day
-// values. These pure helpers do not infer a time zone or turn calendar days
-// into fixed elapsed seconds.
+// Pure proleptic-Gregorian calendar arithmetic. Years are 1 through 9999;
+// dates are (year, month, day) tuples and never imply a zone or elapsed time.
+// Day numbers count from 0001-01-01 as zero. Weekdays use ISO numbering:
+// Monday is 1 and Sunday is 7.
 pub fn is_leap_year(year: Int): Bool =
-    year > 0 && year % 4 == 0 && (year % 100 != 0 || year % 400 == 0);
+    year >= 1 && year <= 9999 && year % 4 == 0 && (year % 100 != 0 || year % 400 == 0);
 
 fn month_length(year: Int, month: Int): Int =
     if month == 2 {
@@ -14,21 +15,144 @@ fn month_length(year: Int, month: Int): Int =
     };
 
 pub fn days_in_month(year: Int, month: Int): Int? =
-    if year < 1 || month < 1 || month > 12 {
-        null
-    } else {
+    if year >= 1 && year <= 9999 && month >= 1 && month <= 12 {
         first([month_length(year, month)])
+    } else {
+        null
+    };
+
+pub fn days_in_year(year: Int): Int? =
+    if year >= 1 && year <= 9999 {
+        if is_leap_year(year) {
+            first([366])
+        } else {
+            first([365])
+        }
+    } else {
+        null
     };
 
 pub fn is_valid_date(year: Int, month: Int, day: Int): Bool =
-    year >= 1 && month >= 1 && month <= 12 && day >= 1 && day <= month_length(year, month);
+    year >= 1 && year <= 9999 && month >= 1 && month <= 12 &&
+        day >= 1 && day <= month_length(year, month);
+
+fn days_before_year(year: Int): Int {
+    let previous = year - 1;
+    previous * 365 + previous / 4 - previous / 100 + previous / 400
+}
 
 fn days_before_month(year: Int, month: Int): Int =
     if month <= 1 {
         0
     } else {
-        month_length(year, month - 1) + days_before_month(year, month - 1)
+        let common_days = (275 * month) / 9 - 30;
+        if month <= 2 {
+            common_days
+        } else if is_leap_year(year) {
+            common_days - 1
+        } else {
+            common_days - 2
+        }
     };
+
+// `day_number` and `from_day_number` are inverses over the supported range.
+pub fn day_number(year: Int, month: Int, day: Int): Int? =
+    if is_valid_date(year, month, day) {
+        first([days_before_year(year) + days_before_month(year, month) + day - 1])
+    } else {
+        null
+    };
+
+fn month_at_day(year: Int, ordinal: Int, low: Int, high: Int): Int =
+    if high - low <= 1 {
+        low
+    } else {
+        let middle = (low + high) / 2;
+        if days_before_month(year, middle) <= ordinal {
+            month_at_day(year, ordinal, middle, high)
+        } else {
+            month_at_day(year, ordinal, low, middle)
+        }
+    };
+
+pub fn from_day_number(day: Int): (Int, Int, Int)? =
+    if day >= 0 && day < days_before_year(10000) {
+        let era = day / 146097;
+        let day_in_era = day % 146097;
+        let year_in_era =
+            (day_in_era - day_in_era / 1460 + day_in_era / 36524 - day_in_era / 146096) / 365;
+        let year = era * 400 + year_in_era + 1;
+        let ordinal = day - days_before_year(year);
+        let month = month_at_day(year, ordinal, 1, 13);
+        first([(year, month, ordinal - days_before_month(year, month) + 1)])
+    } else {
+        null
+    };
+
+pub fn weekday(year: Int, month: Int, day: Int): Int? = case day_number(year, month, day) {
+    Some(index): first([index % 7 + 1]),
+    null: null,
+};
+
+// Signed result is target minus source. Invalid dates return null.
+pub fn days_between(
+    from_year: Int,
+    from_month: Int,
+    from_day: Int,
+    to_year: Int,
+    to_month: Int,
+    to_day: Int
+): Int? = case day_number(from_year, from_month, from_day) {
+    Some(from_index): case day_number(to_year, to_month, to_day) {
+        Some(to_index): first([to_index - from_index]),
+        null: null,
+    },
+    null: null,
+};
+
+// Add civil calendar days, crossing month and year boundaries without
+// converting a local day to a fixed elapsed duration. Out-of-range results
+// return null.
+pub fn add_days(year: Int, month: Int, day: Int, amount: Int): (Int, Int, Int)? =
+    case day_number(year, month, day) {
+        Some(index): from_day_number(index + amount),
+        null: null,
+    };
+
+fn shift_months(year: Int, month: Int, day: Int, amount: Int, clamp: Bool): (Int, Int, Int)? =
+    if is_valid_date(year, month, day) {
+        let target_index = (year - 1) * 12 + month - 1 + amount;
+        if target_index >= 0 && target_index < 9999 * 12 {
+            let target_year = target_index / 12 + 1;
+            let target_month = target_index % 12 + 1;
+            let last_day = month_length(target_year, target_month);
+            if day <= last_day {
+                first([(target_year, target_month, day)])
+            } else if clamp {
+                first([(target_year, target_month, last_day)])
+            } else {
+                null
+            }
+        } else {
+            null
+        }
+    } else {
+        null
+    };
+
+// Reject month shifts whose target month has no corresponding day. For
+// example, January 31 shifted one month returns null.
+pub fn add_months(year: Int, month: Int, day: Int, amount: Int): (Int, Int, Int)? =
+    shift_months(year, month, day, amount, false);
+
+// Clamp only the day-of-month to the target month's final day. The year range
+// and invalid-input rules are the same as `add_months`.
+pub fn add_months_clamped(
+    year: Int,
+    month: Int,
+    day: Int,
+    amount: Int
+): (Int, Int, Int)? = shift_months(year, month, day, amount, true);
 
 pub fn day_of_year(year: Int, month: Int, day: Int): Int? =
     if is_valid_date(year, month, day) {
