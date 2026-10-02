@@ -1,0 +1,25 @@
+// JSON decoding is schema directed and never infers an untyped dynamic value.
+// Duplicate object keys are always rejected. Missing fields remain distinct
+// from explicit null, and numeric tokens are parsed without first rounding
+// through binary Float. Unknown fields fail by default; ignoring them requires
+// the explicit option below. Encoding unsupported Orna values fails rather
+// than dropping fields or emitting nonstandard numeric tokens.
+// The required static result type is supplied through the call form
+// `decode(input, as: T)`, not as a runtime value.
+
+pub fn encode<T>(value: T): Str = fail(error(
+    code: "ORNA-EVAL-UNSUPPORTED",
+    message: "std.encoding.json.encode requires its schema-aware JSON codec binding"
+));
+
+pub fn decode<T>(input: Str): T = fail(error(
+    code: "ORNA-EVAL-UNSUPPORTED",
+    message: "std.encoding.json.decode requires its schema-directed JSON codec binding"
+));
+
+// Unknown fields may be ignored only when the caller opts in explicitly.
+// Duplicate keys, malformed values and type mismatches still fail.
+pub fn decode_with_options<T>(input: Str, ignore_unknown_fields: Bool = false): T = fail(error(
+    code: "ORNA-EVAL-UNSUPPORTED",
+    message: "std.encoding.json.decode_with_options requires its schema-directed JSON codec binding"
+));
