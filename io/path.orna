@@ -22,7 +22,7 @@ fn normalize_segments(remaining: [Str], normalized: [Str]): [Str] =
                 } else {
                     normalize_segments(
                         std.collection.drop(remaining, 1),
-                        std.collection.drop(normalized, std.collection.count(normalized) - 1)
+                        std.collection.take(normalized, std.collection.count(normalized) - 1)
                     )
                 }
             } else {
@@ -84,7 +84,7 @@ pub fn parent(path: Str): Str? {
     if std.collection.count(parts) == 0 {
         null
     } else {
-        let prefix = std.collection.drop(parts, std.collection.count(parts) - 1);
+        let prefix = std.collection.take(parts, std.collection.count(parts) - 1);
         if std.collection.count(prefix) == 0 {
             first(["."])
         } else {
