@@ -205,6 +205,8 @@ fn nth_from<T>(source: Iterator<T>, index: Int): T? =
         }
     };
 
+// The index is zero-based. An empty source or an index beyond the final item
+// returns null; a negative index fails with std.iterator.negative_index.
 pub fn nth<T>(source: Iterator<T>, index: Int): T? =
     if index < 0 {
         fail(error(code: "std.iterator.negative_index", message: "iterator index must be nonnegative"))
