@@ -61,6 +61,8 @@ pub fn should_be_some<T>(value: T?): Bool = expect_some(value);
 
 pub fn should_be_none<T>(value: T?): Bool = expect_none(value);
 
+pub fn should_satisfy<T>(value: T, predicate: fn(T): Bool): Bool = predicate(value);
+
 // The runner catches the callback's ordinary failure, compares its optional
 // stable code, and fails if it returns normally. This operation is local to a
 // test runner and is never a production failure-recovery primitive.
