@@ -55,6 +55,32 @@ fn map_pull<T, U>(source: Iterator<T>, transform: fn(T): U): (U?, Iterator<U>) =
 pub fn map<T, U>(source: Iterator<T>, transform: fn(T): U): Iterator<U> =
     Iterator.Deferred { pull: () => map_pull(source, transform) };
 
+fn chain_pull<T>(left: Iterator<T>, right: Iterator<T>): (T?, Iterator<T>) =
+    case next(left) {
+        (Some(value), tail): (
+            first([value]),
+            Iterator.Deferred { pull: () => chain_pull(tail, right) },
+        ),
+        (null, _): next(right),
+    };
+
+// Pulls every item from left before requesting an item from right.
+pub fn chain<T>(left: Iterator<T>, right: Iterator<T>): Iterator<T> =
+    Iterator.Deferred { pull: () => chain_pull(left, right) };
+
+fn enumerate_pull<T>(source: Iterator<T>, index: Int): ((Int, T)?, Iterator<(Int, T)>) =
+    case next(source) {
+        (Some(value), tail): (
+            first([(index, value)]),
+            Iterator.Deferred { pull: () => enumerate_pull(tail, index + 1) },
+        ),
+        (null, _): (null, empty()),
+    };
+
+// Enumeration starts at zero and advances once per emitted item.
+pub fn enumerate<T>(source: Iterator<T>): Iterator<(Int, T)> =
+    Iterator.Deferred { pull: () => enumerate_pull(source, 0) };
+
 fn filter_pull<T>(source: Iterator<T>, predicate: fn(T): Bool): (T?, Iterator<T>) =
     case next(source) {
         (Some(value), tail) if predicate(value): (
@@ -114,6 +140,16 @@ fn collect_into<T>(source: Iterator<T>, collected: [T]): [T] =
 // Terminal operation. Finite iterators are required; infinite ones should be
 // bounded with `take` before collection.
 pub fn collect<T>(source: Iterator<T>): [T] = collect_into(source, []);
+
+fn fold_from<T, U>(source: Iterator<T>, accumulator: U, combine: fn(U, T): U): U =
+    case next(source) {
+        (Some(value), tail): fold_from(tail, combine(accumulator, value), combine),
+        (null, _): accumulator,
+    };
+
+// Folds a finite iterator from left to right; an infinite source does not terminate.
+pub fn fold<T, U>(source: Iterator<T>, initial: U, combine: fn(U, T): U): U =
+    fold_from(source, initial, combine);
 
 pub fn first<T>(source: Iterator<T>): T? = case next(source) {
     (Some(value), _): first([value]),
