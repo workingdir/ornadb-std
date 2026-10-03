@@ -1,0 +1,32 @@
+// Buffered line adapters build deterministic batches over the explicit
+// filesystem and stream capabilities. Reading snapshots the complete UTF-8
+// file once through std.io.reader before constructing a replayable list-backed
+// stream; `batch_size` bounds each emitted group, not the host read itself.
+
+// Read ordered line batches from one authorized file snapshot. Empty files
+// emit no batches, blank and terminal lines are preserved, and a positive
+// batch size is required by std.stream.batch.
+pub fn read_line_batches(
+    root: Str,
+    path: Str,
+    source_identity: Str,
+    batch_size: Int
+): Stream<[Str]> = std.stream.batch(
+    std.stream.from_list(std.io.reader.read_lines(root, path), source_identity),
+    batch_size
+);
+
+// Flatten batches in order and write their lines separated by LF. Empty
+// batches contribute no lines; an empty final line writes a terminal LF.
+// The filesystem root and overwrite choice stay explicit at the effect edge.
+pub fn write_line_batches(
+    root: Str,
+    path: Str,
+    batches: [[Str]],
+    overwrite: Bool
+): Unit = std.io.writer.write_all_text(
+    root,
+    path,
+    std.text.join(std.collection.flatten(batches), "\n"),
+    overwrite
+);
