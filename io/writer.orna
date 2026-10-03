@@ -1,0 +1,9 @@
+// Writer operations are explicit host effects over a caller-authorized root.
+// Each call completes synchronously; no hidden buffer or implicit flush state
+// survives the operation.
+
+pub fn write_all_text(root: Str, path: Str, contents: Str, overwrite: Bool): Unit =
+    std.io.fs.write_text(root, path, contents, overwrite);
+
+pub fn append_text(root: Str, path: Str, contents: Str): Unit =
+    std.io.fs.append_text(root, path, contents);
