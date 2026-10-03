@@ -1,0 +1,74 @@
+// Renderer-neutral presentation helpers. Values stay typed in properties;
+// renderers may use their Inspect fallback whenever they do not recognize a
+// node contract. These constructors never execute action descriptors.
+
+fn __node<P, A>(
+    kind: Str,
+    properties: P,
+    children: [UI],
+    actions: [(Str, A)],
+): UI = __node(kind, properties, children, actions);
+
+// A Field retains the original value and its runtime type. Details therefore
+// accepts homogeneous UI nodes rather than coercing mixed values to text.
+pub fn Field<T>(label: Str, value: T): UI =
+    __node("field", { label: label, value: value }, [], []);
+
+pub fn Text(value: Str): UI =
+    __node("text", { value: value }, [], []);
+
+pub fn Rows(children: [UI]): UI = __node("rows", {}, children, []);
+pub fn Cols(children: [UI]): UI = __node("cols", {}, children, []);
+pub fn Stack(children: [UI]): UI = __node("stack", {}, children, []);
+pub fn Details(fields: [UI]): UI = __node("details", {}, fields, []);
+
+// Table and Tree retain typed source values instead of rendering them while
+// the plan is being evaluated. Columns are stable labels in input order.
+pub fn Table<T>(rows: T, columns: [Str] = []): UI =
+    __node("table", { rows: rows, columns: columns }, [], []);
+
+pub fn Tree<T>(root: T): UI = __node("tree", { root: root }, [], []);
+
+pub fn Code(source: Str, language: Str? = null): UI =
+    __node("code", { source: source, language: language }, [], []);
+
+pub fn Diff<T>(change: T): UI = __node("diff", { change: change }, [], []);
+
+pub fn Chart<T>(series: T, title: Str? = null): UI =
+    __node("chart", { series: series, title: title }, [], []);
+
+// Only the host-issued Action descriptor is retained. This helper does not
+// invoke it or synthesize an executable handle.
+pub fn Button<A>(label: Str, action: A): UI =
+    __node("button", { label: label }, [], [("activate", action)]);
+
+pub fn Form<A>(fields: [UI], submit: A? = null): UI =
+    __node(
+        "form",
+        {},
+        fields,
+        case submit {
+            Some(action): [("submit", action)],
+            null: [],
+        },
+    );
+
+// Input's value remains its original Orna type. Its Action carries the
+// expected input type checked by the server-created event handle.
+pub fn Input<T, A>(
+    name: Str,
+    label: Str,
+    value: T?,
+    action: A,
+    placeholder: Str? = null,
+): UI = __node(
+    "input",
+    {
+        name: name,
+        label: label,
+        value: value,
+        placeholder: placeholder,
+    },
+    [],
+    [("change", action)],
+);
