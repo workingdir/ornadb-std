@@ -3,102 +3,101 @@
 // same cursor again replays its computation, including callback calls, so use
 // pure callbacks when repeatable observations are required. These in-memory
 // iterators do not wait, checkpoint, or perform stream-provider work.
-pub enum Iterator<T> {
-    Deferred { pull: fn(): (T?, Iterator<T>) },
+pub type Iterator<T> {
+    pub pull: fn(): (T?, Iterator<T>),
 }
 
-pub fn empty<T>(): Iterator<T> = Iterator.Deferred {
+pub fn empty<T>(): Iterator<T> = Iterator {
     pull: () => (null, empty()),
 };
 
-pub fn next<T>(iterator: Iterator<T>): (T?, Iterator<T>) = case iterator {
-    Iterator.Deferred { pull }: pull(),
-};
+pub fn next<T>(iterator: Iterator<T>): (T?, Iterator<T>) = iterator.pull();
 
 fn list_pull<T>(values: [T], start_index: Int): (T?, Iterator<T>) =
-    case std.collection.first(std.collection.drop(values, start_index)) {
-        Some(value): (
-            first([value]),
-            Iterator.Deferred { pull: () => list_pull(values, start_index + 1) },
-        ),
-        null: (null, empty()),
+    if start_index < std.collection.count(values) {
+        (
+            Some(values[start_index]),
+            Iterator { pull: () => list_pull(values, start_index + 1) },
+        )
+    } else {
+        (null, empty())
     };
 
-pub fn from_list<T>(values: [T]): Iterator<T> = Iterator.Deferred {
+pub fn from_list<T>(values: [T]): Iterator<T> = Iterator {
     pull: () => list_pull(values, 0),
 };
 
 // Infinite sources stay productive: the successor is computed only when the
 // following cursor is pulled. Use `take` before `collect` on an infinite source.
-pub fn iterate<T>(seed: T, successor: fn(T): T): Iterator<T> = Iterator.Deferred {
+pub fn iterate<T>(seed: T, successor: fn(T): T): Iterator<T> = Iterator {
     pull: () => (
-        first([seed]),
-        Iterator.Deferred {
+        Some(seed),
+        Iterator {
             pull: () => next(iterate(successor(seed), successor)),
         },
     ),
 };
 
-pub fn repeat<T>(value: T): Iterator<T> = Iterator.Deferred {
-    pull: () => (first([value]), repeat(value)),
+pub fn repeat<T>(value: T): Iterator<T> = Iterator {
+    pull: () => (Some(value), repeat(value)),
 };
 
 fn map_pull<T, U>(source: Iterator<T>, transform: fn(T): U): (U?, Iterator<U>) =
     case next(source) {
         (Some(value), tail): (
-            first([transform(value)]),
-            Iterator.Deferred { pull: () => map_pull(tail, transform) },
+            Some(transform(value)),
+            Iterator { pull: () => map_pull(tail, transform) },
         ),
         (null, _): (null, empty()),
     };
 
 pub fn map<T, U>(source: Iterator<T>, transform: fn(T): U): Iterator<U> =
-    Iterator.Deferred { pull: () => map_pull(source, transform) };
+    Iterator { pull: () => map_pull(source, transform) };
 
 fn chain_pull<T>(left: Iterator<T>, right: Iterator<T>): (T?, Iterator<T>) =
     case next(left) {
         (Some(value), tail): (
-            first([value]),
-            Iterator.Deferred { pull: () => chain_pull(tail, right) },
+            Some(value),
+            Iterator { pull: () => chain_pull(tail, right) },
         ),
         (null, _): next(right),
     };
 
 // Pulls every item from left before requesting an item from right.
 pub fn chain<T>(left: Iterator<T>, right: Iterator<T>): Iterator<T> =
-    Iterator.Deferred { pull: () => chain_pull(left, right) };
+    Iterator { pull: () => chain_pull(left, right) };
 
 fn enumerate_pull<T>(source: Iterator<T>, index: Int): ((Int, T)?, Iterator<(Int, T)>) =
     case next(source) {
         (Some(value), tail): (
-            first([(index, value)]),
-            Iterator.Deferred { pull: () => enumerate_pull(tail, index + 1) },
+            Some((index, value)),
+            Iterator { pull: () => enumerate_pull(tail, index + 1) },
         ),
         (null, _): (null, empty()),
     };
 
 // Enumeration starts at zero and advances once per emitted item.
 pub fn enumerate<T>(source: Iterator<T>): Iterator<(Int, T)> =
-    Iterator.Deferred { pull: () => enumerate_pull(source, 0) };
+    Iterator { pull: () => enumerate_pull(source, 0) };
 
 fn filter_pull<T>(source: Iterator<T>, predicate: fn(T): Bool): (T?, Iterator<T>) =
     case next(source) {
         (Some(value), tail) if predicate(value): (
-            first([value]),
-            Iterator.Deferred { pull: () => filter_pull(tail, predicate) },
+            Some(value),
+            Iterator { pull: () => filter_pull(tail, predicate) },
         ),
         (Some(_), tail): filter_pull(tail, predicate),
         (null, _): (null, empty()),
     };
 
 pub fn filter<T>(source: Iterator<T>, predicate: fn(T): Bool): Iterator<T> =
-    Iterator.Deferred { pull: () => filter_pull(source, predicate) };
+    Iterator { pull: () => filter_pull(source, predicate) };
 
 fn take_while_pull<T>(source: Iterator<T>, predicate: fn(T): Bool): (T?, Iterator<T>) =
     case next(source) {
         (Some(value), tail) if predicate(value): (
-            first([value]),
-            Iterator.Deferred { pull: () => take_while_pull(tail, predicate) },
+            Some(value),
+            Iterator { pull: () => take_while_pull(tail, predicate) },
         ),
         (Some(_), _): (null, empty()),
         (null, _): (null, empty()),
@@ -106,12 +105,12 @@ fn take_while_pull<T>(source: Iterator<T>, predicate: fn(T): Bool): (T?, Iterato
 
 // Stops at the first rejected value; later source items are never requested.
 pub fn take_while<T>(source: Iterator<T>, predicate: fn(T): Bool): Iterator<T> =
-    Iterator.Deferred { pull: () => take_while_pull(source, predicate) };
+    Iterator { pull: () => take_while_pull(source, predicate) };
 
 fn scan_emit<T, U>(source: Iterator<T>, accumulated: U, combine: fn(U, T): U): (U?, Iterator<U>) =
     (
-        first([accumulated]),
-        Iterator.Deferred { pull: () => scan_pull(source, accumulated, combine) },
+        Some(accumulated),
+        Iterator { pull: () => scan_pull(source, accumulated, combine) },
     );
 
 fn scan_pull<T, U>(source: Iterator<T>, accumulated: U, combine: fn(U, T): U): (U?, Iterator<U>) =
@@ -123,7 +122,7 @@ fn scan_pull<T, U>(source: Iterator<T>, accumulated: U, combine: fn(U, T): U): (
 // Emits one left-to-right accumulated value for each source item; the initial
 // value is the accumulator seed and is not emitted for an empty source.
 pub fn scan<T, U>(source: Iterator<T>, initial: U, combine: fn(U, T): U): Iterator<U> =
-    Iterator.Deferred { pull: () => scan_pull(source, initial, combine) };
+    Iterator { pull: () => scan_pull(source, initial, combine) };
 
 fn take_pull<T>(source: Iterator<T>, remaining: Int): (T?, Iterator<T>) =
     if remaining == 0 {
@@ -131,8 +130,8 @@ fn take_pull<T>(source: Iterator<T>, remaining: Int): (T?, Iterator<T>) =
     } else {
         case next(source) {
             (Some(value), tail): (
-                first([value]),
-                Iterator.Deferred { pull: () => take_pull(tail, remaining - 1) },
+                Some(value),
+                Iterator { pull: () => take_pull(tail, remaining - 1) },
             ),
             (null, _): (null, empty()),
         }
@@ -142,7 +141,7 @@ pub fn take<T>(source: Iterator<T>, count: Int): Iterator<T> =
     if count < 0 {
         fail(error(code: "std.iterator.negative_count", message: "iterator count must be nonnegative"))
     } else {
-        Iterator.Deferred { pull: () => take_pull(source, count) }
+        Iterator { pull: () => take_pull(source, count) }
     };
 
 fn drop_pull<T>(source: Iterator<T>, remaining: Int): (T?, Iterator<T>) =
@@ -159,7 +158,7 @@ pub fn drop<T>(source: Iterator<T>, count: Int): Iterator<T> =
     if count < 0 {
         fail(error(code: "std.iterator.negative_count", message: "iterator count must be nonnegative"))
     } else {
-        Iterator.Deferred { pull: () => drop_pull(source, count) }
+        Iterator { pull: () => drop_pull(source, count) }
     };
 
 fn collect_into<T>(source: Iterator<T>, collected: [T]): [T] =
@@ -183,7 +182,7 @@ pub fn fold<T, U>(source: Iterator<T>, initial: U, combine: fn(U, T): U): U =
     fold_from(source, initial, combine);
 
 pub fn first<T>(source: Iterator<T>): T? = case next(source) {
-    (Some(value), _): first([value]),
+    (Some(value), _): Some(value),
     (null, _): null,
 };
 
