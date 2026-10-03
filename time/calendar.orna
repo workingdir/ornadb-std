@@ -36,6 +36,36 @@ pub fn is_valid_date(year: Int, month: Int, day: Int): Bool =
     year >= 1 && year <= 9999 && month >= 1 && month <= 12 &&
         day >= 1 && day <= month_length(year, month);
 
+// Month/year boundary helpers return civil date tuples. They do not create a
+// local midnight or imply any time zone; invalid components return null.
+pub fn month_start(year: Int, month: Int): (Int, Int, Int)? =
+    if year >= 1 && year <= 9999 && month >= 1 && month <= 12 {
+        first([(year, month, 1)])
+    } else {
+        null
+    };
+
+pub fn month_end(year: Int, month: Int): (Int, Int, Int)? =
+    if year >= 1 && year <= 9999 && month >= 1 && month <= 12 {
+        first([(year, month, month_length(year, month))])
+    } else {
+        null
+    };
+
+pub fn year_start(year: Int): (Int, Int, Int)? =
+    if year >= 1 && year <= 9999 {
+        first([(year, 1, 1)])
+    } else {
+        null
+    };
+
+pub fn year_end(year: Int): (Int, Int, Int)? =
+    if year >= 1 && year <= 9999 {
+        first([(year, 12, 31)])
+    } else {
+        null
+    };
+
 fn days_before_year(year: Int): Int {
     let previous = year - 1;
     previous * 365 + previous / 4 - previous / 100 + previous / 400
