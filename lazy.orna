@@ -29,4 +29,4 @@ pub fn constant<T>(value: T): fn(): T = () => value;
 
 pub fn from_pull<T>(
     pull: fn(): (T?, std.iterator.Iterator<T>),
-): std.iterator.Iterator<T> = std.iterator.Iterator.Deferred { pull: pull };
+): std.iterator.Iterator<T> = std.iterator.Iterator { pull: pull };
