@@ -6,18 +6,19 @@
 // Replace is non-overlapping and scans left to right.
 pub fn unicode_version(): Str = "16.0.0";
 
-// The private leaves bind the exact Unicode data tables captured for this
-// profile. Public exports remain ordinary source calls into those leaves.
-fn __trim(value: Str): Str = "";
-fn __split(value: Str, separator: Str): [Str] = [];
-fn __join(values: [Str], separator: Str): Str = "";
-fn __starts_with(value: Str, prefix: Str): Bool = false;
-fn __ends_with(value: Str, suffix: Str): Bool = false;
-fn __contains(value: Str, needle: Str): Bool = false;
-fn __replace(value: Str, from: Str, to: Str): Str = "";
-fn __normalise(value: Str, form: Str): Str = "";
-fn __lower(value: Str): Str = "";
-fn __upper(value: Str): Str = "";
+// Private leaves route public source exports through the evaluator primitives
+// registered for this pinned Unicode profile. The Rust toolchain's Unicode
+// version does not replace the captured behavior.
+fn __trim(value: Str): Str = std.text.trim(value);
+fn __split(value: Str, separator: Str): [Str] = std.text.split(value, separator);
+fn __join(values: [Str], separator: Str): Str = std.text.join(values, separator);
+fn __starts_with(value: Str, prefix: Str): Bool = std.text.starts_with(value, prefix);
+fn __ends_with(value: Str, suffix: Str): Bool = std.text.ends_with(value, suffix);
+fn __contains(value: Str, needle: Str): Bool = std.text.contains(value, needle);
+fn __replace(value: Str, from: Str, to: Str): Str = std.text.replace(value, from, to);
+fn __normalise(value: Str, form: Str): Str = std.text.normalise(value, form);
+fn __lower(value: Str): Str = std.text.lower(value);
+fn __upper(value: Str): Str = std.text.upper(value);
 
 pub fn trim(value: Str): Str = __trim(value);
 pub fn split(value: Str, separator: Str): [Str] = __split(value, separator);

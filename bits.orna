@@ -4,12 +4,12 @@
 // source pipeline operator. Public functions are ordinary Orna wrappers over
 // bounded evaluator primitives, so importing this module does not replace or
 // alter core database operators.
-fn __bit_or(left: Int, right: Int): Int = 0;
-fn __bit_and(left: Int, right: Int): Int = 0;
-fn __bit_xor(left: Int, right: Int): Int = 0;
-fn __bit_not(value: Int): Int = 0;
-fn __shift_left(value: Int, count: Int): Int = 0;
-fn __shift_right(value: Int, count: Int): Int = 0;
+fn __bit_or(left: Int, right: Int): Int = std.bits.bit_or(left, right);
+fn __bit_and(left: Int, right: Int): Int = std.bits.bit_and(left, right);
+fn __bit_xor(left: Int, right: Int): Int = std.bits.bit_xor(left, right);
+fn __bit_not(value: Int): Int = std.bits.bit_not(value);
+fn __shift_left(value: Int, count: Int): Int = std.bits.shift_left(value, count);
+fn __shift_right(value: Int, count: Int): Int = std.bits.shift_right(value, count);
 
 pub fn bit_or(left: Int, right: Int): Int = __bit_or(left, right);
 
