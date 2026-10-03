@@ -1,6 +1,7 @@
 // Language failures use the core Error channel and `|?` recovery boundary.
 // These optional helpers construct Error values for explicit failure paths;
 // they do not convert a failure into a Result or catch cancellation.
+use std.collection;
 
 // Preserve the supplied code and message exactly. A newly made Error has no
 // causes; callers opt into causal context with `caused_by`.
