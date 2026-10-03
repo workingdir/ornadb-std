@@ -73,6 +73,20 @@ pub fn window<T>(values: [T], size: Int, step: Int = 1): [[T]] =
 pub fn window_mean<T>(values: [T], size: Int, step: Int = 1): [T?] =
     map(window(values, size, step), window_values => std.stats.mean(window_values));
 
+// Probability bounds and interpolation are preserved by the selected stats
+// operator for every complete window; no host-default interpolation is added.
+pub fn window_percentile<T, P>(
+    values: [T],
+    size: Int,
+    probability: P,
+    interpolation: Str,
+    step: Int = 1
+): [T?] =
+    map(
+        window(values, size, step),
+        window_values => std.stats.percentile(window_values, probability, interpolation)
+    );
+
 // Produces consecutive nonempty groups; each matching item starts a new group.
 pub fn split_when<T>(values: [T], predicate: fn(T): Bool): [[T]] =
     std.collection.split_when(values, predicate);
