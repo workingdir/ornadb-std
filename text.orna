@@ -1,9 +1,14 @@
-// std.text pins Unicode 16.0.0 behavior as ordinary library exports. Indices
-// and lengths use Unicode scalar positions, not UTF-8 bytes or graphemes.
-// Full casing and normalization use Unicode 16.0.0 tables and are locale
-// independent; lower applies the contextual Final_Sigma rule. Split preserves empty
-// fields, including trailing fields; an empty separator splits into scalars.
-// Replace is non-overlapping and scans left to right.
+// std.text pins Unicode 16.0.0 behavior as ordinary library exports. Any
+// positions and lengths exposed by text operations count Unicode scalar values,
+// not UTF-8 bytes or grapheme clusters. trim removes the pinned Unicode
+// White_Space set at both ends and preserves all interior scalars.
+//
+// Full casing and canonical normalization use Unicode 16.0.0 tables and are
+// locale independent; lower applies the contextual Final_Sigma rule.
+// normalise accepts the explicit forms NFC and NFD. Split preserves empty
+// fields at either edge and between adjacent separators; an empty separator
+// yields one field per Unicode scalar (and no fields for empty input). Replace
+// is non-overlapping and scans left to right.
 pub fn unicode_version(): Str = "16.0.0";
 
 // Private leaves route public source exports through the evaluator primitives
