@@ -11,8 +11,9 @@ pub fn read_line_batches(
     path: Str,
     source_identity: Str,
     batch_size: Int
-): Stream<[Str]> = std.stream.batch(
-    std.stream.from_list(std.io.reader.read_lines(root, path), source_identity),
+): Stream<[Str]> = std.stream.from_list_batches(
+    std.io.reader.read_lines(root, path),
+    source_identity,
     batch_size
 );
 
