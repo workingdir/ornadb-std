@@ -1,5 +1,6 @@
 // Integer utilities keep their inputs and outputs in exact core Int arithmetic.
-// They do not convert through Float or select ambient decimal precision.
+// They do not convert through Float or select ambient decimal precision, so
+// values remain exact beyond machine-word and binary-float precision limits.
 pub fn increment(value: Int): Int = value + 1;
 pub fn decrement(value: Int): Int = value - 1;
 pub fn is_zero(value: Int): Bool = value == 0;
@@ -29,6 +30,7 @@ pub fn lcm(left: Int, right: Int): Int =
     };
 
 // Negative exponents have non-integer results in this exact Int helper and
-// return null. Nonnegative powers use core exact Int exponentiation.
+// return null. Nonnegative powers use core exact Int exponentiation. Exponent
+// zero returns one, including 0^0, matching the identity element for powers.
 pub fn pow_nonnegative(value: Int, exponent: Int): Int? =
     if exponent < 0 { null } else { first([value ^ exponent]) };
