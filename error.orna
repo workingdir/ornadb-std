@@ -1,6 +1,6 @@
 // Language failures use the core Error channel and `|?` recovery boundary.
-// These optional helpers construct and inspect ordinary Error values; they
-// do not convert a failure into a Result or catch cancellation.
+// These optional helpers construct Error values for explicit failure paths;
+// they do not convert a failure into a Result or catch cancellation.
 
 // Preserve the supplied code and message exactly. A newly made Error has no
 // causes; callers opt into causal context with `caused_by`.
@@ -13,8 +13,3 @@ pub fn caused_by(code: Str, message: Str, cause: Error): Error = error(
     message: message,
     cause: cause,
 );
-
-// Return the first cause in canonical order, or null for a cause-free Error.
-// This is an inspection helper: it never unwraps or re-emits a failure.
-pub fn primary_cause(failure: Error): Error? =
-    if failure.causes == [] { null } else { Some(failure.causes[0]) };
