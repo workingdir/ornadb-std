@@ -1,0 +1,61 @@
+// Text-to-primitive helpers are deliberately strict and locale independent.
+// Integer input is exactly the canonical bare Int spelling: ASCII digits,
+// optional leading minus, no plus, separators, whitespace, or redundant zeroes.
+// Invalid input returns null instead of a partial value or a replacement.
+fn digit_value(character: Str): Int? = case character {
+    "0": Some(0),
+    "1": Some(1),
+    "2": Some(2),
+    "3": Some(3),
+    "4": Some(4),
+    "5": Some(5),
+    "6": Some(6),
+    "7": Some(7),
+    "8": Some(8),
+    "9": Some(9),
+    _: null,
+};
+
+/// Parses a canonical signed decimal Int without passing through Float.
+/// `parse.integer("-42")` returns `Some(-42)`; malformed or noncanonical
+/// spellings such as `"+42"`, `"042"`, `"-0"`, and `" 42"` return null.
+pub fn integer(input: Str): Int? {
+    let characters = std.text.split(input, "");
+    let length = std.collection.count(characters);
+    if length == 0 {
+        null
+    } else {
+        let negative = characters[0] == "-";
+        let start = if negative { 1 } else { 0 };
+        if start == length {
+            null
+        } else if characters[start] == "0" && (negative || length - start > 1) {
+            null
+        } else {
+            let index = start;
+            let accumulated = 0;
+            let valid = true;
+            while index < length && valid {
+                let digit = case digit_value(characters[index]) {
+                    Some(value): value,
+                    null: -1,
+                };
+                if digit < 0 {
+                    valid = false;
+                } else {
+                    accumulated = accumulated * 10 + digit;
+                };
+                index += 1;
+            };
+            if valid {
+                Some(if negative { -accumulated } else { accumulated })
+            } else {
+                null
+            }
+        }
+    }
+}
+
+/// Parses only the lowercase source spellings `true` and `false`.
+pub fn boolean(input: Str): Bool? =
+    if input == "true" { Some(true) } else if input == "false" { Some(false) } else { null };

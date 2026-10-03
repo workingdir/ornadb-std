@@ -32,5 +32,6 @@ use views;
 use introspection;
 use reflection;
 use format;
+use parse;
 
 pub fn version(): Str = "1.0.0";
