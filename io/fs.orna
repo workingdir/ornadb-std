@@ -8,6 +8,9 @@
 pub fn read_text(root: Str, path: Str): Str = __read_text(root, path);
 fn __read_text(root: Str, path: Str): Str = std.io.fs.read_text(root, path);
 
+// Split on LF and preserve blank and trailing lines according to std.text.split.
+pub fn read_lines(root: Str, path: Str): [Str] = std.text.split(read_text(root, path), "\n");
+
 pub fn write_text(root: Str, path: Str, contents: Str, overwrite: Bool): Unit =
     __write_text(root, path, contents, overwrite);
 fn __write_text(root: Str, path: Str, contents: Str, overwrite: Bool): Unit =
