@@ -43,6 +43,26 @@ pub fn expect_none<T>(value: T?): Bool = case value {
     null: true,
 };
 
+// Should-style forms use the same pure Boolean contract as `expect_*`. They
+// compose with core `assert` and do not log, throw, or make the core assertion
+// statement depend on the optional test library.
+pub fn should(condition: Bool): Bool = expect(condition);
+
+pub fn should_be_true(value: Bool): Bool = expect_true(value);
+
+pub fn should_be_false(value: Bool): Bool = expect_false(value);
+
+pub fn should_equal<T>(actual: T, expected: T): Bool = expect_equal(actual, expected);
+
+pub fn should_not_equal<T>(actual: T, unexpected: T): Bool =
+    expect_not_equal(actual, unexpected);
+
+pub fn should_be_some<T>(value: T?): Bool = expect_some(value);
+
+pub fn should_be_none<T>(value: T?): Bool = expect_none(value);
+
+pub fn should_satisfy<T>(value: T, predicate: fn(T): Bool): Bool = predicate(value);
+
 // The runner catches the callback's ordinary failure, compares its optional
 // stable code, and fails if it returns normally. This operation is local to a
 // test runner and is never a production failure-recovery primitive.
