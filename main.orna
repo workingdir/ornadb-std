@@ -31,5 +31,6 @@ use lazy;
 use views;
 use introspection;
 use reflection;
+use format;
 
 pub fn version(): Str = "1.0.0";
