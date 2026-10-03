@@ -1,8 +1,10 @@
 // Iterators are persistent pull cursors. Creating or composing one does no
-// traversal; `next` requests one value and returns a new cursor. Pulling the
-// same cursor again replays its computation, including callback calls, so use
-// pure callbacks when repeatable observations are required. These in-memory
-// iterators do not wait, checkpoint, or perform stream-provider work.
+// traversal; `next` requests one value and returns a new cursor without
+// mutating the input cursor. A cursor may be shared: pulling the same cursor
+// again replays its computation, including callback calls, so use pure
+// callbacks when repeatable observations are required. These in-memory
+// iterators do not wait, checkpoint, or perform stream-provider work, and do
+// not transfer or close an external resource when a successor is returned.
 pub type Iterator<T> {
     pub pull: fn(): (T?, Iterator<T>),
 }
@@ -11,6 +13,8 @@ pub fn empty<T>(): Iterator<T> = Iterator {
     pull: () => (null, empty()),
 };
 
+// Advances by observation: the returned cursor represents the successor while
+// `iterator` remains available to replay from its original position.
 pub fn next<T>(iterator: Iterator<T>): (T?, Iterator<T>) = iterator.pull();
 
 fn list_pull<T>(values: [T], start_index: Int): (T?, Iterator<T>) =
@@ -66,6 +70,35 @@ fn chain_pull<T>(left: Iterator<T>, right: Iterator<T>): (T?, Iterator<T>) =
 // Pulls every item from left before requesting an item from right.
 pub fn chain<T>(left: Iterator<T>, right: Iterator<T>): Iterator<T> =
     Iterator { pull: () => chain_pull(left, right) };
+
+fn zip_with_pull<T, U, V>(
+    left: Iterator<T>, right: Iterator<U>, combine: fn(T, U): V
+): (V?, Iterator<V>) =
+    case next(left) {
+        (Some(left_value), left_tail): case next(right) {
+            (Some(right_value), right_tail): (
+                Some(combine(left_value, right_value)),
+                Iterator {
+                    pull: () => zip_with_pull(left_tail, right_tail, combine),
+                },
+            ),
+            (null, _): (null, empty()),
+        },
+        (null, _): (null, empty()),
+    };
+
+// Pulls one value from each cursor in left-to-right order. Stops as soon as
+// either input is exhausted; an unmatched value is never emitted.
+pub fn zip_with<T, U, V>(
+    left: Iterator<T>, right: Iterator<U>, combine: fn(T, U): V
+): Iterator<V> = Iterator {
+    pull: () => zip_with_pull(left, right, combine),
+};
+
+// Zips in input order and stops at the shorter cursor. The resulting cursor is
+// persistent like its inputs: re-pulling an input cursor does not consume it.
+pub fn zip<T, U>(left: Iterator<T>, right: Iterator<U>): Iterator<(T, U)> =
+    zip_with(left, right, (left_value, right_value) => (left_value, right_value));
 
 fn enumerate_pull<T>(source: Iterator<T>, index: Int): ((Int, T)?, Iterator<(Int, T)>) =
     case next(source) {
