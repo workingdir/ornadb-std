@@ -67,6 +67,125 @@ pub fn pairs<T>(values: [T]): [(T, T)] = std.collection.pairs(values);
 pub fn window<T>(values: [T], size: Int, step: Int = 1): [[T]] =
     std.collection.window(values, size, step);
 
+// Section 9 specifies complete positional windows and statistics separately.
+// This profile helper computes a mean for each complete window, preserving
+// the window's positive size/step checks and the statistic's exactness rules.
+pub fn window_mean<T>(values: [T], size: Int, step: Int = 1): [T?] =
+    map(window(values, size, step), window_values => std.stats.mean(window_values));
+
+// Probability bounds and interpolation are preserved by the selected stats
+// operator for every complete window; no host-default interpolation is added.
+pub fn window_percentile<T, P>(
+    values: [T],
+    size: Int,
+    probability: P,
+    interpolation: Str,
+    step: Int = 1
+): [T?] =
+    map(
+        window(values, size, step),
+        window_values => std.stats.percentile(window_values, probability, interpolation)
+    );
+
+// The remaining scalar and categorical statistics use the same complete
+// positional windows. Exact scale and rounding options are passed through
+// unchanged, so each window follows std.stats' explicit arithmetic contract.
+pub fn window_sum<T>(values: [T], size: Int, step: Int = 1): [T] =
+    map(window(values, size, step), window_values => std.stats.sum(window_values));
+
+pub fn window_median<T>(
+    values: [T],
+    size: Int,
+    step: Int = 1,
+    scale: Int? = null,
+    rounding: Str? = null
+): [T?] =
+    map(
+        window(values, size, step),
+        window_values => std.stats.median(window_values, scale, rounding)
+    );
+
+pub fn window_min<T>(values: [T], size: Int, step: Int = 1): [T?] =
+    map(window(values, size, step), window_values => std.stats.min(window_values));
+
+pub fn window_max<T>(values: [T], size: Int, step: Int = 1): [T?] =
+    map(window(values, size, step), window_values => std.stats.max(window_values));
+
+pub fn window_range<T>(values: [T], size: Int, step: Int = 1): [T?] =
+    map(window(values, size, step), window_values => std.stats.range(window_values));
+
+pub fn window_mode<T>(values: [T], size: Int, step: Int = 1): [[T]] =
+    map(window(values, size, step), window_values => std.stats.mode(window_values));
+
+pub fn window_variance<T>(
+    values: [T],
+    size: Int,
+    step: Int = 1,
+    scale: Int? = null,
+    rounding: Str? = null
+): [T?] =
+    map(
+        window(values, size, step),
+        window_values => std.stats.variance(window_values, scale, rounding)
+    );
+
+pub fn window_standard_deviation<T>(
+    values: [T],
+    size: Int,
+    step: Int = 1,
+    scale: Int? = null,
+    rounding: Str? = null
+): [T?] =
+    map(
+        window(values, size, step),
+        window_values => std.stats.standard_deviation(window_values, scale, rounding)
+    );
+
+pub fn window_histogram<T>(
+    values: [T],
+    size: Int,
+    bins: [(T, T)],
+    include_final_upper: Bool = false,
+    step: Int = 1
+): [[Int]] =
+    map(
+        window(values, size, step),
+        window_values => std.stats.histogram(window_values, bins, include_final_upper)
+    );
+
+// Time-series statistics operate on complete timestamped windows. The stats
+// functions retain strict timestamp ordering and their value/time or
+// value×time result units; derivative timestamps remain each pair's right end.
+pub fn window_rate<T>(
+    points: [(Instant, T)],
+    size: Int,
+    step: Int = 1
+): [T?] =
+    map(
+        window(points, size, step),
+        window_points => std.stats.rate(window_points)
+    );
+
+pub fn window_derivative<T>(
+    points: [(Instant, T)],
+    size: Int,
+    step: Int = 1
+): [[(Instant, T)]] =
+    map(
+        window(points, size, step),
+        window_points => std.stats.derivative(window_points)
+    );
+
+pub fn window_integrate<T>(
+    points: [(Instant, T)],
+    size: Int,
+    step: Int = 1
+): [T?] =
+    map(
+        window(points, size, step),
+        window_points => std.stats.integrate(window_points)
+    );
+
 // Produces consecutive nonempty groups; each matching item starts a new group.
 pub fn split_when<T>(values: [T], predicate: fn(T): Bool): [[T]] =
     std.collection.split_when(values, predicate);
