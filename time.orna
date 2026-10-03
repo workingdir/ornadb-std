@@ -9,6 +9,19 @@ pub fn add_elapsed(instant: Instant, elapsed: Duration): Instant = instant + ela
 
 pub fn elapsed_between(start: Instant, end: Instant): Duration = end - start;
 
+/// Returns the earlier absolute instant. Equal instants preserve the left value.
+pub fn instant_min(left: Instant, right: Instant): Instant =
+    if left <= right { left } else { right };
+
+/// Returns the later absolute instant. Equal instants preserve the left value.
+pub fn instant_max(left: Instant, right: Instant): Instant =
+    if left >= right { left } else { right };
+
+/// Bounds an absolute instant to an inclusive interval. Reversed bounds return
+/// the lower bound, matching std.math.clamp and duration_clamp.
+pub fn instant_clamp(value: Instant, lower: Instant, upper: Instant): Instant =
+    instant_max(lower, instant_min(value, upper));
+
 /// Returns the non-negative magnitude of an elapsed duration without converting
 /// it through floating point or changing its nanosecond precision.
 pub fn duration_abs(value: Duration): Duration =
