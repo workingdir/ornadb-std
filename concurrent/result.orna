@@ -1,0 +1,66 @@
+// The reference defines structured child ownership and terminal sys results,
+// but no Result adapter. These helpers keep returned Result.Err payloads as
+// values: they preserve input order and duplicates while splitting success
+// payloads from error payloads. A thrown child failure still follows the
+// cancellation and error rules of std.concurrent.
+fn values_from<T, E>(
+    outcomes: [std.result.Result<T, E>],
+    index: Int,
+    values: [T]
+): [T] =
+    if index >= std.collection.count(outcomes) {
+        values
+    } else {
+        case outcomes[index] {
+            std.result.Result.Ok { value }:
+                values_from(
+                    outcomes,
+                    index + 1,
+                    std.collection.union(values, [value])
+                ),
+            std.result.Result.Err { error: _ }:
+                values_from(outcomes, index + 1, values),
+        }
+    };
+
+fn errors_from<T, E>(
+    outcomes: [std.result.Result<T, E>],
+    index: Int,
+    errors: [E]
+): [E] =
+    if index >= std.collection.count(outcomes) {
+        errors
+    } else {
+        case outcomes[index] {
+            std.result.Result.Ok { value: _ }:
+                errors_from(outcomes, index + 1, errors),
+            std.result.Result.Err { error }:
+                errors_from(
+                    outcomes,
+                    index + 1,
+                    std.collection.union(errors, [error])
+                ),
+        }
+    };
+
+pub fn values<T, E>(outcomes: [std.result.Result<T, E>]): [T] =
+    values_from(outcomes, 0, []);
+
+pub fn errors<T, E>(outcomes: [std.result.Result<T, E>]): [E] =
+    errors_from(outcomes, 0, []);
+
+pub fn partition<T, E>(outcomes: [std.result.Result<T, E>]): ([T], [E]) =
+    (values(outcomes), errors(outcomes));
+
+// The concurrent helpers join every returned Result value before partitioning.
+// Thus an ordinary Err is collected as data and does not cancel sibling work.
+pub fn parallel_partition<T, E>(
+    callbacks: [fn(): std.result.Result<T, E>]
+): ([T], [E]) =
+    partition(std.concurrent.parallel(callbacks));
+
+pub fn parallel_map_partition<T, U, E>(
+    values: [T],
+    transform: fn(T): std.result.Result<U, E>
+): ([U], [E]) =
+    partition(std.concurrent.parallel_map(values, transform));
