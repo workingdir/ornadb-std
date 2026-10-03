@@ -186,6 +186,15 @@ pub fn first<T>(source: Iterator<T>): T? = case next(source) {
     (null, _): null,
 };
 
+fn last_from<T>(source: Iterator<T>, previous: T?): T? =
+    case next(source) {
+        (Some(value), tail): last_from(tail, Some(value)),
+        (null, _): previous,
+    };
+
+// Returns the last item of a finite iterator, or null when it is empty.
+pub fn last<T>(source: Iterator<T>): T? = last_from(source, null);
+
 fn nth_from<T>(source: Iterator<T>, index: Int): T? =
     if index == 0 {
         first(source)
