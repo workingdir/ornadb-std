@@ -1,6 +1,7 @@
 // Curated, pure entry points for common standard-library work. The source
 // snapshot records which public names are imported by `use std.prelude as _`.
 use std.collection as collection;
+use std.text as text;
 
 pub fn api_version(): Str = "orna.std.prelude/1";
 
@@ -11,3 +12,7 @@ pub fn count<T>(values: [T]): Int = collection.count(values);
 pub fn first<T>(values: [T]): T? = collection.first(values);
 
 pub fn unique<T>(values: [T]): [T] = collection.unique(values);
+
+pub fn trim(value: Str): Str = text.trim(value);
+
+pub fn split(value: Str, separator: Str): [Str] = text.split(value, separator);
