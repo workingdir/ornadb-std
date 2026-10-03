@@ -52,6 +52,11 @@ pub fn should_be_true(value: Bool): Bool = expect_true(value);
 
 pub fn should_be_false(value: Bool): Bool = expect_false(value);
 
+pub fn should_equal<T>(actual: T, expected: T): Bool = expect_equal(actual, expected);
+
+pub fn should_not_equal<T>(actual: T, unexpected: T): Bool =
+    expect_not_equal(actual, unexpected);
+
 // The runner catches the callback's ordinary failure, compares its optional
 // stable code, and fails if it returns normally. This operation is local to a
 // test runner and is never a production failure-recovery primitive.
