@@ -67,6 +67,12 @@ pub fn pairs<T>(values: [T]): [(T, T)] = std.collection.pairs(values);
 pub fn window<T>(values: [T], size: Int, step: Int = 1): [[T]] =
     std.collection.window(values, size, step);
 
+// Section 9 specifies complete positional windows and statistics separately.
+// This profile helper computes a mean for each complete window, preserving
+// the window's positive size/step checks and the statistic's exactness rules.
+pub fn window_mean<T>(values: [T], size: Int, step: Int = 1): [T?] =
+    map(window(values, size, step), window_values => std.stats.mean(window_values));
+
 // Produces consecutive nonempty groups; each matching item starts a new group.
 pub fn split_when<T>(values: [T], predicate: fn(T): Bool): [[T]] =
     std.collection.split_when(values, predicate);
