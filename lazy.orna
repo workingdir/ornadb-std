@@ -18,6 +18,13 @@ pub fn and_then<T, U>(
 pub fn zip<T, U>(left: fn(): T, right: fn(): U): fn(): (T, U) =
     () => (left(), right());
 
+// Combines two delayed computations when forced, in left-to-right order.
+pub fn zip_with<T, U, V>(
+    left: fn(): T,
+    right: fn(): U,
+    combine: fn(T, U): V,
+): fn(): V = () => combine(left(), right());
+
 pub fn constant<T>(value: T): fn(): T = () => value;
 
 pub fn from_pull<T>(

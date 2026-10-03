@@ -94,6 +94,37 @@ fn filter_pull<T>(source: Iterator<T>, predicate: fn(T): Bool): (T?, Iterator<T>
 pub fn filter<T>(source: Iterator<T>, predicate: fn(T): Bool): Iterator<T> =
     Iterator.Deferred { pull: () => filter_pull(source, predicate) };
 
+fn take_while_pull<T>(source: Iterator<T>, predicate: fn(T): Bool): (T?, Iterator<T>) =
+    case next(source) {
+        (Some(value), tail) if predicate(value): (
+            first([value]),
+            Iterator.Deferred { pull: () => take_while_pull(tail, predicate) },
+        ),
+        (Some(_), _): (null, empty()),
+        (null, _): (null, empty()),
+    };
+
+// Stops at the first rejected value; later source items are never requested.
+pub fn take_while<T>(source: Iterator<T>, predicate: fn(T): Bool): Iterator<T> =
+    Iterator.Deferred { pull: () => take_while_pull(source, predicate) };
+
+fn scan_emit<T, U>(source: Iterator<T>, accumulated: U, combine: fn(U, T): U): (U?, Iterator<U>) =
+    (
+        first([accumulated]),
+        Iterator.Deferred { pull: () => scan_pull(source, accumulated, combine) },
+    );
+
+fn scan_pull<T, U>(source: Iterator<T>, accumulated: U, combine: fn(U, T): U): (U?, Iterator<U>) =
+    case next(source) {
+        (Some(value), tail): scan_emit(tail, combine(accumulated, value), combine),
+        (null, _): (null, empty()),
+    };
+
+// Emits one left-to-right accumulated value for each source item; the initial
+// value is the accumulator seed and is not emitted for an empty source.
+pub fn scan<T, U>(source: Iterator<T>, initial: U, combine: fn(U, T): U): Iterator<U> =
+    Iterator.Deferred { pull: () => scan_pull(source, initial, combine) };
+
 fn take_pull<T>(source: Iterator<T>, remaining: Int): (T?, Iterator<T>) =
     if remaining == 0 {
         (null, empty())
