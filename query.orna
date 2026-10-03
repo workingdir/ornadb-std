@@ -153,6 +153,39 @@ pub fn window_histogram<T>(
         window_values => std.stats.histogram(window_values, bins, include_final_upper)
     );
 
+// Time-series statistics operate on complete timestamped windows. The stats
+// functions retain strict timestamp ordering and their value/time or
+// value×time result units; derivative timestamps remain each pair's right end.
+pub fn window_rate<T>(
+    points: [(Instant, T)],
+    size: Int,
+    step: Int = 1
+): [T?] =
+    map(
+        window(points, size, step),
+        window_points => std.stats.rate(window_points)
+    );
+
+pub fn window_derivative<T>(
+    points: [(Instant, T)],
+    size: Int,
+    step: Int = 1
+): [[(Instant, T)]] =
+    map(
+        window(points, size, step),
+        window_points => std.stats.derivative(window_points)
+    );
+
+pub fn window_integrate<T>(
+    points: [(Instant, T)],
+    size: Int,
+    step: Int = 1
+): [T?] =
+    map(
+        window(points, size, step),
+        window_points => std.stats.integrate(window_points)
+    );
+
 // Produces consecutive nonempty groups; each matching item starts a new group.
 pub fn split_when<T>(values: [T], predicate: fn(T): Bool): [[T]] =
     std.collection.split_when(values, predicate);
