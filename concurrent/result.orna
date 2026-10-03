@@ -1,0 +1,50 @@
+use std.collection as collection;
+use std.concurrent as concurrent;
+use std.result as result;
+
+// The reference defines structured child ownership and terminal sys results,
+// but no Result adapter. These helpers treat returned Err values as ordinary
+// child results: every child is joined, then collection chooses the first Err
+// in input order. Thrown child failures keep std.concurrent's cancellation
+// and error behavior.
+fn collect_from<T, E>(
+    outcomes: [result.Result<T, E>],
+    index: Int,
+    values: [T]
+): result.Result<[T], E> =
+    if index >= collection.count(outcomes) {
+        result.Result.Ok { value: values }
+    } else {
+        case outcomes[index] {
+            result.Result.Ok { value }:
+                collect_from(
+                    outcomes,
+                    index + 1,
+                    collection.union(values, [value])
+                ),
+            result.Result.Err { error }:
+                result.Result.Err { error: error },
+        }
+    };
+
+// Preserve the input order and duplicates. On the first Err by input index,
+// return that error without exposing a partial value list.
+pub fn collect<T, E>(outcomes: [result.Result<T, E>]): result.Result<[T], E> =
+    collect_from(outcomes, 0, []);
+
+// Run result-producing callbacks as owned concurrent children, join them in
+// input order, then apply collect's first-Err rule. An empty callback list is
+// successful with an empty value list.
+pub fn parallel<T, E>(
+    callbacks: [fn(): result.Result<T, E>]
+): result.Result<[T], E> =
+    collect(concurrent.parallel(callbacks));
+
+// Apply a result-producing transform in one owned child per input. Successful
+// payloads retain input order and duplicates; the first Err by input index is
+// returned after the parallel children have joined.
+pub fn parallel_map<T, U, E>(
+    values: [T],
+    transform: fn(T): result.Result<U, E>
+): result.Result<[U], E> =
+    collect(concurrent.parallel_map(values, transform));
