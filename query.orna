@@ -81,11 +81,20 @@ pub fn window_percentile<T, P>(
     probability: P,
     interpolation: Str,
     step: Int = 1
-): [T?] =
-    map(
-        window(values, size, step),
-        window_values => std.stats.percentile(window_values, probability, interpolation)
+): [T?] {
+    let windows = window(values, size, step);
+    // Probability and named interpolation remain valid arguments even when
+    // complete windows are absent; the empty sample validates without sorting.
+    let _validated_options = std.stats.percentile(
+        std.collection.take(values, 0),
+        probability,
+        interpolation
     );
+    map(
+        windows,
+        window_values => std.stats.percentile(window_values, probability, interpolation)
+    )
+}
 
 // The remaining scalar and categorical statistics use the same complete
 // positional windows. Exact scale and rounding options are passed through
@@ -147,15 +156,36 @@ pub fn window_histogram<T>(
     bins: [(T, T)],
     include_final_upper: Bool = false,
     step: Int = 1
-): [[Int]] =
-    map(
-        window(values, size, step),
-        window_values => std.stats.histogram(window_values, bins, include_final_upper)
+): [[Int]] {
+    let windows = window(values, size, step);
+    // Bin ordering and overlap are part of the call contract, including when
+    // the source is too short to produce a complete window.
+    let _validated_bins = std.stats.histogram(
+        std.collection.take(values, 0),
+        bins,
+        include_final_upper
     );
+    map(
+        windows,
+        window_values => std.stats.histogram(window_values, bins, include_final_upper)
+    )
+}
 
 // Time-series statistics operate on complete timestamped windows. The stats
 // functions retain strict timestamp ordering and their value/time or
 // value×time result units; derivative timestamps remain each pair's right end.
+fn strictly_ordered_time_series_from<T>(
+    points: [(Instant, T)],
+    index: Int,
+    end: Int
+): Bool =
+    if index + 1 >= end {
+        true
+    } else {
+        points[index][0] < points[index + 1][0] &&
+            strictly_ordered_time_series_from(points, index + 1, end)
+    };
+
 // Check window parameters before inspecting the source series so an empty or
 // malformed series cannot mask an invalid window request. The source needs at
 // least two strictly ordered points, and each produced time-series window also
@@ -180,7 +210,8 @@ fn ordered_time_series<T>(
             code: "ORNA-EVAL-VALUE",
             message: "time-series window size must be at least two points"
         ))
-    } else if count(points) >= 2 && every(pairs(points), pair => pair[0][0] < pair[1][0]) {
+    } else if count(points) >= 2 &&
+        strictly_ordered_time_series_from(points, 0, count(points)) {
         points
     } else {
         fail(error(
