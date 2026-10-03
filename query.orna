@@ -80,3 +80,8 @@ pub fn asof_join<T, Time, Key>(
 
 pub fn bucket_by<T, P>(rows: [T], period: P, zone: Str): [[T]] =
     std.collection.bucket_by(rows, period, zone);
+
+// Section 9 does not prescribe a query-plan hint API. This profile exposes the
+// planner's structured, snapshot-pinned plan so callers can inspect its chosen
+// operators and estimate assumptions without parsing rendered explain text.
+pub fn plan_hint<T>(query: Query<T>): sys.Plan = sys.explain(query);
