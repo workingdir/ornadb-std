@@ -3,6 +3,12 @@
 // they did not capture instead of silently borrowing the current edition.
 pub fn timezone_data_version(): Str = "orna-iana-2024a";
 
+// These helpers name elapsed arithmetic explicitly. Calendar movement belongs
+// to std.time.calendar and never treats a civil day or month as fixed seconds.
+pub fn add_elapsed(instant: Instant, elapsed: Duration): Instant = instant + elapsed;
+
+pub fn elapsed_between(start: Instant, end: Instant): Duration = end - start;
+
 // This pinned profile carries UTC and Europe/London from its recorded IANA
 // edition. Other IANA identifiers are unsupported and fail closed; evaluation
 // never consults a host-installed zone database. Offsets are signed seconds
