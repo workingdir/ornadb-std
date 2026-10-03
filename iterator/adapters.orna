@@ -1,0 +1,76 @@
+// The reference pins iterator cursors but does not prescribe a separate
+// adapter catalogue. These adapters follow std.iterator's persistent pull
+// contract: callbacks run only as output is requested, source order is kept,
+// and replaying an input cursor recomputes the same pure traversal.
+
+fn filter_map_pull<T, U>(
+    source: std.iterator.Iterator<T>,
+    transform: fn(T): U?,
+): (U?, std.iterator.Iterator<U>) =
+    case std.iterator.next(source) {
+        (Some(value), tail): case transform(value) {
+            Some(mapped): (
+                Some(mapped),
+                std.iterator.Iterator {
+                    pull: () => filter_map_pull(tail, transform),
+                },
+            ),
+            null: filter_map_pull(tail, transform),
+        },
+        (null, _): (null, std.iterator.empty()),
+    };
+
+// Maps each requested source item to an optional value, skipping only null
+// results. Some(null) remains an emitted value distinct from null itself.
+pub fn filter_map<T, U>(
+    source: std.iterator.Iterator<T>,
+    transform: fn(T): U?,
+): std.iterator.Iterator<U> = std.iterator.Iterator {
+    pull: () => filter_map_pull(source, transform),
+};
+
+fn flat_map_cursor<T, U>(
+    source: std.iterator.Iterator<T>,
+    transform: fn(T): std.iterator.Iterator<U>,
+): std.iterator.Iterator<U> = std.iterator.Iterator {
+    pull: () => case std.iterator.next(source) {
+        (Some(value), tail): std.iterator.next(
+            std.iterator.chain(
+                transform(value),
+                flat_map_cursor(tail, transform),
+            )
+        ),
+        (null, _): (null, std.iterator.empty()),
+    },
+};
+
+// Drains each mapped cursor before requesting the next source item.
+pub fn flat_map<T, U>(
+    source: std.iterator.Iterator<T>,
+    transform: fn(T): std.iterator.Iterator<U>,
+): std.iterator.Iterator<U> = flat_map_cursor(source, transform);
+
+// Concatenates one level of nested cursors in outer order, then inner order.
+pub fn flatten<T>(
+    source: std.iterator.Iterator<std.iterator.Iterator<T>>,
+): std.iterator.Iterator<T> =
+    flat_map(source, inner => inner);
+
+fn skip_while_pull<T>(
+    source: std.iterator.Iterator<T>,
+    predicate: fn(T): Bool,
+): (T?, std.iterator.Iterator<T>) =
+    case std.iterator.next(source) {
+        (Some(value), tail) if predicate(value): skip_while_pull(tail, predicate),
+        (Some(value), tail): (Some(value), tail),
+        (null, _): (null, std.iterator.empty()),
+    };
+
+// Drops the matching prefix only; after the first rejected item, the original
+// persistent tail is returned untouched and no later predicate calls occur.
+pub fn skip_while<T>(
+    source: std.iterator.Iterator<T>,
+    predicate: fn(T): Bool,
+): std.iterator.Iterator<T> = std.iterator.Iterator {
+    pull: () => skip_while_pull(source, predicate),
+};
