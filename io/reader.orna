@@ -1,0 +1,9 @@
+// A reader operation consumes one complete UTF-8 file through the explicit
+// filesystem capability. Provider byte limits bound each read; this module
+// does not retain a descriptor or infer a host path from process state.
+
+pub fn read_all_text(root: Str, path: Str): Str = std.io.fs.read_text(root, path);
+
+// Empty files produce no lines. Nonempty files preserve blank lines and the
+// trailing empty line after a final LF, matching std.io.fs.read_lines.
+pub fn read_lines(root: Str, path: Str): [Str] = std.io.fs.read_lines(root, path);

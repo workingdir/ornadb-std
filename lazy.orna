@@ -1,6 +1,8 @@
 // Lazy computations are ordinary zero-argument functions. `defer`, `map`,
 // `and_then`, and `zip` return thunks without evaluating their computations.
 // Every `force` call invokes its thunk again. This is call-by-name with no memoization.
+// `from_pull` bridges one delayed pull into the persistent std.iterator cursor;
+// its callback runs only when that cursor is advanced.
 pub fn defer<T>(computation: fn(): T): fn(): T = computation;
 
 pub fn force<T>(computation: fn(): T): T = computation();
@@ -16,4 +18,15 @@ pub fn and_then<T, U>(
 pub fn zip<T, U>(left: fn(): T, right: fn(): U): fn(): (T, U) =
     () => (left(), right());
 
+// Combines two delayed computations when forced, in left-to-right order.
+pub fn zip_with<T, U, V>(
+    left: fn(): T,
+    right: fn(): U,
+    combine: fn(T, U): V,
+): fn(): V = () => combine(left(), right());
+
 pub fn constant<T>(value: T): fn(): T = () => value;
+
+pub fn from_pull<T>(
+    pull: fn(): (T?, std.iterator.Iterator<T>),
+): std.iterator.Iterator<T> = std.iterator.Iterator { pull: pull };

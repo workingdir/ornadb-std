@@ -3,6 +3,10 @@
 // numeric or relation operations whose source types are intentionally erased.
 // Public collection behavior is expressed by the functions that follow.
 // Contracts: partition returns (matching, remaining); zip stops at the shorter input; unique keeps each lawful equality class's first occurrence; lawful keys while preserving input order inside each group; adjacent and overlapping pairs; window emits complete windows only; split_when starts a group before a matching item; competition ranks (ties share a rank and later ranks skip tied positions).
+// Edge contracts: empty valid chunk/window/partition/pair inputs return empty
+// collections without invoking callbacks. zip truncates to the shorter side, while
+// zip_exact rejects unequal lengths with `std.collection.zip_length_mismatch`.
+// split_when omits empty groups even for leading or adjacent boundaries.
 fn __list_length<T>(values: [T]): Int = 0;
 fn __list_concat<T>(left: [T], right: [T]): [T] = [];
 fn __numeric_sum<T>(values: [T]): T = 0;

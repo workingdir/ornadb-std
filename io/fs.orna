@@ -8,6 +8,17 @@
 pub fn read_text(root: Str, path: Str): Str = __read_text(root, path);
 fn __read_text(root: Str, path: Str): Str = std.io.fs.read_text(root, path);
 
+// An empty file contains no lines. For nonempty files, split on LF and
+// preserve blank fields, including the final empty field after a terminal LF.
+pub fn read_lines(root: Str, path: Str): [Str] {
+    let contents = read_text(root, path);
+    if contents == "" {
+        []
+    } else {
+        std.text.split(contents, "\n")
+    }
+}
+
 pub fn write_text(root: Str, path: Str, contents: Str, overwrite: Bool): Unit =
     __write_text(root, path, contents, overwrite);
 fn __write_text(root: Str, path: Str, contents: Str, overwrite: Bool): Unit =

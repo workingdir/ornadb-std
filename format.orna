@@ -1,0 +1,42 @@
+// Locale-independent primitive display helpers. Integer text is minimal base
+// ten, matching the canonical Orna Int spelling; it is not a locale formatter
+// or a serialization of arbitrary typed values.
+fn decimal_digit(value: Int): Str = case value {
+    0: "0",
+    1: "1",
+    2: "2",
+    3: "3",
+    4: "4",
+    5: "5",
+    6: "6",
+    7: "7",
+    8: "8",
+    9: "9",
+    _: fail(error(code: "std.format.invalid_digit", message: "integer digit is outside 0 through 9")),
+};
+
+fn unsigned_integer(value: Int): Str {
+    if value == 0 {
+        "0"
+    } else {
+        let remaining = value;
+        let digits = "";
+        while remaining > 0 {
+            digits = std.text.join([decimal_digit(remaining % 10), digits], "");
+            remaining = remaining / 10;
+        }
+        digits
+    }
+}
+
+/// Displays an Int using minimal signed decimal digits.
+/// `format.integer(-42)` returns `"-42"`; zero returns `"0"`.
+pub fn integer(value: Int): Str =
+    if value < 0 {
+        std.text.join(["-", unsigned_integer(-value)], "")
+    } else {
+        unsigned_integer(value)
+    };
+
+/// Displays a Bool using the source spellings `true` and `false`.
+pub fn boolean(value: Bool): Str = if value { "true" } else { "false" };
