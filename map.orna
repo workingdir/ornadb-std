@@ -26,27 +26,27 @@ pub fn entries_by_ovb_key<K, V>(entries: [(K, V)]): [(K, V)] =
         }
     );
 
-// Return ordered encoded key/value pairs for an OVB map encoder. Each value is
-// encoded independently; pairs follow unsigned lexicographic order of the
-// complete encoded key. The result is a list of pairs, not a map encoding.
-// Duplicate logical keys retain from_entries' first-position/last-value rule.
-pub fn encoded_entries_by_ovb_key<K, V>(entries: [(K, V)]): [(Blob, Blob)] =
-    if std.collection.count(entries) == 0 {
-        []
-    } else {
-        let ordered = entries_by_ovb_key(entries);
-        let projected = [];
-        let index = 0;
-        while index < std.collection.count(ordered) {
-            let (key, value) = ordered[index];
-            projected = std.collection.union(projected, [(
-                std.encoding.ovb.encode(key),
-                std.encoding.ovb.encode(value),
-            )]);
-            index += 1;
-        }
-        projected
+// Return ordered encoded key/value pairs for an OVB map encoder. Each key is
+// encoded once, and its value bytes stay attached while pairs are sorted by
+// unsigned lexicographic order of the complete encoded key. The result is a
+// list of pairs, not a map encoding. Duplicate logical keys retain
+// from_entries' first-position/last-value rule.
+pub fn encoded_entries_by_ovb_key<K, V>(entries: [(K, V)]): [(Blob, Blob)] {
+    let normalized = from_entries(entries);
+    let projected = [];
+    let index = 0;
+    while index < std.collection.count(normalized) {
+        let (key, value) = normalized[index];
+        projected = std.collection.union(projected, [(
+            std.encoding.ovb.encode(key),
+            std.encoding.ovb.encode(value),
+        )]);
+        index += 1;
     };
+    std.collection.sort_by(projected, pair => case pair {
+        (key_bytes, _): key_bytes,
+    })
+}
 
 pub fn keys<K, V>(entries: [(K, V)]): [K] =
     if std.collection.count(entries) == 0 {
