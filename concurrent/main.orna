@@ -19,16 +19,18 @@ pub fn parallel<T>(callbacks: [fn(): T]): [T] = std.concurrent.parallel(callback
 // scheduling work.
 pub fn race<T>(callbacks: [fn(): T]): T = std.concurrent.race(callbacks);
 
-// Run one zero-argument callback as an owned child. A negative elapsed
-// duration is an argument error. On expiry, request cancellation and join the
-// child before raising the timeout diagnostic; no partial result is returned.
-// Zero duration observes already-terminal work before cancelling unfinished
-// work. A timeout does not detach or transfer the child.
+// Run one zero-argument callback as an owned child. The duration is elapsed
+// time: a negative value is an argument error. On expiry, request cancellation
+// and join the child before raising the timeout diagnostic; no partial result
+// is returned. Zero duration checks for an already-terminal result before it
+// cancels unfinished work. A timeout does not detach or transfer the child.
 pub fn timeout<T>(callback: fn(): T, duration: Duration): T =
     std.concurrent.timeout(callback, duration);
 
-// Wait for a nonnegative elapsed duration and return null on success. Waiting is cancellation-aware and
-// has a clock/waiting effect, so this operation is unavailable to declaration
-// assertions. The requested instant is a lower-bound target, not an exact
-// scheduling guarantee.
+// Wait for a nonnegative elapsed duration and return null on success. Even a
+// zero-duration wait requires an explicitly admitted clock provider; with one,
+// it checks cancellation and returns without waiting. Waiting is
+// cancellation-aware and has a clock/waiting effect, so this operation is
+// unavailable to declaration assertions. The requested instant is a
+// lower-bound target, not an exact scheduling guarantee.
 pub fn sleep(duration: Duration): Null = std.concurrent.sleep(duration);
