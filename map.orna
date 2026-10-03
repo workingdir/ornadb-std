@@ -14,6 +14,18 @@ pub fn is_empty<K, V>(entries: [(K, V)]): Bool = size(entries) == 0;
 
 pub fn to_entries<K, V>(entries: [(K, V)]): [(K, V)] = from_entries(entries);
 
+// Return a canonical-key view for callers that need deterministic encoded
+// map order. Ordinary map iteration remains in first-insertion order; OVB-1
+// ordering compares the complete encoded key bytes and does not rewrite the
+// map's retained entry positions.
+pub fn entries_by_ovb_key<K, V>(entries: [(K, V)]): [(K, V)] =
+    std.collection.sort_by(
+        from_entries(entries),
+        entry => case entry {
+            (key, _): std.encoding.ovb.encode(key),
+        }
+    );
+
 pub fn keys<K, V>(entries: [(K, V)]): [K] =
     std.collection.map(
         from_entries(entries),
