@@ -1,6 +1,7 @@
 // std.text pins Unicode 16.0.0 behavior as ordinary library exports. Indices
 // and lengths use Unicode scalar positions, not UTF-8 bytes or graphemes.
-// Casing and normalization are locale independent. Split preserves empty
+// Full casing and normalization use Unicode 16.0.0 tables and are locale
+// independent; lower applies the contextual Final_Sigma rule. Split preserves empty
 // fields, including trailing fields; an empty separator splits into scalars.
 // Replace is non-overlapping and scans left to right.
 pub fn unicode_version(): Str = "16.0.0";
