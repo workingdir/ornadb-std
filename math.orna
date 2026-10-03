@@ -1,27 +1,63 @@
 // Integer utilities keep their inputs and outputs in exact core Int arithmetic.
 // They do not convert through Float or select ambient decimal precision, so
 // values remain exact beyond machine-word and binary-float precision limits.
+///
+/// Returns the exact successor of `value`; integer overflow is not possible.
+/// Example: `std.math.increment(41)` returns `42`.
 pub fn increment(value: Int): Int = value + 1;
+/// Returns the exact predecessor of `value`; integer underflow is not possible.
+/// Example: `std.math.decrement(1)` returns `0`.
 pub fn decrement(value: Int): Int = value - 1;
+/// Reports whether `value` is exactly zero.
+/// Example: `std.math.is_zero(0)` returns `true`.
 pub fn is_zero(value: Int): Bool = value == 0;
+/// Returns the non-negative magnitude of `value` using exact integer arithmetic.
+/// Example: `std.math.abs(-7)` returns `7`.
 pub fn abs(value: Int): Int = if value < 0 { -value } else { value };
+/// Returns `-1`, `0`, or `1` according as `value` is negative, zero, or positive.
+/// Example: `std.math.signum(-12)` returns `-1`.
 pub fn signum(value: Int): Int =
     if value < 0 { -1 } else { if value > 0 { 1 } else { 0 } };
+/// Reports whether `value` is greater than zero.
+/// Zero is not positive. Example: `std.math.is_positive(3)` returns `true`.
 pub fn is_positive(value: Int): Bool = value > 0;
+/// Reports whether `value` is less than zero.
+/// Zero is not negative. Example: `std.math.is_negative(-3)` returns `true`.
 pub fn is_negative(value: Int): Bool = value < 0;
+/// Reports whether `value` is divisible by two with no remainder.
+/// Negative even integers are included; `std.math.is_even(-4)` returns `true`.
 pub fn is_even(value: Int): Bool = value % 2 == 0;
+/// Reports whether `value` is not divisible by two with no remainder.
+/// Negative odd integers are included; `std.math.is_odd(-3)` returns `true`.
 pub fn is_odd(value: Int): Bool = value % 2 != 0;
+/// Returns the lesser of `left` and `right`; equal inputs return that value.
+/// Example: `std.math.min(8, 3)` returns `3`.
 pub fn min(left: Int, right: Int): Int = if left < right { left } else { right };
+/// Returns the greater of `left` and `right`; equal inputs return that value.
+/// Example: `std.math.max(8, 3)` returns `8`.
 pub fn max(left: Int, right: Int): Int = if left > right { left } else { right };
+/// Bounds `value` to the inclusive interval from `lower` to `upper`.
+/// The caller should supply `lower <= upper`; reversed bounds return `lower`.
+/// Example: `std.math.clamp(12, 0, 10)` returns `10`.
 pub fn clamp(value: Int, lower: Int, upper: Int): Int = max(lower, min(value, upper));
+/// Returns `value` multiplied by itself with exact integer arithmetic.
+/// Example: `std.math.square(-4)` returns `16`.
 pub fn square(value: Int): Int = value * value;
+/// Returns `value` multiplied by itself three times with exact integer arithmetic.
+/// Example: `std.math.cube(-3)` returns `-27`.
 pub fn cube(value: Int): Int = value * value * value;
 
 fn gcd_nonnegative(left: Int, right: Int): Int =
     if right == 0 { left } else { gcd_nonnegative(right, left % right) };
 
+/// Returns the non-negative greatest common divisor of `left` and `right`.
+/// Either input may be negative; `gcd(0, 0)` is defined as `0`.
+/// Example: `std.math.gcd(-18, 12)` returns `6`.
 pub fn gcd(left: Int, right: Int): Int = gcd_nonnegative(abs(left), abs(right));
 
+/// Returns the least common multiple of the absolute input magnitudes.
+/// Returns `0` when either input is `0`; the result is always non-negative.
+/// Example: `std.math.lcm(-6, 8)` returns `24`.
 pub fn lcm(left: Int, right: Int): Int =
     if is_zero(left) || is_zero(right) {
         0
@@ -29,8 +65,9 @@ pub fn lcm(left: Int, right: Int): Int =
         (abs(left) / gcd(left, right)) * abs(right)
     };
 
-// Negative exponents have non-integer results in this exact Int helper and
-// return null. Nonnegative powers use core exact Int exponentiation. Exponent
-// zero returns one, including 0^0, matching the identity element for powers.
+/// Computes an exact integer power when `exponent` is non-negative.
+/// A negative exponent returns `null` because its result may not be an `Int`.
+/// Exponent zero returns `1`, including `0^0`; this follows the power identity.
+/// Example: `std.math.pow_nonnegative(3, 4)` returns `81`.
 pub fn pow_nonnegative(value: Int, exponent: Int): Int? =
     if exponent < 0 { null } else { first([value ^ exponent]) };
