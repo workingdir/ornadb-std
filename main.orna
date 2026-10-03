@@ -33,5 +33,6 @@ use introspection;
 use reflection;
 use format;
 use parse;
+use prelude;
 
 pub fn version(): Str = "1.0.0";
