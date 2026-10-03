@@ -176,6 +176,7 @@ pub fn window_histogram<T>(
 // construct complete windows and compute their real statistic values below.
 fn __strictly_ordered_time_series<T>(points: [(Instant, T)]): Bool = false;
 fn __window_rate<T>(points: [(Instant, T)], size: Int, step: Int): [T?] = [];
+fn __window_rate_integrate<T>(points: [(Instant, T)], size: Int, step: Int): [(T?, T?)] = [];
 fn __window_derivative<T>(points: [(Instant, T)], size: Int, step: Int): [[(Instant, T)]] = [];
 fn __window_integrate<T>(points: [(Instant, T)], size: Int, step: Int): [T?] = [];
 
@@ -222,6 +223,15 @@ pub fn window_rate<T>(
     step: Int = 1
 ): [T?] =
     __window_rate(ordered_time_series(points, size, step), size, step);
+
+// Pair rate and integral from each identical complete window in source order;
+// sparse timestamps remain aligned instead of requiring two independent passes.
+pub fn window_rate_integrate<T>(
+    points: [(Instant, T)],
+    size: Int,
+    step: Int = 1
+): [(T?, T?)] =
+    __window_rate_integrate(ordered_time_series(points, size, step), size, step);
 
 pub fn window_derivative<T>(
     points: [(Instant, T)],
