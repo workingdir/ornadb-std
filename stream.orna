@@ -8,6 +8,18 @@
 pub fn from_list<T>(values: [T], source_identity: Str): Stream<T> =
     Stream.from_list(values, source_identity);
 
+// Construct a replayable finite source and emit ordered positive-size batches.
+// The source identity remains bound to the complete typed value list, and a
+// final short batch is retained rather than dropped.
+pub fn from_list_batches<T>(
+    values: [T],
+    source_identity: Str,
+    batch_size: Int
+): Stream<[T]> = std.stream.batch(
+    std.stream.from_list(values, source_identity),
+    batch_size
+);
+
 // Process one item at a time. Each callback and checkpoint movement is one
 // activation; exhaustion returns Unit. Callback failure and cancellation
 // propagate without advancing past an uncommitted item.
