@@ -156,13 +156,46 @@ pub fn window_histogram<T>(
 // Time-series statistics operate on complete timestamped windows. The stats
 // functions retain strict timestamp ordering and their value/time or
 // value×time result units; derivative timestamps remain each pair's right end.
+// Check window parameters before inspecting the source series so an empty or
+// malformed series cannot mask an invalid window request. The source needs at
+// least two strictly ordered points, and each produced time-series window also
+// needs two points. Global ordering catches reversals across sparse step gaps.
+fn ordered_time_series<T>(
+    points: [(Instant, T)],
+    size: Int,
+    step: Int
+): [(Instant, T)] =
+    if size <= 0 {
+        fail(error(
+            code: "std.collection.invalid_window_size",
+            message: "window size must be positive"
+        ))
+    } else if step <= 0 {
+        fail(error(
+            code: "std.collection.invalid_window_step",
+            message: "window step must be positive"
+        ))
+    } else if size < 2 {
+        fail(error(
+            code: "ORNA-EVAL-VALUE",
+            message: "time-series window size must be at least two points"
+        ))
+    } else if count(points) >= 2 && every(pairs(points), pair => pair[0][0] < pair[1][0]) {
+        points
+    } else {
+        fail(error(
+            code: "ORNA-EVAL-VALUE",
+            message: "time series needs at least two points with strictly increasing timestamps"
+        ))
+    };
+
 pub fn window_rate<T>(
     points: [(Instant, T)],
     size: Int,
     step: Int = 1
 ): [T?] =
     map(
-        window(points, size, step),
+        window(ordered_time_series(points, size, step), size, step),
         window_points => std.stats.rate(window_points)
     );
 
@@ -172,7 +205,7 @@ pub fn window_derivative<T>(
     step: Int = 1
 ): [[(Instant, T)]] =
     map(
-        window(points, size, step),
+        window(ordered_time_series(points, size, step), size, step),
         window_points => std.stats.derivative(window_points)
     );
 
@@ -182,7 +215,7 @@ pub fn window_integrate<T>(
     step: Int = 1
 ): [T?] =
     map(
-        window(points, size, step),
+        window(ordered_time_series(points, size, step), size, step),
         window_points => std.stats.integrate(window_points)
     );
 
