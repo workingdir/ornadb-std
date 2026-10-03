@@ -12,6 +12,14 @@
 // is primary and remaining failures are ordered causes.
 pub fn parallel<T>(callbacks: [fn(): T]): [T] = std.concurrent.parallel(callbacks);
 
+// Apply one transformation in an owned child activation per input. Results
+// are joined in input order even when child completion order differs. An
+// empty input starts no children and returns an empty list. Each transformed
+// callback has the same transaction, failure and cancellation rules as
+// `parallel` itself.
+pub fn parallel_map<T, U>(values: [T], transform: fn(T): U): [U] =
+    parallel(std.collection.map(values, value => () => transform(value)));
+
 // Return the first observed successful result, then cancel and join every
 // losing child. If all children fail, report the lowest input-index ordinary
 // failure. Simultaneous successes are resolved by recorded completion order;
