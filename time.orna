@@ -3,14 +3,20 @@
 // they did not capture instead of silently borrowing the current edition.
 pub fn timezone_data_version(): Str = "orna-iana-2024a";
 
-// `zone` is an IANA identifier interpreted using this captured edition.
-// Offsets are signed seconds east of UTC at the requested Instant; callers
-// always supply a zone and never inherit a process-local default.
+// This pinned profile carries UTC and Europe/London from its recorded IANA
+// edition. Other IANA identifiers are unsupported and fail closed; evaluation
+// never consults a host-installed zone database. Offsets are signed seconds
+// east of UTC at the requested Instant, including the new offset at an exact
+// transition. Callers always supply a zone and never inherit a process-local
+// default.
 pub fn offset_at(instant: Instant, zone: Str): Int = __offset_at(instant, zone);
 fn __offset_at(instant: Instant, zone: Str): Int = offset_at(instant, zone);
 
-// `local` is ISO civil text without an offset: YYYY-MM-DDTHH:MM:SS with an
-// optional 1..9 digit fractional second. `ambiguous` must explicitly be
+// `local` is exactly YYYY-MM-DDTHH:MM:SS with an optional dot and 1..9 ASCII
+// fractional digits. It has no offset suffix; invalid Gregorian dates, hour
+// or minute overflow, leap-second 60, and fractions longer than nanoseconds
+// are rejected. A fraction is right-padded to nanoseconds (`.1` means
+// 100,000,000 nanoseconds). `ambiguous` must explicitly be
 // "earlier", "later", or "reject". The first two choices select an overlap
 // occurrence; "reject" accepts only unique local times. `gap` defaults to
 // "reject" and may be "shift_forward" or "shift_backward" for a nonexistent
