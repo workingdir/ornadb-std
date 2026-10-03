@@ -171,20 +171,17 @@ pub fn window_histogram<T>(
     )
 }
 
+// Native leaf scans timestamps iteratively so a sparse series' skipped points
+// do not consume one source call frame each. Exported window operators still
+// construct complete windows and compute their real statistic values below.
+fn __strictly_ordered_time_series<T>(points: [(Instant, T)]): Bool = false;
+fn __window_rate<T>(points: [(Instant, T)], size: Int, step: Int): [T?] = [];
+fn __window_derivative<T>(points: [(Instant, T)], size: Int, step: Int): [[(Instant, T)]] = [];
+fn __window_integrate<T>(points: [(Instant, T)], size: Int, step: Int): [T?] = [];
+
 // Time-series statistics operate on complete timestamped windows. The stats
 // functions retain strict timestamp ordering and their value/time or
 // value×time result units; derivative timestamps remain each pair's right end.
-fn strictly_ordered_time_series_from<T>(
-    points: [(Instant, T)],
-    index: Int,
-    end: Int
-): Bool =
-    if index + 1 >= end {
-        true
-    } else {
-        points[index][0] < points[index + 1][0] &&
-            strictly_ordered_time_series_from(points, index + 1, end)
-    };
 
 // Check window parameters before inspecting the source series so an empty or
 // malformed series cannot mask an invalid window request. The source needs at
@@ -210,8 +207,7 @@ fn ordered_time_series<T>(
             code: "ORNA-EVAL-VALUE",
             message: "time-series window size must be at least two points"
         ))
-    } else if count(points) >= 2 &&
-        strictly_ordered_time_series_from(points, 0, count(points)) {
+    } else if count(points) >= 2 && __strictly_ordered_time_series(points) {
         points
     } else {
         fail(error(
@@ -225,30 +221,21 @@ pub fn window_rate<T>(
     size: Int,
     step: Int = 1
 ): [T?] =
-    map(
-        window(ordered_time_series(points, size, step), size, step),
-        window_points => std.stats.rate(window_points)
-    );
+    __window_rate(ordered_time_series(points, size, step), size, step);
 
 pub fn window_derivative<T>(
     points: [(Instant, T)],
     size: Int,
     step: Int = 1
 ): [[(Instant, T)]] =
-    map(
-        window(ordered_time_series(points, size, step), size, step),
-        window_points => std.stats.derivative(window_points)
-    );
+    __window_derivative(ordered_time_series(points, size, step), size, step);
 
 pub fn window_integrate<T>(
     points: [(Instant, T)],
     size: Int,
     step: Int = 1
 ): [T?] =
-    map(
-        window(ordered_time_series(points, size, step), size, step),
-        window_points => std.stats.integrate(window_points)
-    );
+    __window_integrate(ordered_time_series(points, size, step), size, step);
 
 // Produces consecutive nonempty groups; each matching item starts a new group.
 pub fn split_when<T>(values: [T], predicate: fn(T): Bool): [[T]] =
