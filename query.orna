@@ -156,15 +156,17 @@ pub fn window_histogram<T>(
 // Time-series statistics operate on complete timestamped windows. The stats
 // functions retain strict timestamp ordering and their value/time or
 // value×time result units; derivative timestamps remain each pair's right end.
-// Validate the source series before splitting it into windows: when step is
-// larger than one, per-window checks alone can miss a reversal at a boundary.
+// Validate the source-series contract before splitting it into windows: each
+// series needs at least two points and strictly increasing timestamps. When
+// step is larger than one, local window checks alone can miss a reversal at a
+// boundary. A valid two-point input may still yield no windows for a larger size.
 fn ordered_time_series<T>(points: [(Instant, T)]): [(Instant, T)] =
-    if every(pairs(points), pair => pair[0][0] < pair[1][0]) {
+    if count(points) >= 2 && every(pairs(points), pair => pair[0][0] < pair[1][0]) {
         points
     } else {
         fail(error(
             code: "ORNA-EVAL-VALUE",
-            message: "time-series timestamps must be strictly increasing"
+            message: "time series needs at least two points with strictly increasing timestamps"
         ))
     };
 
