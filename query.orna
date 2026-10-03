@@ -87,6 +87,72 @@ pub fn window_percentile<T, P>(
         window_values => std.stats.percentile(window_values, probability, interpolation)
     );
 
+// The remaining scalar and categorical statistics use the same complete
+// positional windows. Exact scale and rounding options are passed through
+// unchanged, so each window follows std.stats' explicit arithmetic contract.
+pub fn window_sum<T>(values: [T], size: Int, step: Int = 1): [T] =
+    map(window(values, size, step), window_values => std.stats.sum(window_values));
+
+pub fn window_median<T>(
+    values: [T],
+    size: Int,
+    step: Int = 1,
+    scale: Int? = null,
+    rounding: Str? = null
+): [T?] =
+    map(
+        window(values, size, step),
+        window_values => std.stats.median(window_values, scale, rounding)
+    );
+
+pub fn window_min<T>(values: [T], size: Int, step: Int = 1): [T?] =
+    map(window(values, size, step), window_values => std.stats.min(window_values));
+
+pub fn window_max<T>(values: [T], size: Int, step: Int = 1): [T?] =
+    map(window(values, size, step), window_values => std.stats.max(window_values));
+
+pub fn window_range<T>(values: [T], size: Int, step: Int = 1): [T?] =
+    map(window(values, size, step), window_values => std.stats.range(window_values));
+
+pub fn window_mode<T>(values: [T], size: Int, step: Int = 1): [[T]] =
+    map(window(values, size, step), window_values => std.stats.mode(window_values));
+
+pub fn window_variance<T>(
+    values: [T],
+    size: Int,
+    step: Int = 1,
+    scale: Int? = null,
+    rounding: Str? = null
+): [T?] =
+    map(
+        window(values, size, step),
+        window_values => std.stats.variance(window_values, scale, rounding)
+    );
+
+pub fn window_standard_deviation<T>(
+    values: [T],
+    size: Int,
+    step: Int = 1,
+    scale: Int? = null,
+    rounding: Str? = null
+): [T?] =
+    map(
+        window(values, size, step),
+        window_values => std.stats.standard_deviation(window_values, scale, rounding)
+    );
+
+pub fn window_histogram<T>(
+    values: [T],
+    size: Int,
+    bins: [(T, T)],
+    include_final_upper: Bool = false,
+    step: Int = 1
+): [[Int]] =
+    map(
+        window(values, size, step),
+        window_values => std.stats.histogram(window_values, bins, include_final_upper)
+    );
+
 // Produces consecutive nonempty groups; each matching item starts a new group.
 pub fn split_when<T>(values: [T], predicate: fn(T): Bool): [[T]] =
     std.collection.split_when(values, predicate);
