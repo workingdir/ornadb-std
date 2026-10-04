@@ -30,61 +30,41 @@ fn decorate_from<T, K>(
         )
     };
 
-fn append_pairs_from<K, T>(
-    values: [(K, T)], index: Int, end: Int, output: [(K, T)]
-): [(K, T)] =
-    if index >= end {
-        output
-    } else {
-        append_pairs_from(
-            values,
-            index + 1,
-            end,
-            std.collection.union(output, [values[index]]),
-        )
-    };
-
-fn insert_pair_from<K, T>(
-    sorted: [(K, T)],
-    candidate: (K, T),
-    descending: Bool,
-    index: Int,
-    end: Int,
-    output: [(K, T)],
-): [(K, T)] =
-    if index >= end {
-        std.collection.union(output, [candidate])
-    } else {
+fn insertion_sort_pairs<K, T>(values: [(K, T)], descending: Bool): [(K, T)] {
+    let sorted = [];
+    let value_index = 0;
+    let end = std.collection.count(values);
+    while value_index < end {
+        let candidate = values[value_index];
         let (candidate_key, _) = candidate;
-        let (current_key, _) = sorted[index];
-        if precedes(candidate_key, current_key, descending) {
-            append_pairs_from(sorted, index, end, std.collection.union(output, [candidate]))
-        } else {
-            insert_pair_from(
-                sorted,
-                candidate,
-                descending,
-                index + 1,
-                end,
-                std.collection.union(output, [sorted[index]]),
-            )
-        }
+        let sorted_end = std.collection.count(sorted);
+        let insert_index = 0;
+        let searching = true;
+        while insert_index < sorted_end && searching {
+            let (current_key, _) = sorted[insert_index];
+            if precedes(candidate_key, current_key, descending) {
+                searching = false;
+            } else {
+                insert_index += 1;
+            };
+        };
+        let updated = [];
+        let copy_index = 0;
+        while copy_index < insert_index {
+            updated = std.collection.union(updated, [sorted[copy_index]]);
+            copy_index += 1;
+        };
+        updated = std.collection.union(updated, [candidate]);
+        copy_index = insert_index;
+        while copy_index < sorted_end {
+            updated = std.collection.union(updated, [sorted[copy_index]]);
+            copy_index += 1;
+        };
+        sorted = updated;
+        value_index += 1;
     };
-
-fn insertion_sort_pairs<K, T>(
-    values: [(K, T)], descending: Bool, index: Int, end: Int, sorted: [(K, T)]
-): [(K, T)] =
-    if index >= end {
-        sorted
-    } else {
-        insertion_sort_pairs(
-            values,
-            descending,
-            index + 1,
-            end,
-            insert_pair_from(sorted, values[index], descending, 0, std.collection.count(sorted), []),
-        )
-    };
+    sorted
+}
 
 fn values_from_pairs<K, T>(
     values: [(K, T)], index: Int, end: Int, output: [T]
@@ -104,13 +84,7 @@ fn values_from_pairs<K, T>(
 fn sort_by_direction<T, K>(values: [T], key: fn(T): K, descending: Bool): [T] {
     if descending {
         let decorated = decorate_from(values, key, 0, std.collection.count(values), []);
-        let ordered = insertion_sort_pairs(
-            decorated,
-            true,
-            0,
-            std.collection.count(decorated),
-            [],
-        );
+        let ordered = insertion_sort_pairs(decorated, true);
         values_from_pairs(ordered, 0, std.collection.count(ordered), [])
     } else {
         std.collection.sort_by(values, key)
