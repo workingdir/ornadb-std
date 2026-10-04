@@ -7,29 +7,23 @@
 // Return exactly `count` random bytes. Count must be nonnegative and within
 // the active resource budget. Use this operation for secret material only
 // when the host provider confirms its CSPRNG contract.
-pub fn bytes(count: Int): Blob = fail(error(
-    code: "ORNA-EVAL-UNSUPPORTED",
-    message: "std.random.bytes requires its host CSPRNG binding"
-));
+pub fn bytes(count: Int): Blob = __bytes(count);
+fn __bytes(count: Int): Blob = bytes(count);
 
 // Sample uniformly from the half-open integer interval [lower_inclusive,
-// upper_exclusive). An empty or reversed interval fails. The provider uses
+// upper_exclusive). An empty or reversed interval fails. The helper uses
 // rejection sampling, so large range boundaries do not introduce modulo bias.
-pub fn integer(lower_inclusive: Int, upper_exclusive: Int): Int = fail(error(
-    code: "ORNA-EVAL-UNSUPPORTED",
-    message: "std.random.integer requires its unbiased sampling binding"
-));
+pub fn integer(lower_inclusive: Int, upper_exclusive: Int): Int =
+    __integer(lower_inclusive, upper_exclusive);
+fn __integer(lower_inclusive: Int, upper_exclusive: Int): Int =
+    integer(lower_inclusive, upper_exclusive);
 
 // Select one list position uniformly. Return null for an empty list; repeated
 // equal values at different positions retain their separate probabilities.
-pub fn choose<T>(values: [T]): T? = fail(error(
-    code: "ORNA-EVAL-UNSUPPORTED",
-    message: "std.random.choose requires its list sampling binding"
-));
+pub fn choose<T>(values: [T]): T? = __choose(values);
+fn __choose<T>(values: [T]): T? = choose(values);
 
 // Apply an unbiased Fisher-Yates permutation. Every input position is retained
 // exactly once; equal values do not collapse the positions they occupy.
-pub fn shuffle<T>(values: [T]): [T] = fail(error(
-    code: "ORNA-EVAL-UNSUPPORTED",
-    message: "std.random.shuffle requires its permutation binding"
-));
+pub fn shuffle<T>(values: [T]): [T] = __shuffle(values);
+fn __shuffle<T>(values: [T]): [T] = shuffle(values);
