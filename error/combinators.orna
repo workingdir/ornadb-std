@@ -1,0 +1,57 @@
+// The reference defines Error values and the language's `|?` recovery
+// boundary, but not a separate combinator API. These helpers operate only on
+// ordinary Error values and preserve cause structure.
+// The helpers never catch, replace, or convert a language failure.
+
+// Add one outer diagnostic while keeping the complete previous error as its
+// first cause. This is data composition, not recovery from a thrown failure.
+pub fn with_context(value: Error, code: Str, message: Str): Error =
+    std.error.caused_by(code, message, value);
+
+fn with_contexts_from(
+    value: Error,
+    contexts: [(Str, Str)],
+    index: Int,
+): Error =
+    if index < 0 {
+        value
+    } else {
+        case contexts[index] {
+            (code, message): with_contexts_from(
+                with_context(value, code, message),
+                contexts,
+                index - 1,
+            ),
+        }
+    };
+
+// Contexts are listed outermost first. Applying them from the end keeps that
+// order above the original error and preserves each original nested cause.
+// An empty list returns the input Error unchanged.
+pub fn with_contexts(value: Error, contexts: [(Str, Str)]): Error =
+    with_contexts_from(value, contexts, std.collection.count(contexts) - 1);
+
+// Search the root code and every cause code in std.error.code_chain's
+// breadth-first order.
+pub fn contains_code(value: Error, expected: Str): Bool =
+    std.collection.exists(
+        std.error.code_chain(value),
+        actual => actual == expected,
+    );
+
+pub fn contains_any_code(value: Error, expected: [Str]): Bool =
+    std.collection.exists(
+        expected,
+        code => contains_code(value, code),
+    );
+
+// The empty expected list matches vacuously, as with std.collection.every.
+pub fn contains_all_codes(value: Error, expected: [Str]): Bool =
+    std.collection.every(
+        expected,
+        code => contains_code(value, code),
+    );
+
+// Compare the complete breadth-first chain, including its order and length.
+pub fn matches_code_chain(value: Error, expected: [Str]): Bool =
+    std.error.code_chain(value) == expected;
