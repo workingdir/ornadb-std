@@ -10,9 +10,14 @@ fn parse_integer_fields(fields: [Str]): [Int]? {
     let index = 0;
     let valid = true;
     while index < collection.count(fields) && valid {
-        case parse.integer(fields[index]) {
-            Some(value): values = collection.union(values, [value]),
-            null: valid = false,
+        let (field_valid, value) = case parse.integer(fields[index]) {
+            Some(value): (true, value),
+            null: (false, 0),
+        };
+        if field_valid {
+            values = collection.union(values, [value]);
+        } else {
+            valid = false;
         };
         index = index + 1;
     };
@@ -24,9 +29,14 @@ fn parse_boolean_fields(fields: [Str]): [Bool]? {
     let index = 0;
     let valid = true;
     while index < collection.count(fields) && valid {
-        case parse.boolean(fields[index]) {
-            Some(value): values = collection.union(values, [value]),
-            null: valid = false,
+        let (field_valid, value) = case parse.boolean(fields[index]) {
+            Some(value): (true, value),
+            null: (false, false),
+        };
+        if field_valid {
+            values = collection.union(values, [value]);
+        } else {
+            valid = false;
         };
         index = index + 1;
     };
