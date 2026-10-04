@@ -77,6 +77,35 @@ pub fn is_negative<T impl Signed>(value: T): Bool = value.is_negative();
 
 pub fn div_rem<T impl Integer>(left: T, right: T): (T, T) = left.div_rem(right);
 
+fn gcd_euclidean<T impl Integer + Zero + Signed>(left: T, right: T): T {
+    if right.is_zero() {
+        left.abs()
+    } else {
+        let (_, remainder) = left.div_rem(right);
+        gcd_euclidean(right, remainder)
+    }
+}
+
+/// Returns the non-negative greatest common divisor. Both-zero inputs return
+/// zero. Integer implementations must provide Euclidean remainders through
+/// `div_rem`; division by zero is avoided by the terminating zero check.
+pub fn gcd<T impl Integer + Zero + Signed>(left: T, right: T): T =
+    gcd_euclidean(left, right);
+
+/// Returns the least common multiple of the absolute input magnitudes, or
+/// zero when either input is zero. Division is exact and nonzero; bounded
+/// implementations inherit their `Div` and `Mul` overflow behavior.
+pub fn lcm<T impl Integer + Zero + Signed + Div + Mul>(left: T, right: T): T =
+    if left.is_zero() {
+        left
+    } else {
+        if right.is_zero() {
+            right
+        } else {
+            (left.abs().div(gcd(left, right))).mul(right.abs())
+        }
+    };
+
 pub fn min<T impl Compare>(left: T, right: T): T =
     if left.compare(right) <= 0 { left } else { right };
 
