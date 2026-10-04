@@ -56,15 +56,15 @@ pub fn concat(left: [Int], right: [Int]): [Int]? =
 
 /// Returns `count` bytes starting at `offset`; invalid or out-of-range bounds
 /// return null. A zero-length slice at the buffer end is valid.
-pub fn slice(values: [Int], offset: Int, count: Int): [Int]? =
+pub fn slice(values: [Int], start: Int, count: Int): [Int]? =
     if !is_buffer(values)
-        || offset < 0
+        || start < 0
         || count < 0
-        || offset + count > std.collection.count(values)
+        || start + count > std.collection.count(values)
     {
         null
     } else {
-        Some(std.collection.take(std.collection.drop(values, offset), count))
+        Some(std.collection.take(std.collection.drop(values, start), count))
     };
 
 /// Splits a valid byte buffer into ordered chunks. Chunk sizes must be positive;
@@ -78,16 +78,16 @@ pub fn chunks(values: [Int], size: Int): [[Int]]? =
 
 /// Reads an unsigned integer from `width` bytes at `offset` in `little` or
 /// `big` byte order. Invalid buffers, ranges, widths, or orders return null.
-pub fn read_unsigned(values: [Int], offset: Int, width: Int, order: Str): Int? =
+pub fn read_unsigned(values: [Int], start: Int, width: Int, order: Str): Int? =
     if !is_buffer(values)
-        || offset < 0
+        || start < 0
         || width <= 0
-        || offset + width > std.collection.count(values)
+        || start + width > std.collection.count(values)
     {
         null
     } else {
         std.bits.unsigned_from_bytes(
-            std.collection.take(std.collection.drop(values, offset), width),
+            std.collection.take(std.collection.drop(values, start), width),
             order
         )
     };
@@ -97,15 +97,15 @@ pub fn read_unsigned(values: [Int], offset: Int, width: Int, order: Str): Int? =
 /// orders, buffers, or values too large for the width return null.
 pub fn write_unsigned(
     values: [Int],
-    offset: Int,
+    start: Int,
     value: Int,
     width: Int,
     order: Str
 ): [Int]? =
     if !is_buffer(values)
-        || offset < 0
+        || start < 0
         || width <= 0
-        || offset + width > std.collection.count(values)
+        || start + width > std.collection.count(values)
     {
         null
     } else {
@@ -113,10 +113,10 @@ pub fn write_unsigned(
             Some(encoded): Some(
                 std.collection.union(
                     std.collection.union(
-                        std.collection.take(values, offset),
+                        std.collection.take(values, start),
                         encoded
                     ),
-                    std.collection.drop(values, offset + width)
+                    std.collection.drop(values, start + width)
                 )
             ),
             null: null,
