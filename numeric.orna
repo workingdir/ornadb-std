@@ -37,6 +37,7 @@ fn digit_value(character: Str): Int? = case character {
 /// sign is optional; a fractional part must contain digits and cannot end in
 /// zero. Plus signs, exponent notation, separators, whitespace, redundant
 /// leading zeroes, and negative zero return null. No rounding is performed.
+/// Inputs beyond evaluator resource limits propagate its bounded limit error.
 pub fn decimal_from_text(input: Str): Decimal? {
     let characters = std.text.split(input, "");
     let length = std.collection.count(characters);
@@ -69,18 +70,19 @@ pub fn decimal_from_text(input: Str): Decimal? {
             && integer_part != null
             && (!has_fraction || fraction_start < length)
             && (!has_fraction || characters[length - 1] != "0");
-        let fraction = 0.decimal;
-        let place = 0.1.decimal;
+        let fraction_numerator = 0;
+        let denominator = 1;
         let index = fraction_start;
         while index < length && valid {
-            case digit_value(characters[index]) {
-                Some(digit): {
-                    fraction = fraction + digit.decimal * place;
-                    place = place / 10.decimal;
-                },
-                null: {
-                    valid = false;
-                },
+            let digit = case digit_value(characters[index]) {
+                Some(value): value,
+                null: -1,
+            };
+            if digit < 0 {
+                valid = false;
+            } else {
+                fraction_numerator = fraction_numerator * 10 + digit;
+                denominator = denominator * 10;
             };
             index += 1;
         };
@@ -88,6 +90,7 @@ pub fn decimal_from_text(input: Str): Decimal? {
             Some(value): value,
             null: 0,
         };
+        let fraction = fraction_numerator.decimal / denominator.decimal;
         let magnitude = integer_value.decimal + fraction;
         if valid && !(negative && magnitude == 0.decimal) {
             Some(if negative { -magnitude } else { magnitude })
