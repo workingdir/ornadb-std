@@ -42,14 +42,25 @@ pub fn fold_while<T, U>(
     values: [T], initial: U, step: fn(U, T): (U, Bool)
 ): U = fold_while_from(values, 0, collection.count(values), initial, step);
 
+fn has_node_from<T>(nodes: [T], target: T, index: Int, end: Int): Bool =
+    if index >= end {
+        false
+    } else if nodes[index] == target {
+        true
+    } else {
+        has_node_from(nodes, target, index + 1, end)
+    };
+
 fn has_node<T>(nodes: [T], target: T): Bool =
-    collection.exists(nodes, node => node == target);
+    has_node_from(nodes, target, 0, collection.count(nodes));
 
 fn depth_first_from<T>(
     pending: [T], visited: [T], neighbors: fn(T): [T]
-): [T] = case collection.first(pending) {
-    null: visited,
-    Some(node): {
+): [T] =
+    if collection.count(pending) == 0 {
+        visited
+    } else {
+        let node = pending[0];
         let remaining = collection.drop(pending, 1);
         if has_node(visited, node) {
             depth_first_from(remaining, visited, neighbors)
@@ -58,8 +69,7 @@ fn depth_first_from<T>(
             let pending_in_preorder = collection.union(neighbors(node), remaining);
             depth_first_from(pending_in_preorder, discovered, neighbors)
         }
-    },
-};
+    };
 
 /// Walks reachable nodes depth first, in pre-order and stable neighbor order.
 pub fn depth_first<T>(root: T, neighbors: fn(T): [T]): [T] =
@@ -67,9 +77,11 @@ pub fn depth_first<T>(root: T, neighbors: fn(T): [T]): [T] =
 
 fn breadth_first_from<T>(
     pending: [T], visited: [T], neighbors: fn(T): [T]
-): [T] = case collection.first(pending) {
-    null: visited,
-    Some(node): {
+): [T] =
+    if collection.count(pending) == 0 {
+        visited
+    } else {
+        let node = pending[0];
         let remaining = collection.drop(pending, 1);
         if has_node(visited, node) {
             breadth_first_from(remaining, visited, neighbors)
@@ -78,8 +90,7 @@ fn breadth_first_from<T>(
             let pending_in_level_order = collection.union(remaining, neighbors(node));
             breadth_first_from(pending_in_level_order, discovered, neighbors)
         }
-    },
-};
+    };
 
 /// Walks reachable nodes breadth first, in stable neighbor order per level.
 pub fn breadth_first<T>(root: T, neighbors: fn(T): [T]): [T] =
@@ -87,20 +98,24 @@ pub fn breadth_first<T>(root: T, neighbors: fn(T): [T]): [T] =
 
 fn reachable_from<T>(
     pending: [T], visited: [T], target: T, neighbors: fn(T): [T]
-): Bool = case collection.first(pending) {
-    null: false,
-    Some(node) if node == target: true,
-    Some(node): {
-        let remaining = collection.drop(pending, 1);
-        if has_node(visited, node) {
-            reachable_from(remaining, visited, target, neighbors)
+): Bool =
+    if collection.count(pending) == 0 {
+        false
+    } else {
+        let node = pending[0];
+        if node == target {
+            true
         } else {
-            let discovered = collection.union(visited, [node]);
-            let pending_in_level_order = collection.union(remaining, neighbors(node));
-            reachable_from(pending_in_level_order, discovered, target, neighbors)
+            let remaining = collection.drop(pending, 1);
+            if has_node(visited, node) {
+                reachable_from(remaining, visited, target, neighbors)
+            } else {
+                let discovered = collection.union(visited, [node]);
+                let pending_in_level_order = collection.union(remaining, neighbors(node));
+                reachable_from(pending_in_level_order, discovered, target, neighbors)
+            }
         }
-    },
-};
+    };
 
 /// Reports whether `target` is reachable, stopping as soon as it is found.
 pub fn reachable<T>(root: T, target: T, neighbors: fn(T): [T]): Bool =
