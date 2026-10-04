@@ -1,0 +1,212 @@
+// Stable finite-list ordering helpers. Keys must provide a lawful total
+// order. Sort operations evaluate the key once for each input value.
+
+// Return a three-way comparison result: -1, 0, or 1.
+pub fn compare<K>(left: K, right: K): Int =
+    if left < right {
+        -1
+    } else if right < left {
+        1
+    } else {
+        0
+    };
+
+fn precedes<K>(left: K, right: K, descending: Bool): Bool =
+    if descending { right < left } else { left < right };
+
+fn decorate_from<T, K>(
+    values: [T], key: fn(T): K, index: Int, end: Int, output: [(K, T)]
+): [(K, T)] =
+    if index >= end {
+        output
+    } else {
+        let value = values[index];
+        decorate_from(
+            values,
+            key,
+            index + 1,
+            end,
+            std.collection.union(output, [(key(value), value)]),
+        )
+    };
+
+fn append_pairs_from<K, T>(
+    values: [(K, T)], index: Int, end: Int, output: [(K, T)]
+): [(K, T)] =
+    if index >= end {
+        output
+    } else {
+        append_pairs_from(
+            values,
+            index + 1,
+            end,
+            std.collection.union(output, [values[index]]),
+        )
+    };
+
+fn merge_pairs<K, T>(
+    left: [(K, T)],
+    right: [(K, T)],
+    left_index: Int,
+    right_index: Int,
+    left_end: Int,
+    right_end: Int,
+    descending: Bool,
+    output: [(K, T)],
+): [(K, T)] =
+    if left_index >= left_end {
+        append_pairs_from(right, right_index, right_end, output)
+    } else if right_index >= right_end {
+        append_pairs_from(left, left_index, left_end, output)
+    } else if precedes(right[right_index].0, left[left_index].0, descending) {
+        merge_pairs(
+            left,
+            right,
+            left_index,
+            right_index + 1,
+            left_end,
+            right_end,
+            descending,
+            std.collection.union(output, [right[right_index]]),
+        )
+    } else {
+        // Choosing the left item for equal keys preserves source order.
+        merge_pairs(
+            left,
+            right,
+            left_index + 1,
+            right_index,
+            left_end,
+            right_end,
+            descending,
+            std.collection.union(output, [left[left_index]]),
+        )
+    };
+
+fn merge_sort_pairs<K, T>(values: [(K, T)], descending: Bool): [(K, T)] =
+    if std.collection.count(values) < 2 {
+        values
+    } else {
+        let middle = std.collection.count(values) / 2;
+        let left = merge_sort_pairs(std.collection.take(values, middle), descending);
+        let right = merge_sort_pairs(std.collection.drop(values, middle), descending);
+        merge_pairs(
+            left,
+            right,
+            0,
+            0,
+            std.collection.count(left),
+            std.collection.count(right),
+            descending,
+            [],
+        )
+    };
+
+fn values_from_pairs<K, T>(
+    values: [(K, T)], index: Int, end: Int, output: [T]
+): [T] =
+    if index >= end {
+        output
+    } else {
+        values_from_pairs(
+            values,
+            index + 1,
+            end,
+            std.collection.union(output, [values[index].1]),
+        )
+    };
+
+fn sort_by_direction<T, K>(values: [T], key: fn(T): K, descending: Bool): [T] = {
+    let decorated = decorate_from(values, key, 0, std.collection.count(values), []);
+    let ordered = merge_sort_pairs(decorated, descending);
+    values_from_pairs(ordered, 0, std.collection.count(ordered), [])
+};
+
+// Sort by ascending key while preserving the source order of equal keys.
+pub fn sort_by<T, K>(values: [T], key: fn(T): K): [T] =
+    sort_by_direction(values, key, false);
+
+// Sort by descending key while preserving the source order of equal keys.
+pub fn sort_by_descending<T, K>(values: [T], key: fn(T): K): [T] =
+    sort_by_direction(values, key, true);
+
+// Sort values in ascending natural order.
+pub fn sort<T>(values: [T]): [T] = sort_by(values, value => value);
+
+// Sort values in descending natural order.
+pub fn sort_descending<T>(values: [T]): [T] = sort_by_descending(values, value => value);
+
+fn sorted_from<T, K>(
+    values: [T], key: fn(T): K, descending: Bool, index: Int, end: Int
+): Bool =
+    if index + 1 >= end {
+        true
+    } else {
+        !precedes(key(values[index + 1]), key(values[index]), descending) &&
+            sorted_from(values, key, descending, index + 1, end)
+    };
+
+// Check ascending order; equal adjacent keys are allowed.
+pub fn is_sorted_by<T, K>(values: [T], key: fn(T): K): Bool =
+    sorted_from(values, key, false, 0, std.collection.count(values));
+
+// Check descending order; equal adjacent keys are allowed.
+pub fn is_sorted_by_descending<T, K>(values: [T], key: fn(T): K): Bool =
+    sorted_from(values, key, true, 0, std.collection.count(values));
+
+pub fn is_sorted<T>(values: [T]): Bool = is_sorted_by(values, value => value);
+
+pub fn is_sorted_descending<T>(values: [T]): Bool =
+    is_sorted_by_descending(values, value => value);
+
+fn extreme_pair_from<T, K>(
+    values: [T], key: fn(T): K, descending: Bool, index: Int, end: Int, best: (K, T)
+): (K, T) =
+    if index >= end {
+        best
+    } else {
+        let value = values[index];
+        let candidate = (key(value), value);
+        extreme_pair_from(
+            values,
+            key,
+            descending,
+            index + 1,
+            end,
+            if precedes(candidate.0, best.0, descending) { candidate } else { best },
+        )
+    };
+
+// Return the first value with the minimum key, or null for an empty list.
+pub fn min_by<T, K>(values: [T], key: fn(T): K): T? =
+    if std.collection.count(values) == 0 {
+        null
+    } else {
+        Some(
+            extreme_pair_from(
+                values,
+                key,
+                false,
+                1,
+                std.collection.count(values),
+                (key(values[0]), values[0]),
+            ).1,
+        )
+    };
+
+// Return the first value with the maximum key, or null for an empty list.
+pub fn max_by<T, K>(values: [T], key: fn(T): K): T? =
+    if std.collection.count(values) == 0 {
+        null
+    } else {
+        Some(
+            extreme_pair_from(
+                values,
+                key,
+                true,
+                1,
+                std.collection.count(values),
+                (key(values[0]), values[0]),
+            ).1,
+        )
+    };
