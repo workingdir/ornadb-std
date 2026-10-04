@@ -1,0 +1,51 @@
+// Finite cursor adapters materialize a persistent iterator once, then pin the
+// resulting list as a replayable stream source. These helpers require finite
+// input; they do not make an unbounded iterator safe to consume.
+
+// Adapt a finite iterator into a replayable stream in pull order. The source
+// identity is still combined with the typed digest of the collected values.
+pub fn from_iterator<T>(
+    source: std.iterator.Iterator<T>,
+    source_identity: Str
+): Stream<T> = std.stream.from_list(
+    std.iterator.collect(source),
+    source_identity
+);
+
+// Invoke a sequence factory once, then adapt its finite iterator. This keeps
+// the source thunk boundary explicit while the returned stream is replayable.
+pub fn from_sequence<T>(
+    source: fn(): std.iterator.Iterator<T>,
+    source_identity: Str
+): Stream<T> = from_iterator(source(), source_identity);
+
+// Collect a finite iterator in source order and emit positive-size batches.
+// The final short batch is retained by std.stream.from_list_batches.
+pub fn from_iterator_batches<T>(
+    source: std.iterator.Iterator<T>,
+    source_identity: Str,
+    batch_size: Int
+): Stream<[T]> = std.stream.from_list_batches(
+    std.iterator.collect(source),
+    source_identity,
+    batch_size
+);
+
+// Invoke a sequence factory once before adapting and batching its finite
+// iterator. Batch validation and source identity remain owned by std.stream.
+pub fn from_sequence_batches<T>(
+    source: fn(): std.iterator.Iterator<T>,
+    source_identity: Str,
+    batch_size: Int
+): Stream<[T]> = from_iterator_batches(source(), source_identity, batch_size);
+
+// Batch first, then add the bounded backpressure adapter to each emitted
+// group. Item order and the final short batch are preserved.
+pub fn buffered_batches<T>(
+    source: Stream<T>,
+    batch_size: Int,
+    capacity: Int
+): Stream<[T]> = std.stream.buffer(
+    std.stream.batch(source, batch_size),
+    capacity
+);
