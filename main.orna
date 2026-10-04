@@ -1,4 +1,5 @@
 use math;
+use numeric;
 use collection;
 use algorithm;
 use query;
