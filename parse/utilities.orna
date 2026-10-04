@@ -1,20 +1,17 @@
 // Composed helpers keep std.parse's primitive spellings strict. Delimited
 // lists preserve empty fields, so a leading, trailing, or repeated separator
 // makes the entire parse fail. Empty input represents an empty list.
-use collection;
-use text;
-
 fn parse_integer_fields(fields: [Str]): [Int]? {
     let values = [];
     let index = 0;
     let valid = true;
-    while index < collection.count(fields) && valid {
+    while index < std.collection.count(fields) && valid {
         let (field_valid, value) = case std.parse.integer(fields[index]) {
             Some(value): (true, value),
             null: (false, 0),
         };
         if field_valid {
-            values = collection.union(values, [value]);
+            values = std.collection.union(values, [value]);
         } else {
             valid = false;
         };
@@ -27,13 +24,13 @@ fn parse_boolean_fields(fields: [Str]): [Bool]? {
     let values = [];
     let index = 0;
     let valid = true;
-    while index < collection.count(fields) && valid {
+    while index < std.collection.count(fields) && valid {
         let (field_valid, value) = case std.parse.boolean(fields[index]) {
             Some(value): (true, value),
             null: (false, false),
         };
         if field_valid {
-            values = collection.union(values, [value]);
+            values = std.collection.union(values, [value]);
         } else {
             valid = false;
         };
@@ -65,7 +62,7 @@ pub fn integer_list(input: Str, separator: Str): [Int]? =
     } else if input == "" {
         Some([])
     } else {
-        parse_integer_fields(text.split(input, separator))
+        parse_integer_fields(std.text.split(input, separator))
     };
 
 /// Parses a delimited list of lowercase booleans as one all-or-nothing value.
@@ -77,7 +74,7 @@ pub fn boolean_list(input: Str, separator: Str): [Bool]? =
     } else if input == "" {
         Some([])
     } else {
-        parse_boolean_fields(text.split(input, separator))
+        parse_boolean_fields(std.text.split(input, separator))
     };
 
 /// Splits at the first literal separator, returning the complete remainder
@@ -86,10 +83,13 @@ pub fn split_once(input: Str, separator: Str): (Str, Str)? =
     if separator == "" {
         null
     } else {
-        let fields = text.split(input, separator);
-        if collection.count(fields) < 2 {
+        let fields = std.text.split(input, separator);
+        if std.collection.count(fields) < 2 {
             null
         } else {
-            Some((fields[0], text.join(collection.drop(fields, 1), separator)))
+            Some((
+                fields[0],
+                std.text.join(std.collection.drop(fields, 1), separator),
+            ))
         }
     };
