@@ -58,29 +58,33 @@ fn merge_pairs<K, T>(
         append_pairs_from(right, right_index, right_end, output)
     } else if right_index >= right_end {
         append_pairs_from(left, left_index, left_end, output)
-    } else if precedes(right[right_index].0, left[left_index].0, descending) {
-        merge_pairs(
-            left,
-            right,
-            left_index,
-            right_index + 1,
-            left_end,
-            right_end,
-            descending,
-            std.collection.union(output, [right[right_index]]),
-        )
     } else {
-        // Choosing the left item for equal keys preserves source order.
-        merge_pairs(
-            left,
-            right,
-            left_index + 1,
-            right_index,
-            left_end,
-            right_end,
-            descending,
-            std.collection.union(output, [left[left_index]]),
-        )
+        let (left_key, _) = left[left_index];
+        let (right_key, _) = right[right_index];
+        if precedes(right_key, left_key, descending) {
+            merge_pairs(
+                left,
+                right,
+                left_index,
+                right_index + 1,
+                left_end,
+                right_end,
+                descending,
+                std.collection.union(output, [right[right_index]]),
+            )
+        } else {
+            // Choosing the left item for equal keys preserves source order.
+            merge_pairs(
+                left,
+                right,
+                left_index + 1,
+                right_index,
+                left_end,
+                right_end,
+                descending,
+                std.collection.union(output, [left[left_index]]),
+            )
+        }
     };
 
 fn merge_sort_pairs<K, T>(values: [(K, T)], descending: Bool): [(K, T)] =
@@ -108,19 +112,20 @@ fn values_from_pairs<K, T>(
     if index >= end {
         output
     } else {
+        let (_, value) = values[index];
         values_from_pairs(
             values,
             index + 1,
             end,
-            std.collection.union(output, [values[index].1]),
+            std.collection.union(output, [value]),
         )
     };
 
-fn sort_by_direction<T, K>(values: [T], key: fn(T): K, descending: Bool): [T] = {
+fn sort_by_direction<T, K>(values: [T], key: fn(T): K, descending: Bool): [T] {
     let decorated = decorate_from(values, key, 0, std.collection.count(values), []);
     let ordered = merge_sort_pairs(decorated, descending);
     values_from_pairs(ordered, 0, std.collection.count(ordered), [])
-};
+}
 
 // Sort by ascending key while preserving the source order of equal keys.
 pub fn sort_by<T, K>(values: [T], key: fn(T): K): [T] =
@@ -167,13 +172,15 @@ fn extreme_pair_from<T, K>(
     } else {
         let value = values[index];
         let candidate = (key(value), value);
+        let (candidate_key, _) = candidate;
+        let (best_key, _) = best;
         extreme_pair_from(
             values,
             key,
             descending,
             index + 1,
             end,
-            if precedes(candidate.0, best.0, descending) { candidate } else { best },
+            if precedes(candidate_key, best_key, descending) { candidate } else { best },
         )
     };
 
@@ -182,16 +189,15 @@ pub fn min_by<T, K>(values: [T], key: fn(T): K): T? =
     if std.collection.count(values) == 0 {
         null
     } else {
-        Some(
-            extreme_pair_from(
-                values,
-                key,
-                false,
-                1,
-                std.collection.count(values),
-                (key(values[0]), values[0]),
-            ).1,
-        )
+        let (_, value) = extreme_pair_from(
+            values,
+            key,
+            false,
+            1,
+            std.collection.count(values),
+            (key(values[0]), values[0]),
+        );
+        Some(value)
     };
 
 // Return the first value with the maximum key, or null for an empty list.
@@ -199,14 +205,13 @@ pub fn max_by<T, K>(values: [T], key: fn(T): K): T? =
     if std.collection.count(values) == 0 {
         null
     } else {
-        Some(
-            extreme_pair_from(
-                values,
-                key,
-                true,
-                1,
-                std.collection.count(values),
-                (key(values[0]), values[0]),
-            ).1,
-        )
+        let (_, value) = extreme_pair_from(
+            values,
+            key,
+            true,
+            1,
+            std.collection.count(values),
+            (key(values[0]), values[0]),
+        );
+        Some(value)
     };
