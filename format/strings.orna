@@ -1,0 +1,82 @@
+// String layout helpers count Unicode scalar values, not UTF-8 bytes or
+// grapheme clusters. A multi-scalar fill string repeats as a scalar pattern.
+use text;
+use collection;
+
+fn scalar_count(value: Str): Int = collection.count(text.split(value, ""));
+
+fn repeat_fill(fill: Str, count: Int): Str {
+    let scalars = text.split(fill, "");
+    let scalar_total = collection.count(scalars);
+    if count <= 0 || scalar_total == 0 {
+        ""
+    } else {
+        let output = [];
+        let index = 0;
+        while index < count {
+            output = collection.union(output, [scalars[index % scalar_total]]);
+            index = index + 1;
+        }
+        text.join(output, "")
+    }
+}
+
+fn pad_left_by(value: Str, count: Int, fill: Str): Str =
+    text.join([repeat_fill(fill, count), value], "");
+
+fn pad_right_by(value: Str, count: Int, fill: Str): Str =
+    text.join([value, repeat_fill(fill, count)], "");
+
+/// Repeats the string `count` times. Nonpositive counts return the empty string.
+pub fn repeat(value: Str, count: Int): Str = repeat_fill(value, count);
+
+/// Pads to at least `width` Unicode scalar values on the left. `fill` is a
+/// repeating scalar pattern; an empty fill string leaves the value unchanged.
+pub fn pad_left(value: Str, width: Int, fill: Str = " "): Str =
+    pad_left_by(value, width - scalar_count(value), fill);
+
+/// Pads to at least `width` Unicode scalar values on the right.
+pub fn pad_right(value: Str, width: Int, fill: Str = " "): Str =
+    pad_right_by(value, width - scalar_count(value), fill);
+
+/// Centers a string in at least `width` Unicode scalar values. An odd extra
+/// padding scalar goes on the right; an empty fill leaves the value unchanged.
+pub fn center(value: Str, width: Int, fill: Str = " "): Str {
+    let padding = width - scalar_count(value);
+    if padding <= 0 {
+        value
+    } else {
+        let left = padding / 2;
+        let right = padding - left;
+        text.join([repeat_fill(fill, left), value, repeat_fill(fill, right)], "")
+    }
+}
+
+/// Truncates to at most `width` Unicode scalar values, reserving room for the
+/// first scalars of `suffix` when truncation is needed. Nonpositive widths
+/// return the empty string.
+pub fn truncate(value: Str, width: Int, suffix: Str = "…"): Str {
+    if width <= 0 {
+        ""
+    } else {
+        let scalars = text.split(value, "");
+        if collection.count(scalars) <= width {
+            value
+        } else {
+            let suffix_scalars = text.split(suffix, "");
+            let kept_suffix = collection.take(suffix_scalars, width);
+            let prefix_width = width - collection.count(kept_suffix);
+            text.join(
+                [text.join(collection.take(scalars, prefix_width), ""), text.join(kept_suffix, "")],
+                ""
+            )
+        }
+    }
+}
+
+/// Prefixes every line, preserving empty lines and a final trailing newline.
+pub fn indent(value: Str, prefix: Str): Str =
+    text.join(
+        collection.map(text.split(value, "\n"), line => text.join([prefix, line], "")),
+        "\n"
+    );
