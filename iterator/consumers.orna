@@ -1,0 +1,142 @@
+// Terminal consumers traverse persistent pull cursors in source order. A
+// consumer only advances its local successor; the original cursor can be
+// observed again and callbacks may therefore run again on replay.
+
+fn any_from<T>(
+    source: std.iterator.Iterator<T>,
+    predicate: fn(T): Bool,
+): Bool = case std.iterator.next(source) {
+    (Some(value), _) if predicate(value): true,
+    (Some(_), tail): any_from(tail, predicate),
+    (null, _): false,
+};
+
+// Stops at the first item accepted by `predicate`; an empty cursor is false.
+pub fn any<T>(
+    source: std.iterator.Iterator<T>,
+    predicate: fn(T): Bool,
+): Bool = any_from(source, predicate);
+
+fn all_from<T>(
+    source: std.iterator.Iterator<T>,
+    predicate: fn(T): Bool,
+): Bool = case std.iterator.next(source) {
+    (Some(value), _) if !predicate(value): false,
+    (Some(_), tail): all_from(tail, predicate),
+    (null, _): true,
+};
+
+// Returns true for an empty cursor and stops at the first rejected item.
+pub fn all<T>(
+    source: std.iterator.Iterator<T>,
+    predicate: fn(T): Bool,
+): Bool = all_from(source, predicate);
+
+fn find_from<T>(
+    source: std.iterator.Iterator<T>,
+    predicate: fn(T): Bool,
+): T? = case std.iterator.next(source) {
+    (Some(value), _) if predicate(value): Some(value),
+    (Some(_), tail): find_from(tail, predicate),
+    (null, _): null,
+};
+
+// Returns the first matching item, or null after a finite cursor is exhausted.
+pub fn find<T>(
+    source: std.iterator.Iterator<T>,
+    predicate: fn(T): Bool,
+): T? = find_from(source, predicate);
+
+fn find_map_from<T, U>(
+    source: std.iterator.Iterator<T>,
+    transform: fn(T): U?,
+): U? = case std.iterator.next(source) {
+    (Some(value), tail): case transform(value) {
+        Some(mapped): Some(mapped),
+        null: find_map_from(tail, transform),
+    },
+    (null, _): null,
+};
+
+// Skips null transform results and returns the first Some result.
+pub fn find_map<T, U>(
+    source: std.iterator.Iterator<T>,
+    transform: fn(T): U?,
+): U? = find_map_from(source, transform);
+
+fn position_from<T>(
+    source: std.iterator.Iterator<T>,
+    predicate: fn(T): Bool,
+    index: Int,
+): Int? = case std.iterator.next(source) {
+    (Some(value), _) if predicate(value): Some(index),
+    (Some(_), tail): position_from(tail, predicate, index + 1),
+    (null, _): null,
+};
+
+// Returns the zero-based position of the first match, or null when absent.
+pub fn position<T>(
+    source: std.iterator.Iterator<T>,
+    predicate: fn(T): Bool,
+): Int? = position_from(source, predicate, 0);
+
+fn count_from<T>(source: std.iterator.Iterator<T>): Int =
+    case std.iterator.next(source) {
+        (Some(_), tail): 1 + count_from(tail),
+        (null, _): 0,
+    };
+
+// Counts a finite cursor; an infinite cursor does not terminate.
+pub fn count<T>(source: std.iterator.Iterator<T>): Int = count_from(source);
+
+fn count_by_from<T>(
+    source: std.iterator.Iterator<T>,
+    predicate: fn(T): Bool,
+): Int = case std.iterator.next(source) {
+    (Some(value), tail) if predicate(value): 1 + count_by_from(tail, predicate),
+    (Some(_), tail): count_by_from(tail, predicate),
+    (null, _): 0,
+};
+
+// Counts the items accepted by `predicate` in a finite cursor.
+pub fn count_by<T>(
+    source: std.iterator.Iterator<T>,
+    predicate: fn(T): Bool,
+): Int = count_by_from(source, predicate);
+
+fn partition_from<T>(
+    source: std.iterator.Iterator<T>,
+    predicate: fn(T): Bool,
+    accepted: [T],
+    rejected: [T],
+): ([T], [T]) = case std.iterator.next(source) {
+    (Some(value), tail) if predicate(value):
+        partition_from(tail, predicate, std.collection.union(accepted, [value]), rejected),
+    (Some(value), tail):
+        partition_from(tail, predicate, accepted, std.collection.union(rejected, [value])),
+    (null, _): (accepted, rejected),
+};
+
+// Partitions a finite cursor into stable accepted and rejected lists.
+pub fn partition<T>(
+    source: std.iterator.Iterator<T>,
+    predicate: fn(T): Bool,
+): ([T], [T]) = partition_from(source, predicate, [], []);
+
+fn reduce_from<T>(
+    source: std.iterator.Iterator<T>,
+    accumulated: T,
+    combine: fn(T, T): T,
+): T? = case std.iterator.next(source) {
+    (Some(value), tail): reduce_from(tail, combine(accumulated, value), combine),
+    (null, _): Some(accumulated),
+};
+
+// Reduces a nonempty finite cursor from left to right; empty input returns null.
+pub fn reduce<T>(
+    source: std.iterator.Iterator<T>,
+    combine: fn(T, T): T,
+): T? = case std.iterator.next(source) {
+    (Some(value), tail): reduce_from(tail, value, combine),
+    (null, _): null,
+};
