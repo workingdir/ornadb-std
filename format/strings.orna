@@ -28,7 +28,19 @@ fn pad_right_by(value: Str, count: Int, fill: Str): Str =
     text.join([value, repeat_fill(fill, count)], "");
 
 /// Repeats the string `count` times. Nonpositive counts return the empty string.
-pub fn repeat(value: Str, count: Int): Str = repeat_fill(value, count);
+pub fn repeat(value: Str, count: Int): Str {
+    if count <= 0 || value == "" {
+        ""
+    } else {
+        let output = [];
+        let remaining = count;
+        while remaining > 0 {
+            output = collection.union(output, [value]);
+            remaining = remaining - 1;
+        }
+        text.join(output, "")
+    }
+}
 
 /// Pads to at least `width` Unicode scalar values on the left. `fill` is a
 /// repeating scalar pattern; an empty fill string leaves the value unchanged.
