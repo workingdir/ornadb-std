@@ -44,65 +44,45 @@ fn append_pairs_from<K, T>(
         )
     };
 
-fn merge_pairs<K, T>(
-    left: [(K, T)],
-    right: [(K, T)],
-    left_index: Int,
-    right_index: Int,
-    left_end: Int,
-    right_end: Int,
+fn insert_pair_from<K, T>(
+    sorted: [(K, T)],
+    candidate: (K, T),
     descending: Bool,
+    index: Int,
+    end: Int,
     output: [(K, T)],
 ): [(K, T)] =
-    if left_index >= left_end {
-        append_pairs_from(right, right_index, right_end, output)
-    } else if right_index >= right_end {
-        append_pairs_from(left, left_index, left_end, output)
+    if index >= end {
+        std.collection.union(output, [candidate])
     } else {
-        let (left_key, _) = left[left_index];
-        let (right_key, _) = right[right_index];
-        if precedes(right_key, left_key, descending) {
-            merge_pairs(
-                left,
-                right,
-                left_index,
-                right_index + 1,
-                left_end,
-                right_end,
-                descending,
-                std.collection.union(output, [right[right_index]]),
-            )
+        let (candidate_key, _) = candidate;
+        let (current_key, _) = sorted[index];
+        if precedes(candidate_key, current_key, descending) {
+            append_pairs_from(sorted, index, end, std.collection.union(output, [candidate]))
         } else {
-            // Choosing the left item for equal keys preserves source order.
-            merge_pairs(
-                left,
-                right,
-                left_index + 1,
-                right_index,
-                left_end,
-                right_end,
+            insert_pair_from(
+                sorted,
+                candidate,
                 descending,
-                std.collection.union(output, [left[left_index]]),
+                index + 1,
+                end,
+                std.collection.union(output, [sorted[index]]),
             )
         }
     };
 
-fn merge_sort_pairs<K, T>(values: [(K, T)], descending: Bool): [(K, T)] =
-    if std.collection.count(values) < 2 {
-        values
+fn insertion_sort_pairs<K, T>(
+    values: [(K, T)], descending: Bool, index: Int, end: Int, sorted: [(K, T)]
+): [(K, T)] =
+    if index >= end {
+        sorted
     } else {
-        let middle = std.collection.count(values) / 2;
-        let left = merge_sort_pairs(std.collection.take(values, middle), descending);
-        let right = merge_sort_pairs(std.collection.drop(values, middle), descending);
-        merge_pairs(
-            left,
-            right,
-            0,
-            0,
-            std.collection.count(left),
-            std.collection.count(right),
+        insertion_sort_pairs(
+            values,
             descending,
-            [],
+            index + 1,
+            end,
+            insert_pair_from(sorted, values[index], descending, 0, std.collection.count(sorted), []),
         )
     };
 
@@ -122,9 +102,19 @@ fn values_from_pairs<K, T>(
     };
 
 fn sort_by_direction<T, K>(values: [T], key: fn(T): K, descending: Bool): [T] {
-    let decorated = decorate_from(values, key, 0, std.collection.count(values), []);
-    let ordered = merge_sort_pairs(decorated, descending);
-    values_from_pairs(ordered, 0, std.collection.count(ordered), [])
+    if descending {
+        let decorated = decorate_from(values, key, 0, std.collection.count(values), []);
+        let ordered = insertion_sort_pairs(
+            decorated,
+            true,
+            0,
+            std.collection.count(decorated),
+            [],
+        );
+        values_from_pairs(ordered, 0, std.collection.count(ordered), [])
+    } else {
+        std.collection.sort_by(values, key)
+    }
 }
 
 // Sort by ascending key while preserving the source order of equal keys.
