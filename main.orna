@@ -28,6 +28,7 @@ use pattern;
 use regex;
 use iterator;
 use lazy;
+use memo;
 use views;
 use introspection;
 use reflection;

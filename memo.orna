@@ -1,0 +1,37 @@
+// Pure, explicitly threaded memoization helpers. Orna's standard collections
+// are immutable, so each call returns the updated cache beside its value; pass
+// that cache to the next call to reuse prior results. Cache keys must have a
+// lawful equality relation, as required by std.map.
+use map;
+
+// Reuse a cached zero-argument computation or evaluate it once and retain its
+// result. The optional wrapper distinguishes an empty cache from a cached null.
+pub fn memoize_thunk<T>(cached: T?, computation: fn(): T): (T?, T) =
+    case cached {
+        Some(value): (cached, value),
+        null: {
+            let value = computation();
+            (Some(value), value)
+        },
+    };
+
+// Return the prior result for key, or compute and insert a result on a miss.
+// Map insertion replaces an equal key without changing its first position.
+pub fn memoize<K, V>(
+    cache: [(K, V)],
+    key: K,
+    computation: fn(K): V,
+): ([(K, V)], V) = case std.map.get(cache, key) {
+    Some(value): (cache, value),
+    null: {
+        let value = computation(key);
+        (std.map.insert(cache, key, value), value)
+    },
+};
+
+pub fn get<K, V>(cache: [(K, V)], key: K): V? = std.map.get(cache, key);
+
+pub fn remove<K, V>(cache: [(K, V)], key: K): [(K, V)] =
+    std.map.remove(cache, key);
+
+pub fn clear<K, V>(cache: [(K, V)]): [(K, V)] = [];
