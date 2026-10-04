@@ -4,6 +4,8 @@
 // source pipeline operator. Public functions are ordinary Orna wrappers over
 // bounded evaluator primitives, so importing this module does not replace or
 // alter core database operators.
+use std.collection;
+
 fn __bit_or(left: Int, right: Int): Int = std.bits.bit_or(left, right);
 fn __bit_and(left: Int, right: Int): Int = std.bits.bit_and(left, right);
 fn __bit_xor(left: Int, right: Int): Int = std.bits.bit_xor(left, right);
@@ -22,3 +24,100 @@ pub fn bit_not(value: Int): Int = __bit_not(value);
 pub fn shift_left(value: Int, count: Int): Int = __shift_left(value, count);
 
 pub fn shift_right(value: Int, count: Int): Int = __shift_right(value, count);
+
+/// Tests a zero-based bit index. Int uses unbounded signed two's-complement
+/// semantics, so negative values have an infinite sign extension. A negative
+/// index returns null.
+pub fn test_bit(value: Int, index: Int): Bool? =
+    if index < 0 {
+        null
+    } else {
+        Some(bit_and(shift_right(value, index), 1) != 0)
+    };
+
+/// Sets a zero-based bit and returns null for a negative index.
+pub fn set_bit(value: Int, index: Int): Int? =
+    if index < 0 {
+        null
+    } else {
+        Some(bit_or(value, shift_left(1, index)))
+    };
+
+/// Clears a zero-based bit and returns null for a negative index.
+pub fn clear_bit(value: Int, index: Int): Int? =
+    if index < 0 {
+        null
+    } else {
+        Some(bit_and(value, bit_not(shift_left(1, index))))
+    };
+
+/// Toggles a zero-based bit and returns null for a negative index.
+pub fn toggle_bit(value: Int, index: Int): Int? =
+    if index < 0 {
+        null
+    } else {
+        Some(bit_xor(value, shift_left(1, index)))
+    };
+
+/// Reports whether an integer is an unsigned byte value from 0 through 255.
+pub fn is_byte(value: Int): Bool = value >= 0 && value <= 255;
+
+fn supports_byte_order(order: Str): Bool = order == "little" || order == "big";
+
+/// Encodes a nonnegative integer into exactly `width` bytes in the requested
+/// byte order. The width must be positive and large enough; invalid arguments
+/// return null. Little endian places the least-significant byte first. Big
+/// endian places the most-significant byte first. Resource limits still apply.
+pub fn unsigned_to_bytes(value: Int, width: Int, order: Str): [Int]? {
+    if value < 0 || width <= 0 || !supports_byte_order(order) || shift_right(value, width * 8) != 0 {
+        null
+    } else {
+        let index = 0;
+        let output = [];
+        while index < width {
+            let byte_index = if order == "little" { index } else { width - index - 1 };
+            let byte = bit_and(shift_right(value, byte_index * 8), 255);
+            output = std.collection.append(output, byte);
+            index += 1;
+        };
+        Some(output)
+    }
+}
+
+/// Decodes a nonempty list of unsigned byte values in the requested byte
+/// order. Invalid byte values, an empty list, or an unsupported order return
+/// null. Leading zero bytes are accepted and do not survive the Int conversion.
+pub fn unsigned_from_bytes(bytes: [Int], order: Str): Int? {
+    let length = std.collection.count(bytes);
+    if length == 0 || !supports_byte_order(order) {
+        null
+    } else {
+        let index = 0;
+        let valid = true;
+        while index < length && valid {
+            if !is_byte(bytes[index]) {
+                valid = false;
+            };
+            index += 1;
+        };
+        if !valid {
+            null
+        } else {
+            let value = 0;
+            if order == "little" {
+                let cursor = length;
+                while cursor > 0 {
+                    cursor -= 1;
+                    value = value * 256 + bytes[cursor];
+                };
+            } else {
+                let cursor = 0;
+                while cursor < length {
+                    value = value * 256 + bytes[cursor];
+                    cursor += 1;
+                };
+            };
+            Some(value)
+        }
+    }
+}

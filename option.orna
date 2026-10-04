@@ -1,6 +1,7 @@
 // `T?` is the language's built-in Option<T>, represented by Some(value) or
 // null. This module adds ordinary helpers without changing that core type or
-// turning language failures into optional values.
+// turning language failures into optional values. Combinators select branches;
+// they never catch failures raised by callbacks.
 pub fn is_some<T>(value: T?): Bool = case value {
     Some(_): true,
     null: false,
@@ -40,6 +41,74 @@ pub fn or_else<T>(value: T?, fallback: fn(): T?): T? = case value {
 pub fn zip<T, U>(left: T?, right: U?): (T, U)? = case left {
     Some(left_value): case right {
         Some(right_value): first([(left_value, right_value)]),
+        null: null,
+    },
+    null: null,
+};
+
+/// Collapses one nested optional layer. `Some(null)` becomes null.
+pub fn flatten<T>(value: T? ?): T? = case value {
+    Some(inner): inner,
+    null: null,
+};
+
+/// Returns the right option when the left is present, otherwise null. Both
+/// arguments are evaluated before this function is called; use `and_then` when
+/// constructing the right option must be conditional.
+pub fn and<T, U>(left: T?, right: U?): U? = case left {
+    Some(_): right,
+    null: null,
+};
+
+/// Returns the left option when present, otherwise the right option. Both
+/// arguments are evaluated before this function is called; use `or_else` for a
+/// deferred fallback.
+pub fn or<T>(left: T?, right: T?): T? = case left {
+    Some(_): left,
+    null: right,
+};
+
+/// Returns the present option only when exactly one input is present.
+pub fn xor<T>(left: T?, right: T?): T? = case left {
+    Some(_): case right {
+        Some(_): null,
+        null: left,
+    },
+    null: right,
+};
+
+/// Applies `transform` to a present value, otherwise returns the already
+/// evaluated fallback.
+pub fn map_or<T, U>(value: T?, fallback: U, transform: fn(T): U): U = case value {
+    Some(inner): transform(inner),
+    null: fallback,
+};
+
+/// Applies `transform` to a present value or calls `fallback` only for null.
+pub fn map_or_else<T, U>(
+    value: T?, fallback: fn(): U, transform: fn(T): U
+): U = case value {
+    Some(inner): transform(inner),
+    null: fallback(),
+};
+
+/// Returns the value when present or calls `fallback` only for null.
+pub fn unwrap_or_else<T>(value: T?, fallback: fn(): T): T = case value {
+    Some(inner): inner,
+    null: fallback(),
+};
+
+/// Tests whether the optional value is equal to `expected`.
+pub fn contains<T>(value: T?, expected: T): Bool = case value {
+    Some(inner): inner == expected,
+    null: false,
+};
+
+/// Combines two present values and returns null when either input is absent.
+/// The callback runs only when both options contain values.
+pub fn zip_with<T, U, V>(left: T?, right: U?, combine: fn(T, U): V): V? = case left {
+    Some(left_value): case right {
+        Some(right_value): first([combine(left_value, right_value)]),
         null: null,
     },
     null: null,

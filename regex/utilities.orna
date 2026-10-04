@@ -1,0 +1,43 @@
+// Convenience projections over Match values returned by std.regex. These
+// helpers preserve match order and use the dialect's half-open scalar spans.
+use collection;
+use regex;
+
+// Return capture group zero (the full match) or a later group. Negative,
+// out-of-range, and nonparticipating groups all return null.
+pub fn capture_at(value: std.regex.Match, index: Int): Str? =
+    if index < 0 {
+        null
+    } else {
+        case std.collection.first(std.collection.drop(std.regex.captures(value), index)) {
+            Some(capture): capture,
+            null: null,
+        }
+    };
+
+// Project a match's zero-based, half-open Unicode-scalar span.
+pub fn span(value: std.regex.Match): (Int, Int) =
+    (std.regex.start(value), std.regex.end(value));
+
+pub fn span_length(value: std.regex.Match): Int =
+    std.regex.end(value) - std.regex.start(value);
+
+pub fn is_zero_width(value: std.regex.Match): Bool =
+    std.regex.start(value) == std.regex.end(value);
+
+// Preserve the source order, duplicate text, and empty matches in projections.
+pub fn matched_texts(values: [std.regex.Match]): [Str] =
+    std.collection.map(values, value => std.regex.matched_text(value));
+
+pub fn spans(values: [std.regex.Match]): [(Int, Int)] =
+    std.collection.map(values, value => span(value));
+
+// Select one capture group from every match. Null entries retain unmatched or
+// absent groups, so the result stays aligned with the input match list.
+pub fn capture_column(values: [std.regex.Match], index: Int): [Str?] =
+    std.collection.map(values, value => capture_at(value, index));
+
+pub fn zero_width_count(values: [std.regex.Match]): Int =
+    std.collection.count(
+        std.collection.filter(values, value => is_zero_width(value))
+    );

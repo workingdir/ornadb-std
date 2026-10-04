@@ -1,0 +1,61 @@
+// Date and instant conveniences composed from the pinned Gregorian calendar
+// and exact elapsed-time operations. Calendar days are never treated as fixed
+// seconds, and instants never inherit a process-local time zone.
+
+// Weekdays use ISO numbering: Monday is 1 and Sunday is 7. Invalid civil
+// dates return null so callers can distinguish invalid input from a weekday.
+pub fn is_weekend(year: Int, month: Int, day: Int): Bool? =
+    case std.time.calendar.weekday(year, month, day) {
+        Some(weekday): Some(weekday >= 6),
+        null: null,
+    };
+
+pub fn is_business_day(year: Int, month: Int, day: Int): Bool? =
+    case std.time.calendar.weekday(year, month, day) {
+        Some(weekday): Some(weekday < 6),
+        null: null,
+    };
+
+// Return the Monday and Sunday of the ISO week containing a valid date.
+// Results cross month and year boundaries using civil calendar arithmetic.
+pub fn week_start(year: Int, month: Int, day: Int): (Int, Int, Int)? =
+    case std.time.calendar.weekday(year, month, day) {
+        Some(weekday): std.time.calendar.add_days(year, month, day, 1 - weekday),
+        null: null,
+    };
+
+pub fn week_end(year: Int, month: Int, day: Int): (Int, Int, Int)? =
+    case std.time.calendar.weekday(year, month, day) {
+        Some(weekday): std.time.calendar.add_days(year, month, day, 7 - weekday),
+        null: null,
+    };
+
+// Quarters are numbered 1 through 4. Invalid years or months return null.
+pub fn quarter_of(year: Int, month: Int): Int? =
+    if year >= 1 && year <= 9999 && month >= 1 && month <= 12 {
+        Some((month - 1) / 3 + 1)
+    } else {
+        null
+    };
+
+// Quarter boundaries are inclusive civil dates and do not imply a time zone.
+pub fn quarter_start(year: Int, month: Int): (Int, Int, Int)? =
+    case quarter_of(year, month) {
+        Some(quarter): std.time.calendar.month_start(year, (quarter - 1) * 3 + 1),
+        null: null,
+    };
+
+pub fn quarter_end(year: Int, month: Int): (Int, Int, Int)? =
+    case quarter_of(year, month) {
+        Some(quarter): std.time.calendar.month_end(year, quarter * 3),
+        null: null,
+    };
+
+// Test membership in a closed instant interval. Reversed endpoints are
+// normalized, and equality with either endpoint is included.
+pub fn instant_in_closed_range(value: Instant, left: Instant, right: Instant): Bool =
+    value >= std.time.instant_min(left, right) && value <= std.time.instant_max(left, right);
+
+// Return the nonnegative, exact elapsed distance between two instants.
+pub fn instant_distance(left: Instant, right: Instant): Duration =
+    std.time.duration_abs(std.time.elapsed_between(left, right));

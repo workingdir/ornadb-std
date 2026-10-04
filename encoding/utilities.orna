@@ -1,0 +1,80 @@
+// Unicode helpers count and slice Unicode scalar values. They do not treat
+// grapheme clusters as single units: combining marks and joiners stay separate.
+// Base64url follows RFC 4648's URL-safe alphabet and omits padding. Decoding
+// accepts only canonical unpadded Base64url; malformed input fails like the
+// underlying strict standard Base64 decoder.
+
+pub fn unicode_scalars(value: Str): [Str] = std.text.split(value, "");
+
+pub fn unicode_scalar_length(value: Str): Int =
+    std.collection.count(unicode_scalars(value));
+
+/// Reverses Unicode scalar values while preserving each scalar's UTF-8 bytes.
+/// Combining sequences and joined emoji are reversed by scalar, not grapheme.
+pub fn unicode_reverse(value: Str): Str {
+    let scalars = unicode_scalars(value);
+    let index = std.collection.count(scalars) - 1;
+    let reversed = [];
+    while index >= 0 {
+        reversed = std.collection.union(reversed, [scalars[index]]);
+        index = index - 1;
+    };
+    std.text.join(reversed, "")
+}
+
+/// Returns the Unicode scalar slice `[start, end)`. Negative or inverted
+/// bounds return the empty string; bounds past the string clamp to its length.
+pub fn unicode_slice(value: Str, start: Int, end: Int): Str =
+    if start < 0 || end < start {
+        ""
+    } else {
+        std.text.join(
+            std.collection.take(
+                std.collection.drop(unicode_scalars(value), start),
+                end - start
+            ),
+            ""
+        )
+    };
+
+/// Encodes bytes as unpadded URL-safe Base64 (the `-` and `_` alphabet).
+pub fn base64url_encode(input: Blob): Str =
+    std.text.replace(
+        std.text.replace(
+            std.text.replace(std.encoding.base64.encode(input), "+", "-"),
+            "/",
+            "_"
+        ),
+        "=",
+        ""
+    );
+
+/// Decodes canonical unpadded URL-safe Base64. Explicit padding, the standard
+/// `+` and `/` alphabet, invalid characters, and nonzero unused trailing bits
+/// are rejected by canonical re-encoding or the strict Base64 decoder.
+pub fn base64url_decode(input: Str): Blob {
+    let length = std.collection.count(std.text.split(input, ""));
+    let remainder = length - (length / 4) * 4;
+    let padded = if remainder == 2 {
+        std.text.join([input, "=="], "")
+    } else if remainder == 3 {
+        std.text.join([input, "="], "")
+    } else {
+        input
+    };
+    let decoded = std.encoding.base64.decode(
+        std.text.replace(
+            std.text.replace(padded, "-", "+"),
+            "_",
+            "/"
+        )
+    );
+    if base64url_encode(decoded) == input {
+        decoded
+    } else {
+        fail(error(
+            code: "std.encoding.base64url.noncanonical",
+            message: "input is not canonical unpadded URL-safe Base64"
+        ))
+    }
+}

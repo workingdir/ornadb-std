@@ -1,0 +1,124 @@
+// Byte buffers are immutable lists of unsigned octets, each in 0...255.
+// Every operation that consumes a buffer validates all elements first.
+// Buffer-producing functions return null for invalid bytes, sizes, ranges,
+// byte orders, or values that do not fit the requested width.
+fn all_bytes(values: [Int]): Bool {
+    let index = 0;
+    let valid = true;
+    while index < std.collection.count(values) && valid {
+        if !std.bits.is_byte(values[index]) {
+            valid = false;
+        };
+        index = index + 1;
+    };
+    valid
+}
+
+fn zero_bytes(length: Int): [Int] {
+    let index = 0;
+    let output = [];
+    while index < length {
+        output = std.collection.union(output, [0]);
+        index = index + 1;
+    };
+    output
+}
+
+/// Reports whether an integer is an unsigned octet.
+pub fn is_byte(value: Int): Bool = std.bits.is_byte(value);
+
+/// Reports whether every item is an unsigned octet. The empty buffer is valid.
+pub fn is_buffer(values: [Int]): Bool = all_bytes(values);
+
+/// Returns the buffer's byte length, or null if an element is outside 0...255.
+pub fn buffer_length(values: [Int]): Int? =
+    if is_buffer(values) { Some(std.collection.count(values)) } else { null };
+
+/// Allocates a zero-filled byte buffer. Negative lengths return null.
+pub fn new_buffer(length: Int): [Int]? =
+    if length < 0 { null } else { Some(zero_bytes(length)) };
+
+/// Appends one byte, returning null for an invalid buffer or byte.
+pub fn append_byte(values: [Int], value: Int): [Int]? =
+    if !is_buffer(values) || !is_byte(value) {
+        null
+    } else {
+        Some(std.collection.union(values, [value]))
+    };
+
+/// Concatenates two valid byte buffers without changing their order.
+pub fn concat(left: [Int], right: [Int]): [Int]? =
+    if !is_buffer(left) || !is_buffer(right) {
+        null
+    } else {
+        Some(std.collection.union(left, right))
+    };
+
+/// Returns `count` bytes starting at `offset`; invalid or out-of-range bounds
+/// return null. A zero-length slice at the buffer end is valid.
+pub fn slice(values: [Int], start: Int, count: Int): [Int]? =
+    if !is_buffer(values)
+        || start < 0
+        || count < 0
+        || start + count > std.collection.count(values)
+    {
+        null
+    } else {
+        Some(std.collection.take(std.collection.drop(values, start), count))
+    };
+
+/// Splits a valid byte buffer into ordered chunks. Chunk sizes must be positive;
+/// an empty buffer produces no chunks.
+pub fn chunks(values: [Int], size: Int): [[Int]]? =
+    if !is_buffer(values) || size <= 0 {
+        null
+    } else {
+        Some(std.collection.chunk(values, size))
+    };
+
+/// Reads an unsigned integer from `width` bytes at `offset` in `little` or
+/// `big` byte order. Invalid buffers, ranges, widths, or orders return null.
+pub fn read_unsigned(values: [Int], start: Int, width: Int, order: Str): Int? =
+    if !is_buffer(values)
+        || start < 0
+        || width <= 0
+        || start + width > std.collection.count(values)
+    {
+        null
+    } else {
+        std.bits.unsigned_from_bytes(
+            std.collection.take(std.collection.drop(values, start), width),
+            order
+        )
+    };
+
+/// Replaces exactly `width` bytes at `offset` with an unsigned integer in
+/// `little` or `big` order. The write never grows the buffer; invalid ranges,
+/// orders, buffers, or values too large for the width return null.
+pub fn write_unsigned(
+    values: [Int],
+    start: Int,
+    value: Int,
+    width: Int,
+    order: Str
+): [Int]? =
+    if !is_buffer(values)
+        || start < 0
+        || width <= 0
+        || start + width > std.collection.count(values)
+    {
+        null
+    } else {
+        case std.bits.unsigned_to_bytes(value, width, order) {
+            Some(encoded): Some(
+                std.collection.union(
+                    std.collection.union(
+                        std.collection.take(values, start),
+                        encoded
+                    ),
+                    std.collection.drop(values, start + width)
+                )
+            ),
+            null: null,
+        }
+    };

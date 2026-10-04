@@ -1,5 +1,7 @@
 // Result is an ordinary closed enum in the optional std package. Orna's own
 // failures continue through the language Error channel and are not wrapped.
+// These combinators select explicit Ok and Err branches and never catch a
+// language failure raised by a callback.
 pub enum Result<T, E> {
     Ok { value: T },
     Err { error: E },
@@ -13,6 +15,32 @@ pub fn is_ok<T, E>(result: Result<T, E>): Bool = case result {
 pub fn is_err<T, E>(result: Result<T, E>): Bool = case result {
     Result.Ok { value: _ }: false,
     Result.Err { error: _ }: true,
+};
+
+/// Returns `next` for Ok and preserves the first Err. Both arguments are
+/// evaluated before the call; use `and_then` to construct `next` conditionally.
+pub fn and<T, U, E>(result: Result<T, E>, next: Result<U, E>): Result<U, E> = case result {
+    Result.Ok { value: _ }: next,
+    Result.Err { error }: Result.Err { error: error },
+};
+
+/// Preserves Ok and returns the already-evaluated fallback for Err. Use
+/// `or_else` when recovery should be computed only for the Err branch.
+pub fn or<T, E, F>(result: Result<T, E>, fallback: Result<T, F>): Result<T, F> = case result {
+    Result.Ok { value }: Result.Ok { value: value },
+    Result.Err { error: _ }: fallback,
+};
+
+/// Tests whether the result is Ok and its value equals `expected`.
+pub fn contains<T, E>(result: Result<T, E>, expected: T): Bool = case result {
+    Result.Ok { value }: value == expected,
+    Result.Err { error: _ }: false,
+};
+
+/// Tests whether the result is Err and its error equals `expected`.
+pub fn contains_error<T, E>(result: Result<T, E>, expected: E): Bool = case result {
+    Result.Ok { value: _ }: false,
+    Result.Err { error }: error == expected,
 };
 
 pub fn map<T, U, E>(result: Result<T, E>, transform: fn(T): U): Result<U, E> = case result {
@@ -61,6 +89,16 @@ pub fn err<T, E>(result: Result<T, E>): E? = case result {
     Result.Err { error }: first([error]),
 };
 
+/// Converts `Result<Option<T>, E>` to `Option<Result<T, E>>` without losing
+/// either the successful value, the empty option, or the error payload.
+pub fn transpose<T, E>(result: Result<T?, E>): Result<T, E>? = case result {
+    Result.Ok { value }: case value {
+        Some(inner): first([Result.Ok { value: inner }]),
+        null: null,
+    },
+    Result.Err { error }: first([Result.Err { error: error }]),
+};
+
 // Fold both variants into one result type. Exactly one branch callback runs.
 pub fn fold<T, E, U>(
     result: Result<T, E>,
@@ -94,5 +132,16 @@ pub fn map_or_else<T, E, U>(
 // Collapse a nested Result when both layers use the same error type.
 pub fn flatten<T, E>(result: Result<Result<T, E>, E>): Result<T, E> = case result {
     Result.Ok { value }: value,
+    Result.Err { error }: Result.Err { error: error },
+};
+
+/// Combines two successful values into a pair. If either input is Err, the
+/// first Err from left to right is returned. Both arguments are already evaluated.
+pub fn zip<T, U, E>(left: Result<T, E>, right: Result<U, E>): Result<(T, U), E> = case left {
+    Result.Ok { value: left_value }: case right {
+        Result.Ok { value: right_value }:
+            Result.Ok { value: (left_value, right_value) },
+        Result.Err { error }: Result.Err { error: error },
+    },
     Result.Err { error }: Result.Err { error: error },
 };

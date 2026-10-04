@@ -1,0 +1,57 @@
+// A lazy sequence is a repeatable thunk that creates an initial persistent
+// iterator. Building a pipeline does not call its source thunk; forcing a
+// pipeline creates its cursor, and cursor adapters run only when pulled.
+
+pub fn from_iterator<T>(source: std.iterator.Iterator<T>): fn(): std.iterator.Iterator<T> =
+    () => source;
+
+pub fn from_list<T>(values: [T]): fn(): std.iterator.Iterator<T> =
+    () => std.iterator.from_list(values);
+
+pub fn map<T, U>(
+    source: fn(): std.iterator.Iterator<T>,
+    transform: fn(T): U,
+): fn(): std.iterator.Iterator<U> =
+    () => std.iterator.map(source(), transform);
+
+pub fn filter<T>(
+    source: fn(): std.iterator.Iterator<T>,
+    predicate: fn(T): Bool,
+): fn(): std.iterator.Iterator<T> =
+    () => std.iterator.filter(source(), predicate);
+
+pub fn flat_map<T, U>(
+    source: fn(): std.iterator.Iterator<T>,
+    transform: fn(T): fn(): std.iterator.Iterator<U>,
+): fn(): std.iterator.Iterator<U> =
+    () => std.iterator.adapters.flat_map(source(), value => transform(value)());
+
+pub fn chain<T>(
+    left: fn(): std.iterator.Iterator<T>,
+    right: fn(): std.iterator.Iterator<T>,
+): fn(): std.iterator.Iterator<T> =
+    () => std.iterator.chain(left(), right());
+
+pub fn zip_with<T, U, V>(
+    left: fn(): std.iterator.Iterator<T>,
+    right: fn(): std.iterator.Iterator<U>,
+    combine: fn(T, U): V,
+): fn(): std.iterator.Iterator<V> =
+    () => std.iterator.zip_with(left(), right(), combine);
+
+pub fn take<T>(
+    source: fn(): std.iterator.Iterator<T>,
+    count: Int,
+): fn(): std.iterator.Iterator<T> =
+    () => std.iterator.take(source(), count);
+
+pub fn drop<T>(
+    source: fn(): std.iterator.Iterator<T>,
+    count: Int,
+): fn(): std.iterator.Iterator<T> =
+    () => std.iterator.drop(source(), count);
+
+// Collect is a delayed terminal operation and requires a finite cursor. For
+// infinite sources, bound with `take` before forcing the resulting list thunk.
+pub fn collect<T>(source: fn(): std.iterator.Iterator<T>): fn(): [T] =
+    () => std.iterator.collect(source());
