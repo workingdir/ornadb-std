@@ -1,0 +1,25 @@
+// Immutable string builders are ordered [Str] chunks until build joins them.
+// Appending returns a new chunk list and leaves the original reusable.
+use std.collection as collection;
+use std.text as text;
+
+pub fn new(): [Str] = [];
+
+pub fn from_text(value: Str): [Str] = [value];
+
+pub fn append(builder: [Str], value: Str): [Str] =
+    collection.union(builder, [value]);
+
+pub fn append_all(builder: [Str], values: [Str]): [Str] =
+    collection.union(builder, values);
+
+// Adds one line followed by LF, including when `value` is empty.
+pub fn append_line(builder: [Str], value: Str): [Str] = append_all(
+    builder,
+    [value, "\n"]
+);
+
+pub fn build(builder: [Str]): Str = text.join(builder, "");
+
+// Emptiness describes the built text, so appending empty chunks stays empty.
+pub fn is_empty(builder: [Str]): Bool = build(builder) == "";

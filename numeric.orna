@@ -1,3 +1,104 @@
+use std.collection;
+use std.format;
+use std.parse;
+use std.text;
+
+// Numeric conversions are locale independent. Exact conversions stay in
+// base-ten arithmetic and never pass through binary Float.
+
+/// Parses the canonical signed Int spelling. Invalid or noncanonical input
+/// returns null; accepted values contain no plus sign, whitespace,
+/// separators, redundant leading zeroes, or negative zero.
+pub fn integer_from_text(input: Str): Int? = std.parse.integer(input);
+
+/// Formats an Int as minimal signed base-ten text. Parsing that text with
+/// `integer_from_text` recovers the original integer exactly.
+pub fn integer_to_text(value: Int): Str = std.format.integer(value);
+
+/// Converts an Int to Decimal exactly by preserving its integer value in
+/// base-ten arithmetic, without a binary Float intermediate.
+pub fn decimal_from_integer(value: Int): Decimal = value.decimal;
+
+fn digit_value(character: Str): Int? = case character {
+    "0": Some(0),
+    "1": Some(1),
+    "2": Some(2),
+    "3": Some(3),
+    "4": Some(4),
+    "5": Some(5),
+    "6": Some(6),
+    "7": Some(7),
+    "8": Some(8),
+    "9": Some(9),
+    _: null,
+};
+
+/// Parses canonical fixed-point base-ten text into an exact Decimal. A minus
+/// sign is optional; a fractional part must contain digits and cannot end in
+/// zero. Plus signs, exponent notation, separators, whitespace, redundant
+/// leading zeroes, and negative zero return null. No rounding is performed.
+/// Inputs beyond evaluator resource limits propagate its bounded limit error.
+pub fn decimal_from_text(input: Str): Decimal? {
+    let characters = std.text.split(input, "");
+    let length = std.collection.count(characters);
+    if length == 0 {
+        null
+    } else {
+        let negative = characters[0] == "-";
+        let sign_offset = if negative { 1 } else { 0 };
+        let point = -1;
+        let scan = sign_offset;
+        while scan < length && point < 0 {
+            if characters[scan] == "." {
+                point = scan;
+            } else {
+                scan += 1;
+            };
+        };
+        let integer_end = if point < 0 { length } else { point };
+        let fraction_start = if point < 0 { length } else { point + 1 };
+        let integer_text = std.text.join(
+            std.collection.take(
+                std.collection.drop(characters, sign_offset),
+                integer_end - sign_offset
+            ),
+            ""
+        );
+        let integer_part = std.parse.integer(integer_text);
+        let has_fraction = point >= 0;
+        let valid = integer_end > sign_offset
+            && integer_part != null
+            && (!has_fraction || fraction_start < length)
+            && (!has_fraction || characters[length - 1] != "0");
+        let fraction_numerator = 0;
+        let denominator = 1;
+        let index = fraction_start;
+        while index < length && valid {
+            let digit = case digit_value(characters[index]) {
+                Some(value): value,
+                null: -1,
+            };
+            if digit < 0 {
+                valid = false;
+            } else {
+                fraction_numerator = fraction_numerator * 10 + digit;
+                denominator = denominator * 10;
+            };
+            index += 1;
+        };
+        let integer_value = case integer_part {
+            Some(value): value,
+            null: 0,
+        };
+        let fraction = fraction_numerator.decimal / denominator.decimal;
+        let magnitude = integer_value.decimal + fraction;
+        if valid && !(negative && magnitude == 0.decimal) {
+            Some(if negative { -magnitude } else { magnitude })
+        } else {
+            null
+        }
+    }
+}
 // Numeric capabilities are explicit protocols. They do not coerce values or
 // route through Float; an implementation owns the arithmetic of its type.
 // `Compare.compare` returns a negative value, zero, or a positive value.

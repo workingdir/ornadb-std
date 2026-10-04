@@ -1,0 +1,133 @@
+// Eager adapters for finite lists. Traversals preserve input order and call
+// callbacks from left to right; prefix adapters stop at the first boundary.
+
+fn append<T>(values: [T], value: T): [T] = std.collection.union(values, [value]);
+
+fn filter_map_from<T, U>(
+    values: [T], transform: fn(T): U?, index: Int, end: Int, output: [U]
+): [U] =
+    if index >= end {
+        output
+    } else {
+        case transform(values[index]) {
+            Some(mapped): filter_map_from(values, transform, index + 1, end, append(output, mapped)),
+            null: filter_map_from(values, transform, index + 1, end, output),
+        }
+    };
+
+/// Maps each value to an optional result and keeps only `Some` values.
+pub fn filter_map<T, U>(values: [T], transform: fn(T): U?): [U] =
+    filter_map_from(values, transform, 0, std.collection.count(values), []);
+
+fn map_while_from<T, U>(
+    values: [T], transform: fn(T): U?, index: Int, end: Int, output: [U]
+): [U] =
+    if index >= end {
+        output
+    } else {
+        case transform(values[index]) {
+            Some(mapped): map_while_from(values, transform, index + 1, end, append(output, mapped)),
+            null: output,
+        }
+    };
+
+/// Maps the longest prefix for which `transform` returns `Some`, then stops.
+pub fn map_while<T, U>(values: [T], transform: fn(T): U?): [U] =
+    map_while_from(values, transform, 0, std.collection.count(values), []);
+
+fn take_while_from<T>(
+    values: [T], predicate: fn(T): Bool, index: Int, end: Int, output: [T]
+): [T] =
+    if index >= end {
+        output
+    } else {
+        let value = values[index];
+        if predicate(value) {
+            take_while_from(values, predicate, index + 1, end, append(output, value))
+        } else {
+            output
+        }
+    };
+
+/// Keeps the longest leading prefix accepted by `predicate`.
+pub fn take_while<T>(values: [T], predicate: fn(T): Bool): [T] =
+    take_while_from(values, predicate, 0, std.collection.count(values), []);
+
+fn drop_while_from<T>(
+    values: [T], predicate: fn(T): Bool, index: Int, end: Int, dropping: Bool, output: [T]
+): [T] =
+    if index >= end {
+        output
+    } else {
+        let value = values[index];
+        if dropping {
+            if predicate(value) {
+                drop_while_from(values, predicate, index + 1, end, true, output)
+            } else {
+                drop_while_from(values, predicate, index + 1, end, false, append(output, value))
+            }
+        } else {
+            drop_while_from(values, predicate, index + 1, end, false, append(output, value))
+        }
+    };
+
+/// Drops the leading prefix accepted by `predicate` and keeps the rest.
+pub fn drop_while<T>(values: [T], predicate: fn(T): Bool): [T] =
+    drop_while_from(values, predicate, 0, std.collection.count(values), true, []);
+
+fn intersperse_from<T>(
+    values: [T], separator: T, index: Int, end: Int, output: [T]
+): [T] =
+    if index >= end {
+        output
+    } else {
+        let separated = if index == 0 {
+            append(output, values[index])
+        } else {
+            append(append(output, separator), values[index])
+        };
+        intersperse_from(values, separator, index + 1, end, separated)
+    };
+
+/// Inserts `separator` between adjacent values; empty and singleton lists are unchanged.
+pub fn intersperse<T>(values: [T], separator: T): [T] =
+    intersperse_from(values, separator, 0, std.collection.count(values), []);
+
+fn scan_from<T, S>(
+    values: [T], stepper: fn(S, T): S, index: Int, end: Int, state: S, output: [S]
+): [S] =
+    if index >= end {
+        output
+    } else {
+        let next_state = stepper(state, values[index]);
+        scan_from(values, stepper, index + 1, end, next_state, append(output, next_state))
+    };
+
+/// Returns each left-to-right accumulated state after an input value; the seed is not included.
+pub fn scan<T, S>(values: [T], seed: S, stepper: fn(S, T): S): [S] =
+    scan_from(values, stepper, 0, std.collection.count(values), seed, []);
+
+fn zip_longest_from<T, U>(
+    left: [T], right: [U], index: Int, end: Int, output: [(T?, U?)]
+): [(T?, U?)] =
+    if index >= end {
+        output
+    } else {
+        let left_value = if index < std.collection.count(left) { Some(left[index]) } else { null };
+        let right_value = if index < std.collection.count(right) { Some(right[index]) } else { null };
+        zip_longest_from(left, right, index + 1, end, append(output, (left_value, right_value)))
+    };
+
+/// Pairs aligned values through the longer list, using null for a missing side.
+pub fn zip_longest<T, U>(left: [T], right: [U]): [(T?, U?)] =
+    zip_longest_from(
+        left,
+        right,
+        0,
+        if std.collection.count(left) > std.collection.count(right) {
+            std.collection.count(left)
+        } else {
+            std.collection.count(right)
+        },
+        [],
+    );
