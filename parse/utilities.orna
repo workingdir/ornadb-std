@@ -2,7 +2,6 @@
 // lists preserve empty fields, so a leading, trailing, or repeated separator
 // makes the entire parse fail. Empty input represents an empty list.
 use collection;
-use parse;
 use text;
 
 fn parse_integer_fields(fields: [Str]): [Int]? {
@@ -10,7 +9,7 @@ fn parse_integer_fields(fields: [Str]): [Int]? {
     let index = 0;
     let valid = true;
     while index < collection.count(fields) && valid {
-        let (field_valid, value) = case parse.integer(fields[index]) {
+        let (field_valid, value) = case std.parse.integer(fields[index]) {
             Some(value): (true, value),
             null: (false, 0),
         };
@@ -29,7 +28,7 @@ fn parse_boolean_fields(fields: [Str]): [Bool]? {
     let index = 0;
     let valid = true;
     while index < collection.count(fields) && valid {
-        let (field_valid, value) = case parse.boolean(fields[index]) {
+        let (field_valid, value) = case std.parse.boolean(fields[index]) {
             Some(value): (true, value),
             null: (false, false),
         };
@@ -45,14 +44,14 @@ fn parse_boolean_fields(fields: [Str]): [Bool]? {
 
 /// Returns the parsed canonical integer, or `fallback` when parsing fails.
 pub fn integer_or(input: Str, fallback: Int): Int =
-    case parse.integer(input) {
+    case std.parse.integer(input) {
         Some(value): value,
         null: fallback,
     };
 
 /// Returns the parsed lowercase boolean, or `fallback` when parsing fails.
 pub fn boolean_or(input: Str, fallback: Bool): Bool =
-    case parse.boolean(input) {
+    case std.parse.boolean(input) {
         Some(value): value,
         null: fallback,
     };
