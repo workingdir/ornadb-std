@@ -1,0 +1,107 @@
+// Finite-list folds and graph walks. Folds visit list items from left to
+// right. Graph walks visit each reachable node once, keeping neighbors in the
+// order returned by the callback; both walks tolerate cycles and shared nodes.
+use collection;
+
+fn fold_from<T, U>(
+    values: [T], index: Int, end: Int, accumulated: U, combine: fn(U, T): U
+): U =
+    if index >= end {
+        accumulated
+    } else {
+        fold_from(
+            values,
+            index + 1,
+            end,
+            combine(accumulated, values[index]),
+            combine,
+        )
+    };
+
+/// Folds a finite list from left to right, returning `initial` for an empty list.
+pub fn fold<T, U>(values: [T], initial: U, combine: fn(U, T): U): U =
+    fold_from(values, 0, collection.count(values), initial, combine);
+
+fn fold_while_from<T, U>(
+    values: [T], index: Int, end: Int, accumulated: U,
+    step: fn(U, T): (U, Bool)
+): U =
+    if index >= end {
+        accumulated
+    } else {
+        let (next, continue_iteration) = step(accumulated, values[index]);
+        if continue_iteration {
+            fold_while_from(values, index + 1, end, next, step)
+        } else {
+            next
+        }
+    };
+
+/// Folds left to right until `step` returns false; the stopping item's state is kept.
+pub fn fold_while<T, U>(
+    values: [T], initial: U, step: fn(U, T): (U, Bool)
+): U = fold_while_from(values, 0, collection.count(values), initial, step);
+
+fn has_node<T>(nodes: [T], target: T): Bool =
+    collection.exists(nodes, node => node == target);
+
+fn depth_first_from<T>(
+    pending: [T], visited: [T], neighbors: fn(T): [T]
+): [T] = case collection.first(pending) {
+    null: visited,
+    Some(node): {
+        let remaining = collection.drop(pending, 1);
+        if has_node(visited, node) {
+            depth_first_from(remaining, visited, neighbors)
+        } else {
+            let discovered = collection.union(visited, [node]);
+            let pending_in_preorder = collection.union(neighbors(node), remaining);
+            depth_first_from(pending_in_preorder, discovered, neighbors)
+        }
+    },
+};
+
+/// Walks reachable nodes depth first, in pre-order and stable neighbor order.
+pub fn depth_first<T>(root: T, neighbors: fn(T): [T]): [T] =
+    depth_first_from([root], [], neighbors);
+
+fn breadth_first_from<T>(
+    pending: [T], visited: [T], neighbors: fn(T): [T]
+): [T] = case collection.first(pending) {
+    null: visited,
+    Some(node): {
+        let remaining = collection.drop(pending, 1);
+        if has_node(visited, node) {
+            breadth_first_from(remaining, visited, neighbors)
+        } else {
+            let discovered = collection.union(visited, [node]);
+            let pending_in_level_order = collection.union(remaining, neighbors(node));
+            breadth_first_from(pending_in_level_order, discovered, neighbors)
+        }
+    },
+};
+
+/// Walks reachable nodes breadth first, in stable neighbor order per level.
+pub fn breadth_first<T>(root: T, neighbors: fn(T): [T]): [T] =
+    breadth_first_from([root], [], neighbors);
+
+fn reachable_from<T>(
+    pending: [T], visited: [T], target: T, neighbors: fn(T): [T]
+): Bool = case collection.first(pending) {
+    null: false,
+    Some(node) if node == target: true,
+    Some(node): {
+        let remaining = collection.drop(pending, 1);
+        if has_node(visited, node) {
+            reachable_from(remaining, visited, target, neighbors)
+        } else {
+            let discovered = collection.union(visited, [node]);
+            let pending_in_level_order = collection.union(remaining, neighbors(node));
+            reachable_from(pending_in_level_order, discovered, target, neighbors)
+        }
+    },
+};
+
+/// Reports whether `target` is reachable, stopping as soon as it is found.
+pub fn reachable<T>(root: T, target: T, neighbors: fn(T): [T]): Bool =
+    reachable_from([root], [], target, neighbors);
