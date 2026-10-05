@@ -1,0 +1,21 @@
+// Text positions and counts in this module use Unicode scalar values, matching
+// std.text.split(value, ""). Counts clamp at the text length. Negative counts
+// keep std.collection.take/drop's std.collection.negative_count failure.
+use std.collection as collection;
+use std.text as text;
+
+/// Returns the first `count` Unicode scalar values.
+pub fn take(value: Str, count: Int): Str =
+    text.join(collection.take(text.split(value, ""), count), "");
+
+/// Removes the first `count` Unicode scalar values.
+pub fn drop(value: Str, count: Int): Str =
+    text.join(collection.drop(text.split(value, ""), count), "");
+
+/// Returns `count` Unicode scalar values beginning at `start`.
+/// Both arguments must be nonnegative; values past the end produce empty text.
+pub fn slice(value: Str, start: Int, count: Int): Str =
+    text.join(
+        collection.take(collection.drop(text.split(value, ""), start), count),
+        ""
+    );
