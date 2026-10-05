@@ -1,0 +1,50 @@
+// Line positions are based on Unicode scalar values. Split accepts LF, CRLF,
+// and lone CR; blank lines and the empty line after a terminal break survive.
+// Joining uses LF, so normalise preserves line boundaries while standardizing
+// every recognized separator to one LF.
+use std.collection as collection;
+use std.text as text;
+
+/// Splits text into logical lines. Empty text has no lines; terminal line
+/// breaks produce a final empty line.
+pub fn split(value: Str): [Str] {
+    if value == "" {
+        []
+    } else {
+        let scalars = text.split(value, "");
+        let scalar_count = collection.count(scalars);
+        let lines = [];
+        let current = [];
+        let index = 0;
+        while index < scalar_count {
+            let scalar = scalars[index];
+            if scalar == "\n" {
+                lines = collection.union(lines, [text.join(current, "")]);
+                current = [];
+            } else if scalar == "\r" {
+                lines = collection.union(lines, [text.join(current, "")]);
+                current = [];
+                if index + 1 < scalar_count {
+                    if scalars[index + 1] == "\n" {
+                        index = index + 1;
+                    };
+                };
+            } else {
+                current = collection.union(current, [scalar]);
+            };
+            index = index + 1;
+        };
+        collection.union(lines, [text.join(current, "")])
+    }
+}
+
+/// Joins logical lines with LF. Any original CR or CRLF separators are
+/// normalized by split followed by join.
+pub fn join(lines: [Str]): Str = text.join(lines, "\n");
+
+/// Counts logical lines using the same LF, CRLF, and CR boundaries as split.
+pub fn count(value: Str): Int = collection.count(split(value));
+
+/// Rewrites every recognized line separator as LF while retaining blank and
+/// terminal lines.
+pub fn normalise(value: Str): Str = join(split(value));
