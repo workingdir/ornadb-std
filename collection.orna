@@ -113,6 +113,28 @@ fn exists_from<T>(values: [T], predicate: fn(T): Bool, index: Int, end: Int): Bo
         exists_from(values, predicate, index + 1, end)
     };
 
+fn one_from<T>(
+    values: [T], predicate: fn(T): Bool, index: Int, end: Int, matches: [T]
+): T =
+    if index >= end {
+        case matches {
+            []: fail(error(code: "std.collection.one.none", message: "one requires exactly one matching value")),
+            [value]: value,
+            _: fail(error(code: "std.collection.one.multiple", message: "one found multiple matching values")),
+        }
+    } else {
+        let value = values[index];
+        if predicate(value) {
+            case matches {
+                []: one_from(values, predicate, index + 1, end, [value]),
+                [first]: one_from(values, predicate, index + 1, end, [first, value]),
+                _: one_from(values, predicate, index + 1, end, matches),
+            }
+        } else {
+            one_from(values, predicate, index + 1, end, matches)
+        }
+    };
+
 fn partition_from<T>(
     values: [T], predicate: fn(T): Bool, index: Int, end: Int, yes: [T], no: [T]
 ): ([T], [T]) =
@@ -228,11 +250,7 @@ pub fn first<T>(rows: [T]): T? =
     if __list_length(rows) == 0 { null } else { Some(rows[0]) };
 
 pub fn one<T>(rows: [T], predicate: fn(T): Bool = value => true): T =
-    case filter(rows, predicate) {
-        []: fail(error(code: "std.collection.one.none", message: "one requires exactly one matching value")),
-        [value]: value,
-        _: fail(error(code: "std.collection.one.multiple", message: "one found multiple matching values")),
-    };
+    one_from(rows, predicate, 0, __list_length(rows), []);
 
 pub fn sum<T>(rows: [T]): T = __numeric_sum(rows);
 
