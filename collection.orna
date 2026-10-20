@@ -22,192 +22,215 @@ fn __bucket_by<T, P>(rows: [T], period: P, zone: Str): [[T]] = [];
 
 fn append<T>(values: [T], value: T): [T] = __list_concat(values, [value]);
 
-fn slice_range<T>(values: [T], index: Int, end: Int, output: [T]): [T] =
-    if index >= end {
-        output
-    } else {
-        slice_range(values, index + 1, end, append(output, values[index]))
+fn slice_range<T>(values: [T], index: Int, end: Int, output: [T]): [T] {
+    let cursor = index;
+    let result = output;
+    while cursor < end {
+        result = append(result, values[cursor]);
+        cursor += 1;
     };
+    result
+}
 
 fn filter_from<T>(
     values: [T], predicate: fn(T): Bool, index: Int, end: Int, output: [T]
-): [T] =
-    if index >= end {
-        output
-    } else {
-        let value = values[index];
-        filter_from(
-            values,
-            predicate,
-            index + 1,
-            end,
-            if predicate(value) { append(output, value) } else { output }
-        )
+): [T] {
+    let cursor = index;
+    let result = output;
+    while cursor < end {
+        let value = values[cursor];
+        if predicate(value) {
+            result = append(result, value);
+        };
+        cursor += 1;
     };
+    result
+}
 
 fn map_from<T, U>(
     values: [T], transform: fn(T): U, index: Int, end: Int, output: [U]
-): [U] =
-    if index >= end {
-        output
-    } else {
-        map_from(values, transform, index + 1, end, append(output, transform(values[index])))
+): [U] {
+    let cursor = index;
+    let result = output;
+    while cursor < end {
+        result = append(result, transform(values[cursor]));
+        cursor += 1;
     };
+    result
+}
 
 fn flat_map_from<T, U>(
     values: [T], transform: fn(T): [U], index: Int, end: Int, output: [U]
-): [U] =
-    if index >= end {
-        output
-    } else {
-        flat_map_from(
-            values,
-            transform,
-            index + 1,
-            end,
-            __list_concat(output, transform(values[index]))
-        )
+): [U] {
+    let cursor = index;
+    let result = output;
+    while cursor < end {
+        result = __list_concat(result, transform(values[cursor]));
+        cursor += 1;
     };
+    result
+}
 
-fn contains_from<T>(values: [T], value: T, index: Int, end: Int): Bool =
-    if index >= end {
-        false
-    } else if values[index] == value {
-        true
-    } else {
-        contains_from(values, value, index + 1, end)
+fn contains_from<T>(values: [T], value: T, index: Int, end: Int): Bool {
+    let cursor = index;
+    let found = false;
+    while cursor < end && !found {
+        if values[cursor] == value {
+            found = true;
+        };
+        cursor += 1;
     };
+    found
+}
 
-fn distinct_from<T>(values: [T], index: Int, end: Int, output: [T]): [T] =
-    if index >= end {
-        output
-    } else {
-        let value = values[index];
-        distinct_from(
-            values,
-            index + 1,
-            end,
-            if contains_from(output, value, 0, __list_length(output)) {
-                output
-            } else {
-                append(output, value)
-            }
-        )
+fn distinct_from<T>(values: [T], index: Int, end: Int, output: [T]): [T] {
+    let cursor = index;
+    let result = output;
+    while cursor < end {
+        let value = values[cursor];
+        if !contains_from(result, value, 0, __list_length(result)) {
+            result = append(result, value);
+        };
+        cursor += 1;
     };
+    result
+}
 
-fn every_from<T>(values: [T], predicate: fn(T): Bool, index: Int, end: Int): Bool =
-    if index >= end {
-        true
-    } else if predicate(values[index]) {
-        every_from(values, predicate, index + 1, end)
-    } else {
-        false
+fn every_from<T>(values: [T], predicate: fn(T): Bool, index: Int, end: Int): Bool {
+    let cursor = index;
+    let holds = true;
+    while cursor < end && holds {
+        if !predicate(values[cursor]) {
+            holds = false;
+        };
+        cursor += 1;
     };
+    holds
+}
 
-fn exists_from<T>(values: [T], predicate: fn(T): Bool, index: Int, end: Int): Bool =
-    if index >= end {
-        false
-    } else if predicate(values[index]) {
-        true
-    } else {
-        exists_from(values, predicate, index + 1, end)
+fn exists_from<T>(values: [T], predicate: fn(T): Bool, index: Int, end: Int): Bool {
+    let cursor = index;
+    let found = false;
+    while cursor < end && !found {
+        if predicate(values[cursor]) {
+            found = true;
+        };
+        cursor += 1;
     };
+    found
+}
 
 fn one_from<T>(
     values: [T], predicate: fn(T): Bool, index: Int, end: Int, matches: [T]
-): T =
-    if index >= end {
-        case matches {
-            []: fail(error(code: "std.collection.one.none", message: "one requires exactly one matching value")),
-            [value]: value,
-            _: fail(error(code: "std.collection.one.multiple", message: "one found multiple matching values")),
-        }
-    } else {
-        let value = values[index];
-        if predicate(value) {
-            case matches {
-                []: one_from(values, predicate, index + 1, end, [value]),
-                [first]: one_from(values, predicate, index + 1, end, [first, value]),
-                _: one_from(values, predicate, index + 1, end, matches),
-            }
-        } else {
-            one_from(values, predicate, index + 1, end, matches)
-        }
+): T {
+    let cursor = index;
+    let found = matches;
+    while cursor < end {
+        let value = values[cursor];
+        if predicate(value) && __list_length(found) < 2 {
+            found = append(found, value);
+        };
+        cursor += 1;
     };
+    if __list_length(found) == 0 {
+        fail(error(code: "std.collection.one.none", message: "one requires exactly one matching value"))
+    } else if __list_length(found) == 1 {
+        found[0]
+    } else {
+        fail(error(code: "std.collection.one.multiple", message: "one found multiple matching values"))
+    }
+}
 
 fn partition_from<T>(
     values: [T], predicate: fn(T): Bool, index: Int, end: Int, yes: [T], no: [T]
-): ([T], [T]) =
-    if index >= end {
-        (yes, no)
-    } else {
-        let value = values[index];
+): ([T], [T]) {
+    let cursor = index;
+    let yes_items = yes;
+    let no_items = no;
+    while cursor < end {
+        let value = values[cursor];
         if predicate(value) {
-            partition_from(values, predicate, index + 1, end, append(yes, value), no)
+            yes_items = append(yes_items, value);
         } else {
-            partition_from(values, predicate, index + 1, end, yes, append(no, value))
-        }
+            no_items = append(no_items, value);
+        };
+        cursor += 1;
     };
+    (yes_items, no_items)
+}
 
-fn flatten_from<T>(values: [[T]], index: Int, end: Int, output: [T]): [T] =
-    if index >= end {
-        output
-    } else {
-        flatten_from(values, index + 1, end, __list_concat(output, values[index]))
+fn flatten_from<T>(values: [[T]], index: Int, end: Int, output: [T]): [T] {
+    let cursor = index;
+    let result = output;
+    while cursor < end {
+        result = __list_concat(result, values[cursor]);
+        cursor += 1;
     };
+    result
+}
 
-fn zip_from<T, U>(left: [T], right: [U], index: Int, end: Int, output: [(T, U)]): [(T, U)] =
-    if index >= end {
-        output
-    } else {
-        zip_from(left, right, index + 1, end, append(output, (left[index], right[index])))
+fn zip_from<T, U>(left: [T], right: [U], index: Int, end: Int, output: [(T, U)]): [(T, U)] {
+    let cursor = index;
+    let result = output;
+    while cursor < end {
+        result = append(result, (left[cursor], right[cursor]));
+        cursor += 1;
     };
+    result
+}
 
-fn chunk_from<T>(values: [T], size: Int, index: Int, end: Int, output: [[T]]): [[T]] =
-    if index >= end {
-        output
-    } else {
-        let next = if index + size < end { index + size } else { end };
-        chunk_from(values, size, next, end, append(output, slice_range(values, index, next, [])))
+fn chunk_from<T>(values: [T], size: Int, index: Int, end: Int, output: [[T]]): [[T]] {
+    let cursor = index;
+    let result = output;
+    while cursor < end {
+        let next = if cursor + size < end { cursor + size } else { end };
+        result = append(result, slice_range(values, cursor, next, []));
+        cursor = next;
     };
+    result
+}
 
-fn pairs_from<T>(values: [T], index: Int, end: Int, output: [(T, T)]): [(T, T)] =
-    if index + 1 >= end {
-        output
-    } else {
-        pairs_from(values, index + 1, end, append(output, (values[index], values[index + 1])))
+fn pairs_from<T>(values: [T], index: Int, end: Int, output: [(T, T)]): [(T, T)] {
+    let cursor = index;
+    let result = output;
+    while cursor + 1 < end {
+        result = append(result, (values[cursor], values[cursor + 1]));
+        cursor += 1;
     };
+    result
+}
 
 fn windows_from<T>(
     values: [T], size: Int, step: Int, index: Int, end: Int, output: [[T]]
-): [[T]] =
-    if index + size > end {
-        output
-    } else {
-        windows_from(
-            values,
-            size,
-            step,
-            index + step,
-            end,
-            append(output, slice_range(values, index, index + size, []))
-        )
+): [[T]] {
+    let cursor = index;
+    let result = output;
+    while cursor + size <= end {
+        result = append(result, slice_range(values, cursor, cursor + size, []));
+        cursor += step;
     };
+    result
+}
 
 fn split_when_from<T>(
     values: [T], predicate: fn(T): Bool, index: Int, end: Int,
     groups: [[T]], current: [T]
-): [[T]] =
-    if index >= end {
-        if __list_length(current) == 0 { groups } else { append(groups, current) }
-    } else {
-        let value = values[index];
-        if predicate(value) && __list_length(current) > 0 {
-            split_when_from(values, predicate, index + 1, end, append(groups, current), [value])
+): [[T]] {
+    let cursor = index;
+    let result = groups;
+    let group = current;
+    while cursor < end {
+        let value = values[cursor];
+        if predicate(value) && __list_length(group) > 0 {
+            result = append(result, group);
+            group = [value];
         } else {
-            split_when_from(values, predicate, index + 1, end, groups, append(current, value))
-        }
+            group = append(group, value);
+        };
+        cursor += 1;
     };
+    if __list_length(group) == 0 { result } else { append(result, group) }
+}
 
 // The evaluator chooses the finite-list implementation from this exact
 // source overload; Relation<T> calls remain relation plans in the core.
