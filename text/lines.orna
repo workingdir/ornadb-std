@@ -2,7 +2,7 @@
 // and lone CR; blank lines and the empty line after a terminal break survive.
 // Joining uses LF, so normalise preserves line boundaries while standardizing
 // every recognized separator to one LF.
-use std.collection as collection;
+use std.list as list;
 use std.text as text;
 
 /// Splits text into logical lines. Empty text has no lines; terminal line
@@ -12,17 +12,17 @@ pub fn split(value: Str): [Str] {
         []
     } else {
         let scalars = text.split(value, "");
-        let scalar_count = collection.count(scalars);
+        let scalar_count = list.length(scalars);
         let lines = [];
         let current = [];
         let index = 0;
         while index < scalar_count {
             let scalar = scalars[index];
             if scalar == "\n" {
-                lines = collection.union(lines, [text.join(current, "")]);
+                lines = union(lines, [text.join(current, "")]);
                 current = [];
             } else if scalar == "\r" {
-                lines = collection.union(lines, [text.join(current, "")]);
+                lines = union(lines, [text.join(current, "")]);
                 current = [];
                 if index + 1 < scalar_count {
                     if scalars[index + 1] == "\n" {
@@ -30,11 +30,11 @@ pub fn split(value: Str): [Str] {
                     };
                 };
             } else {
-                current = collection.union(current, [scalar]);
+                current = union(current, [scalar]);
             };
             index = index + 1;
         };
-        collection.union(lines, [text.join(current, "")])
+        union(lines, [text.join(current, "")])
     }
 }
 
@@ -43,7 +43,7 @@ pub fn split(value: Str): [Str] {
 pub fn join(lines: [Str]): Str = text.join(lines, "\n");
 
 /// Counts logical lines using the same LF, CRLF, and CR boundaries as split.
-pub fn count(value: Str): Int = collection.count(split(value));
+pub fn count(value: Str): Int = list.length(split(value));
 
 /// Rewrites every recognized line separator as LF while retaining blank and
 /// terminal lines.

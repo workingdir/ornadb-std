@@ -64,7 +64,7 @@ pub fn find_all(regex: Regex, text: Str): [Match] = fail(error(
 // Count the complete ordered match list. Resource exhaustion propagates from
 // find_all; this helper never reports a count for a truncated scan.
 pub fn count_matches(regex: Regex, text: Str): Int =
-    std.collection.count(find_all(regex, text));
+    count(find_all(regex, text));
 
 pub fn matched_text(value: Match): Str = case value {
     Match.Found { text, start: _, end: _, captures: _ }: text,

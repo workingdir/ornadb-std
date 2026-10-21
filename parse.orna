@@ -21,7 +21,7 @@ fn digit_value(character: Str): Int? = case character {
 /// spellings such as `"+42"`, `"042"`, `"-0"`, and `" 42"` return null.
 pub fn integer(input: Str): Int? {
     let characters = std.text.split(input, "");
-    let length = std.collection.count(characters);
+    let length = count(characters);
     if length == 0 {
         null
     } else {

@@ -111,9 +111,9 @@ fn partition_from<T>(
     rejected: [T],
 ): ([T], [T]) = case std.iterator.next(source) {
     (Some(value), tail) if predicate(value):
-        partition_from(tail, predicate, std.collection.union(accepted, [value]), rejected),
+        partition_from(tail, predicate, union(accepted, [value]), rejected),
     (Some(value), tail):
-        partition_from(tail, predicate, accepted, std.collection.union(rejected, [value])),
+        partition_from(tail, predicate, accepted, union(rejected, [value])),
     (null, _): (accepted, rejected),
 };
 

@@ -8,7 +8,7 @@ fn values_from<T, E>(
     index: Int,
     values: [T]
 ): [T] =
-    if index >= std.collection.count(outcomes) {
+    if index >= count(outcomes) {
         values
     } else {
         case outcomes[index] {
@@ -16,7 +16,7 @@ fn values_from<T, E>(
                 values_from(
                     outcomes,
                     index + 1,
-                    std.collection.union(values, [value])
+                    union(values, [value])
                 ),
             std.result.Result.Err { error: _ }:
                 values_from(outcomes, index + 1, values),
@@ -28,7 +28,7 @@ fn errors_from<T, E>(
     index: Int,
     errors: [E]
 ): [E] =
-    if index >= std.collection.count(outcomes) {
+    if index >= count(outcomes) {
         errors
     } else {
         case outcomes[index] {
@@ -38,7 +38,7 @@ fn errors_from<T, E>(
                 errors_from(
                     outcomes,
                     index + 1,
-                    std.collection.union(errors, [error])
+                    union(errors, [error])
                 ),
         }
     };

@@ -8,10 +8,10 @@ pub fn new(): [Str] = [];
 pub fn from_text(value: Str): [Str] = [value];
 
 pub fn append(builder: [Str], value: Str): [Str] =
-    collection.union(builder, [value]);
+    union(builder, [value]);
 
 pub fn append_all(builder: [Str], values: [Str]): [Str] =
-    collection.union(builder, values);
+    union(builder, values);
 
 // Adds one line followed by LF, including when `value` is empty.
 pub fn append_line(builder: [Str], value: Str): [Str] = append_all(

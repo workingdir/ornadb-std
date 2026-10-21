@@ -29,25 +29,25 @@ fn with_contexts_from(
 // order above the original error and preserves each original nested cause.
 // An empty list returns the input Error unchanged.
 pub fn with_contexts(value: Error, contexts: [(Str, Str)]): Error =
-    with_contexts_from(value, contexts, std.collection.count(contexts) - 1);
+    with_contexts_from(value, contexts, count(contexts) - 1);
 
 // Search the root code and every cause code in std.error.code_chain's
 // breadth-first order.
 pub fn contains_code(value: Error, expected: Str): Bool =
-    std.collection.exists(
+    exists(
         std.error.code_chain(value),
         actual => actual == expected,
     );
 
 pub fn contains_any_code(value: Error, expected: [Str]): Bool =
-    std.collection.exists(
+    exists(
         expected,
         code => contains_code(value, code),
     );
 
-// The empty expected list matches vacuously, as with std.collection.every.
+// The empty expected list matches vacuously, as with every.
 pub fn contains_all_codes(value: Error, expected: [Str]): Bool =
-    std.collection.every(
+    every(
         expected,
         code => contains_code(value, code),
     );

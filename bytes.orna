@@ -5,7 +5,7 @@
 fn all_bytes(values: [Int]): Bool {
     let index = 0;
     let valid = true;
-    while index < std.collection.count(values) && valid {
+    while index < count(values) && valid {
         if !std.bits.is_byte(values[index]) {
             valid = false;
         };
@@ -18,7 +18,7 @@ fn zero_bytes(length: Int): [Int] {
     let index = 0;
     let output = [];
     while index < length {
-        output = std.collection.union(output, [0]);
+        output = union(output, [0]);
         index = index + 1;
     };
     output
@@ -32,7 +32,7 @@ pub fn is_buffer(values: [Int]): Bool = all_bytes(values);
 
 /// Returns the buffer's byte length, or null if an element is outside 0...255.
 pub fn buffer_length(values: [Int]): Int? =
-    if is_buffer(values) { Some(std.collection.count(values)) } else { null };
+    if is_buffer(values) { Some(count(values)) } else { null };
 
 /// Allocates a zero-filled byte buffer. Negative lengths return null.
 pub fn new_buffer(length: Int): [Int]? =
@@ -43,7 +43,7 @@ pub fn append_byte(values: [Int], value: Int): [Int]? =
     if !is_buffer(values) || !is_byte(value) {
         null
     } else {
-        Some(std.collection.union(values, [value]))
+        Some(union(values, [value]))
     };
 
 /// Concatenates two valid byte buffers without changing their order.
@@ -51,20 +51,20 @@ pub fn concat(left: [Int], right: [Int]): [Int]? =
     if !is_buffer(left) || !is_buffer(right) {
         null
     } else {
-        Some(std.collection.union(left, right))
+        Some(union(left, right))
     };
 
-/// Returns `count` bytes starting at `offset`; invalid or out-of-range bounds
+/// Returns `byte_count` bytes starting at `offset`; invalid or out-of-range bounds
 /// return null. A zero-length slice at the buffer end is valid.
-pub fn slice(values: [Int], start: Int, count: Int): [Int]? =
+pub fn slice(values: [Int], start: Int, byte_count: Int): [Int]? =
     if !is_buffer(values)
         || start < 0
-        || count < 0
-        || start + count > std.collection.count(values)
+        || byte_count < 0
+        || start + byte_count > count(values)
     {
         null
     } else {
-        Some(std.collection.take(std.collection.drop(values, start), count))
+        Some(take(drop(values, start), byte_count))
     };
 
 /// Splits a valid byte buffer into ordered chunks. Chunk sizes must be positive;
@@ -82,12 +82,12 @@ pub fn read_unsigned(values: [Int], start: Int, width: Int, order: Str): Int? =
     if !is_buffer(values)
         || start < 0
         || width <= 0
-        || start + width > std.collection.count(values)
+        || start + width > count(values)
     {
         null
     } else {
         std.bits.unsigned_from_bytes(
-            std.collection.take(std.collection.drop(values, start), width),
+            take(drop(values, start), width),
             order
         )
     };
@@ -105,18 +105,18 @@ pub fn write_unsigned(
     if !is_buffer(values)
         || start < 0
         || width <= 0
-        || start + width > std.collection.count(values)
+        || start + width > count(values)
     {
         null
     } else {
         case std.bits.unsigned_to_bytes(value, width, order) {
             Some(encoded): Some(
-                std.collection.union(
-                    std.collection.union(
-                        std.collection.take(values, start),
+                union(
+                    union(
+                        take(values, start),
                         encoded
                     ),
-                    std.collection.drop(values, start + width)
+                    drop(values, start + width)
                 )
             ),
             null: null,
