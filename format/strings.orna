@@ -3,18 +3,18 @@
 use text;
 use collection;
 
-fn scalar_count(value: Str): Int = collection.count(text.split(value, ""));
+fn scalar_count(value: Str): Int = count(text.split(value, ""));
 
-fn repeat_fill(fill: Str, count: Int): Str {
+fn repeat_fill(fill: Str, times: Int): Str {
     let scalars = text.split(fill, "");
-    let scalar_total = collection.count(scalars);
-    if count <= 0 || scalar_total == 0 {
+    let scalar_total = count(scalars);
+    if times <= 0 || scalar_total == 0 {
         ""
     } else {
         let output = [];
         let index = 0;
-        while index < count {
-            output = collection.union(output, [scalars[index % scalar_total]]);
+        while index < times {
+            output = union(output, [scalars[index % scalar_total]]);
             index = index + 1;
         }
         text.join(output, "")
@@ -35,7 +35,7 @@ pub fn repeat(value: Str, count: Int): Str {
         let output = [];
         let remaining = count;
         while remaining > 0 {
-            output = collection.union(output, [value]);
+            output = union(output, [value]);
             remaining = remaining - 1;
         }
         text.join(output, "")
@@ -72,14 +72,14 @@ pub fn truncate(value: Str, width: Int, suffix: Str = "…"): Str {
         ""
     } else {
         let scalars = text.split(value, "");
-        if collection.count(scalars) <= width {
+        if count(scalars) <= width {
             value
         } else {
             let suffix_scalars = text.split(suffix, "");
-            let kept_suffix = collection.take(suffix_scalars, width);
-            let prefix_width = width - collection.count(kept_suffix);
+            let kept_suffix = take(suffix_scalars, width);
+            let prefix_width = width - count(kept_suffix);
             text.join(
-                [text.join(collection.take(scalars, prefix_width), ""), text.join(kept_suffix, "")],
+                [text.join(take(scalars, prefix_width), ""), text.join(kept_suffix, "")],
                 ""
             )
         }
@@ -89,6 +89,6 @@ pub fn truncate(value: Str, width: Int, suffix: Str = "…"): Str {
 /// Prefixes every line, preserving empty lines and a final trailing newline.
 pub fn indent(value: Str, prefix: Str): Str =
     text.join(
-        collection.map(text.split(value, "\n"), line => text.join([prefix, line], "")),
+        map(text.split(value, "\n"), line => text.join([prefix, line], "")),
         "\n"
     );

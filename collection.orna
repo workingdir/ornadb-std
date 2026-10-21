@@ -1,18 +1,3 @@
-// Finite list operations are ordinary Orna functions. The small private
-// leaves below are evaluator primitives for immutable list size/assembly and
-// numeric or relation operations whose source types are intentionally erased.
-// Public collection behavior is expressed by the functions that follow.
-// Contracts: partition returns (matching, remaining); zip stops at the shorter input; unique keeps each lawful equality class's first occurrence; lawful keys while preserving input order inside each group; adjacent and overlapping pairs; window emits complete windows only; split_when starts a group before a matching item; competition ranks (ties share a rank and later ranks skip tied positions).
-// Edge contracts: empty valid chunk/window/partition/pair inputs return empty
-// collections without invoking callbacks. zip truncates to the shorter side, while
-// zip_exact rejects unequal lengths with `std.collection.zip_length_mismatch`.
-// split_when omits empty groups even for leading or adjacent boundaries.
-fn __list_length<T>(values: [T]): Int = 0;
-fn __list_concat<T>(left: [T], right: [T]): [T] = [];
-fn __numeric_sum<T>(values: [T]): T = 0;
-fn __stable_sort<T, K>(values: [T], key: fn(T): K): [T] = values;
-fn __minimum<T>(values: [T]): T? = null;
-fn __maximum<T>(values: [T]): T? = null;
 fn __group_by<T, K>(values: [T], key: fn(T): K): [(K, [T])] = [];
 fn __rank<T, K>(values: [T], key: fn(T): K): [(T, Int)] = [];
 fn __asof_join<T, Time, Key>(
@@ -20,7 +5,7 @@ fn __asof_join<T, Time, Key>(
 ): [(T, T?)] = [];
 fn __bucket_by<T, P>(rows: [T], period: P, zone: Str): [[T]] = [];
 
-fn append<T>(values: [T], value: T): [T] = __list_concat(values, [value]);
+fn append<T>(values: [T], value: T): [T] = union(values, [value]);
 
 fn slice_range<T>(values: [T], index: Int, end: Int, output: [T]): [T] {
     let cursor = index;
@@ -30,115 +15,6 @@ fn slice_range<T>(values: [T], index: Int, end: Int, output: [T]): [T] {
         cursor += 1;
     };
     result
-}
-
-fn filter_from<T>(
-    values: [T], predicate: fn(T): Bool, index: Int, end: Int, output: [T]
-): [T] {
-    let cursor = index;
-    let result = output;
-    while cursor < end {
-        let value = values[cursor];
-        if predicate(value) {
-            result = append(result, value);
-        };
-        cursor += 1;
-    };
-    result
-}
-
-fn map_from<T, U>(
-    values: [T], transform: fn(T): U, index: Int, end: Int, output: [U]
-): [U] {
-    let cursor = index;
-    let result = output;
-    while cursor < end {
-        result = append(result, transform(values[cursor]));
-        cursor += 1;
-    };
-    result
-}
-
-fn flat_map_from<T, U>(
-    values: [T], transform: fn(T): [U], index: Int, end: Int, output: [U]
-): [U] {
-    let cursor = index;
-    let result = output;
-    while cursor < end {
-        result = __list_concat(result, transform(values[cursor]));
-        cursor += 1;
-    };
-    result
-}
-
-fn contains_from<T>(values: [T], value: T, index: Int, end: Int): Bool {
-    let cursor = index;
-    let found = false;
-    while cursor < end && !found {
-        if values[cursor] == value {
-            found = true;
-        };
-        cursor += 1;
-    };
-    found
-}
-
-fn distinct_from<T>(values: [T], index: Int, end: Int, output: [T]): [T] {
-    let cursor = index;
-    let result = output;
-    while cursor < end {
-        let value = values[cursor];
-        if !contains_from(result, value, 0, __list_length(result)) {
-            result = append(result, value);
-        };
-        cursor += 1;
-    };
-    result
-}
-
-fn every_from<T>(values: [T], predicate: fn(T): Bool, index: Int, end: Int): Bool {
-    let cursor = index;
-    let holds = true;
-    while cursor < end && holds {
-        if !predicate(values[cursor]) {
-            holds = false;
-        };
-        cursor += 1;
-    };
-    holds
-}
-
-fn exists_from<T>(values: [T], predicate: fn(T): Bool, index: Int, end: Int): Bool {
-    let cursor = index;
-    let found = false;
-    while cursor < end && !found {
-        if predicate(values[cursor]) {
-            found = true;
-        };
-        cursor += 1;
-    };
-    found
-}
-
-fn one_from<T>(
-    values: [T], predicate: fn(T): Bool, index: Int, end: Int, matches: [T]
-): T {
-    let cursor = index;
-    let found = matches;
-    while cursor < end {
-        let value = values[cursor];
-        if predicate(value) && __list_length(found) < 2 {
-            found = append(found, value);
-        };
-        cursor += 1;
-    };
-    if __list_length(found) == 0 {
-        fail(error(code: "std.collection.one.none", message: "one requires exactly one matching value"))
-    } else if __list_length(found) == 1 {
-        found[0]
-    } else {
-        fail(error(code: "std.collection.one.multiple", message: "one found multiple matching values"))
-    }
 }
 
 fn partition_from<T>(
@@ -163,7 +39,7 @@ fn flatten_from<T>(values: [[T]], index: Int, end: Int, output: [T]): [T] {
     let cursor = index;
     let result = output;
     while cursor < end {
-        result = __list_concat(result, values[cursor]);
+        result = union(result, values[cursor]);
         cursor += 1;
     };
     result
@@ -221,7 +97,7 @@ fn split_when_from<T>(
     let group = current;
     while cursor < end {
         let value = values[cursor];
-        if predicate(value) && __list_length(group) > 0 {
+        if predicate(value) && count(group) > 0 {
             result = append(result, group);
             group = [value];
         } else {
@@ -229,63 +105,8 @@ fn split_when_from<T>(
         };
         cursor += 1;
     };
-    if __list_length(group) == 0 { result } else { append(result, group) }
+    if count(group) == 0 { result } else { append(result, group) }
 }
-
-// The evaluator chooses the finite-list implementation from this exact
-// source overload; Relation<T> calls remain relation plans in the core.
-pub fn filter<T>(rows: [T], predicate: fn(T): Bool): [T] =
-    filter_from(rows, predicate, 0, __list_length(rows), []);
-
-pub fn map<T, U>(rows: [T], transform: fn(T): U): [U] =
-    map_from(rows, transform, 0, __list_length(rows), []);
-
-pub fn flat_map<T, U>(rows: [T], transform: fn(T): [U]): [U] =
-    flat_map_from(rows, transform, 0, __list_length(rows), []);
-
-// Key ordering and numeric total-order details are delegated to the leaf
-// sorter; the exported function is an ordinary source function.
-pub fn sort_by<T, K>(rows: [T], key: fn(T): K): [T] = __stable_sort(rows, key);
-
-pub fn take<T>(rows: [T], count: Int): [T] =
-    if count < 0 {
-        fail(error(code: "std.collection.negative_count", message: "take count must be nonnegative"))
-    } else {
-        slice_range(rows, 0, if count < __list_length(rows) { count } else { __list_length(rows) }, [])
-    };
-
-pub fn drop<T>(rows: [T], count: Int): [T] =
-    if count < 0 {
-        fail(error(code: "std.collection.negative_count", message: "drop count must be nonnegative"))
-    } else {
-        let end = __list_length(rows);
-        slice_range(rows, if count < end { count } else { end }, end, [])
-    };
-
-pub fn distinct<T>(rows: [T]): [T] =
-    distinct_from(rows, 0, __list_length(rows), []);
-
-pub fn union<T>(left: [T], right: [T]): [T] = __list_concat(left, right);
-
-pub fn count<T>(rows: [T]): Int = __list_length(rows);
-
-pub fn first<T>(rows: [T]): T? =
-    if __list_length(rows) == 0 { null } else { Some(rows[0]) };
-
-pub fn one<T>(rows: [T], predicate: fn(T): Bool = value => true): T =
-    one_from(rows, predicate, 0, __list_length(rows), []);
-
-pub fn sum<T>(rows: [T]): T = __numeric_sum(rows);
-
-pub fn min<T>(rows: [T]): T? = __minimum(rows);
-
-pub fn max<T>(rows: [T]): T? = __maximum(rows);
-
-pub fn every<T>(rows: [T], predicate: fn(T): Bool): Bool =
-    every_from(rows, predicate, 0, __list_length(rows));
-
-pub fn exists<T>(rows: [T], predicate: fn(T): Bool): Bool =
-    exists_from(rows, predicate, 0, __list_length(rows));
 
 pub fn asof_join<T, Time, Key>(
     left: [T], right: [T], time: fn(T): Time, by: fn(T): Key
@@ -295,29 +116,29 @@ pub fn chunk<T>(values: [T], size: Int): [[T]] =
     if size <= 0 {
         fail(error(code: "std.collection.invalid_chunk_size", message: "chunk size must be positive"))
     } else {
-        chunk_from(values, size, 0, __list_length(values), [])
+        chunk_from(values, size, 0, count(values), [])
     };
 
 pub fn flatten<T>(values: [[T]]): [T] =
-    flatten_from(values, 0, __list_length(values), []);
+    flatten_from(values, 0, count(values), []);
 
 pub fn partition<T>(values: [T], predicate: fn(T): Bool): ([T], [T]) =
-    partition_from(values, predicate, 0, __list_length(values), [], []);
+    partition_from(values, predicate, 0, count(values), [], []);
 
 pub fn zip<T, U>(left: [T], right: [U]): [(T, U)] =
     zip_from(
         left,
         right,
         0,
-        if __list_length(left) < __list_length(right) { __list_length(left) } else { __list_length(right) },
+        if count(left) < count(right) { count(left) } else { count(right) },
         []
     );
 
 pub fn zip_exact<T, U>(left: [T], right: [U]): [(T, U)] =
-    if __list_length(left) != __list_length(right) {
+    if count(left) != count(right) {
         fail(error(code: "std.collection.zip_length_mismatch", message: "zip_exact requires equal lengths"))
     } else {
-        zip_from(left, right, 0, __list_length(left), [])
+        zip_from(left, right, 0, count(left), [])
     };
 
 pub fn unique<T>(values: [T]): [T] = distinct(values);
@@ -325,7 +146,7 @@ pub fn unique<T>(values: [T]): [T] = distinct(values);
 pub fn group_by<T, K>(values: [T], key: fn(T): K): [(K, [T])] = __group_by(values, key);
 
 pub fn pairs<T>(values: [T]): [(T, T)] =
-    pairs_from(values, 0, __list_length(values), []);
+    pairs_from(values, 0, count(values), []);
 
 pub fn window<T>(values: [T], size: Int, step: Int = 1): [[T]] =
     if size <= 0 {
@@ -333,12 +154,12 @@ pub fn window<T>(values: [T], size: Int, step: Int = 1): [[T]] =
     } else if step <= 0 {
         fail(error(code: "std.collection.invalid_window_step", message: "window step must be positive"))
     } else {
-        windows_from(values, size, step, 0, __list_length(values), [])
+        windows_from(values, size, step, 0, count(values), [])
     };
 
 // Produces consecutive nonempty groups; each matching item starts a new group.
 pub fn split_when<T>(values: [T], predicate: fn(T): Bool): [[T]] =
-    split_when_from(values, predicate, 0, __list_length(values), [], []);
+    split_when_from(values, predicate, 0, count(values), [], []);
 
 pub fn rank<T, K>(values: [T], key: fn(T): K): [(T, Int)] = __rank(values, key);
 

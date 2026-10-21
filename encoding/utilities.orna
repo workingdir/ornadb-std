@@ -7,16 +7,16 @@
 pub fn unicode_scalars(value: Str): [Str] = std.text.split(value, "");
 
 pub fn unicode_scalar_length(value: Str): Int =
-    std.collection.count(unicode_scalars(value));
+    count(unicode_scalars(value));
 
 /// Reverses Unicode scalar values while preserving each scalar's UTF-8 bytes.
 /// Combining sequences and joined emoji are reversed by scalar, not grapheme.
 pub fn unicode_reverse(value: Str): Str {
     let scalars = unicode_scalars(value);
-    let index = std.collection.count(scalars) - 1;
+    let index = count(scalars) - 1;
     let reversed = [];
     while index >= 0 {
-        reversed = std.collection.union(reversed, [scalars[index]]);
+        reversed = union(reversed, [scalars[index]]);
         index = index - 1;
     };
     std.text.join(reversed, "")
@@ -29,8 +29,8 @@ pub fn unicode_slice(value: Str, start: Int, end: Int): Str =
         ""
     } else {
         std.text.join(
-            std.collection.take(
-                std.collection.drop(unicode_scalars(value), start),
+            take(
+                drop(unicode_scalars(value), start),
                 end - start
             ),
             ""
@@ -53,7 +53,7 @@ pub fn base64url_encode(input: Blob): Str =
 /// `+` and `/` alphabet, invalid characters, and nonzero unused trailing bits
 /// are rejected by canonical re-encoding or the strict Base64 decoder.
 pub fn base64url_decode(input: Str): Blob {
-    let length = std.collection.count(std.text.split(input, ""));
+    let length = count(std.text.split(input, ""));
     let remainder = length - (length / 4) * 4;
     let padded = if remainder == 2 {
         std.text.join([input, "=="], "")
