@@ -4,45 +4,6 @@
 // Contracts: partition returns (matching, remaining); zip stops at the shorter input; unique keeps each lawful equality class's first occurrence; lawful keys while preserving input order inside each group; adjacent and overlapping pairs; window emits complete windows only; split_when starts a group before a matching item; competition ranks (ties share a rank and later ranks skip tied positions).
 use collection;
 
-pub fn filter<T>(rows: [T], predicate: fn(T): Bool): [T] =
-    std.collection.filter(rows, predicate);
-
-pub fn map<T, U>(rows: [T], transform: fn(T): U): [U] =
-    std.collection.map(rows, transform);
-
-pub fn flat_map<T, U>(rows: [T], transform: fn(T): [U]): [U] =
-    std.collection.flat_map(rows, transform);
-
-pub fn sort_by<T, K>(rows: [T], key: fn(T): K): [T] =
-    std.collection.sort_by(rows, key);
-
-pub fn take<T>(rows: [T], count: Int): [T] = std.collection.take(rows, count);
-
-pub fn drop<T>(rows: [T], count: Int): [T] = std.collection.drop(rows, count);
-
-pub fn distinct<T>(rows: [T]): [T] = std.collection.distinct(rows);
-
-pub fn union<T>(left: [T], right: [T]): [T] = std.collection.union(left, right);
-
-pub fn count<T>(rows: [T]): Int = std.collection.count(rows);
-
-pub fn first<T>(rows: [T]): T? = std.collection.first(rows);
-
-pub fn one<T>(rows: [T], predicate: fn(T): Bool = value => true): T =
-    std.collection.one(rows, predicate);
-
-pub fn sum<T>(rows: [T]): T = std.collection.sum(rows);
-
-pub fn min<T>(rows: [T]): T? = std.collection.min(rows);
-
-pub fn max<T>(rows: [T]): T? = std.collection.max(rows);
-
-pub fn every<T>(rows: [T], predicate: fn(T): Bool): Bool =
-    std.collection.every(rows, predicate);
-
-pub fn exists<T>(rows: [T], predicate: fn(T): Bool): Bool =
-    std.collection.exists(rows, predicate);
-
 pub fn chunk<T>(values: [T], size: Int): [[T]] =
     std.collection.chunk(values, size);
 
@@ -86,7 +47,7 @@ pub fn window_percentile<T, P>(
     // Probability and named interpolation remain valid arguments even when
     // complete windows are absent; the empty sample validates without sorting.
     let _validated_options = std.stats.percentile(
-        std.collection.take(values, 0),
+        take(values, 0),
         probability,
         interpolation
     );
@@ -161,7 +122,7 @@ pub fn window_histogram<T>(
     // Bin ordering and overlap are part of the call contract, including when
     // the source is too short to produce a complete window.
     let _validated_bins = std.stats.histogram(
-        std.collection.take(values, 0),
+        take(values, 0),
         bins,
         include_final_upper
     );

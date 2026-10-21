@@ -5,12 +5,12 @@ fn enumerate_from<T>(values: [T], index: Int, end: Int, output: [(Int, T)]): [(I
     if index >= end {
         output
     } else {
-        enumerate_from(values, index + 1, end, std.collection.union(output, [(index, values[index])]))
+        enumerate_from(values, index + 1, end, union(output, [(index, values[index])]))
     };
 
 // Adds each value's zero-based source position without changing its order.
 pub fn enumerate<T>(values: [T]): [(Int, T)] =
-    enumerate_from(values, 0, std.collection.count(values), []);
+    enumerate_from(values, 0, count(values), []);
 
 fn map_indexed_from<T, U>(
     values: [T], transform: fn(Int, T): U, index: Int, end: Int, output: [U]
@@ -23,13 +23,13 @@ fn map_indexed_from<T, U>(
             transform,
             index + 1,
             end,
-            std.collection.union(output, [transform(index, values[index])]),
+            union(output, [transform(index, values[index])]),
         )
     };
 
 // Calls transform once per value, from left to right, with its zero-based index.
 pub fn map_indexed<T, U>(values: [T], transform: fn(Int, T): U): [U] =
-    map_indexed_from(values, transform, 0, std.collection.count(values), []);
+    map_indexed_from(values, transform, 0, count(values), []);
 
 fn zip_with_from<T, U, V>(
     left: [T], right: [U], combine: fn(T, U): V, index: Int, end: Int, output: [V]
@@ -43,7 +43,7 @@ fn zip_with_from<T, U, V>(
             combine,
             index + 1,
             end,
-            std.collection.union(output, [combine(left[index], right[index])]),
+            union(output, [combine(left[index], right[index])]),
         )
     };
 
@@ -58,7 +58,7 @@ pub fn zip_with<T, U, V>(left: [T], right: [U], combine: fn(T, U): V): [V] =
         right,
         combine,
         0,
-        shorter_length(std.collection.count(left), std.collection.count(right)),
+        shorter_length(count(left), count(right)),
         [],
     );
 
@@ -73,11 +73,11 @@ fn unzip_from<T, U>(
             pairs,
             index + 1,
             end,
-            std.collection.union(left, [left_value]),
-            std.collection.union(right, [right_value]),
+            union(left, [left_value]),
+            union(right, [right_value]),
         )
     };
 
 // Splits pairs into parallel lists, retaining each component's source order.
 pub fn unzip<T, U>(pairs: [(T, U)]): ([T], [U]) =
-    unzip_from(pairs, 0, std.collection.count(pairs), [], []);
+    unzip_from(pairs, 0, count(pairs), [], []);

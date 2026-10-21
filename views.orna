@@ -3,17 +3,19 @@
 // materializes the selected values in source order.
 // The enum variant is public, so operations validate ranges constructed
 // directly by callers as well as ranges returned by these helpers.
+use std.list as list;
+
 pub enum View<T> {
     Slice { source: [T], start: Int, end: Int },
 }
 
 fn valid_range<T>(source: [T], start: Int, end: Int): Bool =
-    start >= 0 && end >= start && end <= std.collection.count(source);
+    start >= 0 && end >= start && end <= count(source);
 
 pub fn from_list<T>(source: [T]): View<T> = View.Slice {
     source: source,
     start: 0,
-    end: std.collection.count(source),
+    end: count(source),
 };
 
 pub fn length<T>(view: View<T>): Int = case view {
@@ -36,7 +38,7 @@ pub fn get<T>(view: View<T>, index: Int): T? = case view {
         } else if index < 0 || index >= end - start {
             null
         } else {
-            std.collection.first(std.collection.drop(source, start + index))
+            Some(source[start + index])
         },
 };
 
@@ -81,7 +83,7 @@ pub fn drop<T>(view: View<T>, count: Int): View<T> =
 pub fn to_list<T>(view: View<T>): [T] = case view {
     View.Slice { source, start, end }:
         if valid_range(source, start, end) {
-            std.collection.take(std.collection.drop(source, start), end - start)
+            list.take(list.drop(source, start), end - start)
         } else {
             fail(error(code: "std.views.invalid_view", message: "view range is outside its source list"))
         },
@@ -102,7 +104,7 @@ fn windows_from<T>(
             width,
             step,
             cursor_index + step,
-            std.collection.union(
+            union(
                 collected,
                 [slice(view, cursor_index, cursor_index + width)]
             )

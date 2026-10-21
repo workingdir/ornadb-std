@@ -18,7 +18,7 @@ fn fold_from<T, U>(
 
 /// Folds a finite list from left to right, returning `initial` for an empty list.
 pub fn fold<T, U>(values: [T], initial: U, combine: fn(U, T): U): U =
-    fold_from(values, 0, std.collection.count(values), initial, combine);
+    fold_from(values, 0, count(values), initial, combine);
 
 fn fold_while_from<T, U>(
     values: [T], index: Int, end: Int, accumulated: U,
@@ -38,24 +38,24 @@ fn fold_while_from<T, U>(
 /// Folds left to right until `step` returns false; the stopping item's state is kept.
 pub fn fold_while<T, U>(
     values: [T], initial: U, step: fn(U, T): (U, Bool)
-): U = fold_while_from(values, 0, std.collection.count(values), initial, step);
+): U = fold_while_from(values, 0, count(values), initial, step);
 
 fn has_node<T>(nodes: [T], target: T): Bool =
-    std.collection.exists(nodes, node => node == target);
+    exists(nodes, node => node == target);
 
 fn depth_first_from<T>(
     pending: [T], visited: [T], neighbors: fn(T): [T]
 ): [T] =
-    if std.collection.count(pending) == 0 {
+    if count(pending) == 0 {
         visited
     } else {
         let node = pending[0];
-        let remaining = std.collection.drop(pending, 1);
+        let remaining = drop(pending, 1);
         if has_node(visited, node) {
             depth_first_from(remaining, visited, neighbors)
         } else {
-            let discovered = std.collection.union(visited, [node]);
-            let pending_in_preorder = std.collection.union(neighbors(node), remaining);
+            let discovered = union(visited, [node]);
+            let pending_in_preorder = union(neighbors(node), remaining);
             depth_first_from(pending_in_preorder, discovered, neighbors)
         }
     };
@@ -67,16 +67,16 @@ pub fn depth_first<T>(root: T, neighbors: fn(T): [T]): [T] =
 fn breadth_first_from<T>(
     pending: [T], visited: [T], neighbors: fn(T): [T]
 ): [T] =
-    if std.collection.count(pending) == 0 {
+    if count(pending) == 0 {
         visited
     } else {
         let node = pending[0];
-        let remaining = std.collection.drop(pending, 1);
+        let remaining = drop(pending, 1);
         if has_node(visited, node) {
             breadth_first_from(remaining, visited, neighbors)
         } else {
-            let discovered = std.collection.union(visited, [node]);
-            let pending_in_level_order = std.collection.union(remaining, neighbors(node));
+            let discovered = union(visited, [node]);
+            let pending_in_level_order = union(remaining, neighbors(node));
             breadth_first_from(pending_in_level_order, discovered, neighbors)
         }
     };
@@ -88,19 +88,19 @@ pub fn breadth_first<T>(root: T, neighbors: fn(T): [T]): [T] =
 fn reachable_from<T>(
     pending: [T], visited: [T], target: T, neighbors: fn(T): [T]
 ): Bool =
-    if std.collection.count(pending) == 0 {
+    if count(pending) == 0 {
         false
     } else {
         let node = pending[0];
         if node == target {
             true
         } else {
-            let remaining = std.collection.drop(pending, 1);
+            let remaining = drop(pending, 1);
             if has_node(visited, node) {
                 reachable_from(remaining, visited, target, neighbors)
             } else {
-                let discovered = std.collection.union(visited, [node]);
-                let pending_in_level_order = std.collection.union(remaining, neighbors(node));
+                let discovered = union(visited, [node]);
+                let pending_in_level_order = union(remaining, neighbors(node));
                 reachable_from(pending_in_level_order, discovered, target, neighbors)
             }
         }

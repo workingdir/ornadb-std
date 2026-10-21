@@ -18,7 +18,7 @@ pub fn parallel<T>(callbacks: [fn(): T]): [T] = std.concurrent.parallel(callback
 // callback has the same transaction, failure and cancellation rules as
 // `parallel` itself.
 pub fn parallel_map<T, U>(values: [T], transform: fn(T): U): [U] =
-    parallel(std.collection.map(values, value => () => transform(value)));
+    parallel(map(values, value => () => transform(value)));
 
 // Return the first observed successful result, then cancel and join every
 // losing child. If all children fail, report the lowest input-index ordinary

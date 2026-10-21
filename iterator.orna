@@ -18,7 +18,7 @@ pub fn empty<T>(): Iterator<T> = Iterator {
 pub fn next<T>(iterator: Iterator<T>): (T?, Iterator<T>) = iterator.pull();
 
 fn list_pull<T>(values: [T], start_index: Int): (T?, Iterator<T>) =
-    if start_index < std.collection.count(values) {
+    if start_index < count(values) {
         (
             Some(values[start_index]),
             Iterator { pull: () => list_pull(values, start_index + 1) },
@@ -196,7 +196,7 @@ pub fn drop<T>(source: Iterator<T>, count: Int): Iterator<T> =
 
 fn collect_into<T>(source: Iterator<T>, collected: [T]): [T] =
     case next(source) {
-        (Some(value), tail): collect_into(tail, std.collection.union(collected, [value])),
+        (Some(value), tail): collect_into(tail, union(collected, [value])),
         (null, _): collected,
     };
 
