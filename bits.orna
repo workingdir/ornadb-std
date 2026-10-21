@@ -77,7 +77,7 @@ pub fn unsigned_to_bytes(value: Int, width: Int, order: Str): [Int]? {
         while index < width {
             let byte_index = if order == "little" { index } else { width - index - 1 };
             let byte = bit_and(shift_right(value, byte_index * 8), 255);
-            output = std.collection.append(output, byte);
+            output = union(output, [byte]);
             index += 1;
         };
         Some(output)
@@ -88,7 +88,7 @@ pub fn unsigned_to_bytes(value: Int, width: Int, order: Str): [Int]? {
 /// order. Invalid byte values, an empty list, or an unsupported order return
 /// null. Leading zero bytes are accepted and do not survive the Int conversion.
 pub fn unsigned_from_bytes(bytes: [Int], order: Str): Int? {
-    let length = std.collection.count(bytes);
+    let length = count(bytes);
     if length == 0 || !supports_byte_order(order) {
         null
     } else {

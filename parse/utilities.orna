@@ -5,13 +5,13 @@ fn parse_integer_fields(fields: [Str]): [Int]? {
     let values = [];
     let index = 0;
     let valid = true;
-    while index < std.collection.count(fields) && valid {
+    while index < count(fields) && valid {
         let (field_valid, value) = case std.parse.integer(fields[index]) {
             Some(value): (true, value),
             null: (false, 0),
         };
         if field_valid {
-            values = std.collection.union(values, [value]);
+            values = union(values, [value]);
         } else {
             valid = false;
         };
@@ -24,13 +24,13 @@ fn parse_boolean_fields(fields: [Str]): [Bool]? {
     let values = [];
     let index = 0;
     let valid = true;
-    while index < std.collection.count(fields) && valid {
+    while index < count(fields) && valid {
         let (field_valid, value) = case std.parse.boolean(fields[index]) {
             Some(value): (true, value),
             null: (false, false),
         };
         if field_valid {
-            values = std.collection.union(values, [value]);
+            values = union(values, [value]);
         } else {
             valid = false;
         };
@@ -84,12 +84,12 @@ pub fn split_once(input: Str, separator: Str): (Str, Str)? =
         null
     } else {
         let fields = std.text.split(input, separator);
-        if std.collection.count(fields) < 2 {
+        if count(fields) < 2 {
             null
         } else {
             Some((
                 fields[0],
-                std.text.join(std.collection.drop(fields, 1), separator),
+                std.text.join(drop(fields, 1), separator),
             ))
         }
     };

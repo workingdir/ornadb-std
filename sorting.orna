@@ -26,18 +26,18 @@ fn decorate_from<T, K>(
             key,
             index + 1,
             end,
-            std.collection.union(output, [(key(value), value)]),
+            union(output, [(key(value), value)]),
         )
     };
 
 fn insertion_sort_pairs<K, T>(values: [(K, T)], descending: Bool): [(K, T)] {
     let sorted = [];
     let value_index = 0;
-    let end = std.collection.count(values);
+    let end = count(values);
     while value_index < end {
         let candidate = values[value_index];
         let (candidate_key, _) = candidate;
-        let sorted_end = std.collection.count(sorted);
+        let sorted_end = count(sorted);
         let insert_index = 0;
         let searching = true;
         while insert_index < sorted_end && searching {
@@ -51,13 +51,13 @@ fn insertion_sort_pairs<K, T>(values: [(K, T)], descending: Bool): [(K, T)] {
         let updated = [];
         let copy_index = 0;
         while copy_index < insert_index {
-            updated = std.collection.union(updated, [sorted[copy_index]]);
+            updated = union(updated, [sorted[copy_index]]);
             copy_index += 1;
         };
-        updated = std.collection.union(updated, [candidate]);
+        updated = union(updated, [candidate]);
         copy_index = insert_index;
         while copy_index < sorted_end {
-            updated = std.collection.union(updated, [sorted[copy_index]]);
+            updated = union(updated, [sorted[copy_index]]);
             copy_index += 1;
         };
         sorted = updated;
@@ -77,18 +77,14 @@ fn values_from_pairs<K, T>(
             values,
             index + 1,
             end,
-            std.collection.union(output, [value]),
+            union(output, [value]),
         )
     };
 
 fn sort_by_direction<T, K>(values: [T], key: fn(T): K, descending: Bool): [T] {
-    if descending {
-        let decorated = decorate_from(values, key, 0, std.collection.count(values), []);
-        let ordered = insertion_sort_pairs(decorated, true);
-        values_from_pairs(ordered, 0, std.collection.count(ordered), [])
-    } else {
-        std.collection.sort_by(values, key)
-    }
+    let decorated = decorate_from(values, key, 0, count(values), []);
+    let ordered = insertion_sort_pairs(decorated, descending);
+    values_from_pairs(ordered, 0, count(ordered), [])
 }
 
 // Sort by ascending key while preserving the source order of equal keys.
@@ -117,11 +113,11 @@ fn sorted_from<T, K>(
 
 // Check ascending order; equal adjacent keys are allowed.
 pub fn is_sorted_by<T, K>(values: [T], key: fn(T): K): Bool =
-    sorted_from(values, key, false, 0, std.collection.count(values));
+    sorted_from(values, key, false, 0, count(values));
 
 // Check descending order; equal adjacent keys are allowed.
 pub fn is_sorted_by_descending<T, K>(values: [T], key: fn(T): K): Bool =
-    sorted_from(values, key, true, 0, std.collection.count(values));
+    sorted_from(values, key, true, 0, count(values));
 
 pub fn is_sorted<T>(values: [T]): Bool = is_sorted_by(values, value => value);
 
@@ -150,7 +146,7 @@ fn extreme_pair_from<T, K>(
 
 // Return the first value with the minimum key, or null for an empty list.
 pub fn min_by<T, K>(values: [T], key: fn(T): K): T? =
-    if std.collection.count(values) == 0 {
+    if count(values) == 0 {
         null
     } else {
         let (_, value) = extreme_pair_from(
@@ -158,7 +154,7 @@ pub fn min_by<T, K>(values: [T], key: fn(T): K): T? =
             key,
             false,
             1,
-            std.collection.count(values),
+            count(values),
             (key(values[0]), values[0]),
         );
         Some(value)
@@ -166,7 +162,7 @@ pub fn min_by<T, K>(values: [T], key: fn(T): K): T? =
 
 // Return the first value with the maximum key, or null for an empty list.
 pub fn max_by<T, K>(values: [T], key: fn(T): K): T? =
-    if std.collection.count(values) == 0 {
+    if count(values) == 0 {
         null
     } else {
         let (_, value) = extreme_pair_from(
@@ -174,7 +170,7 @@ pub fn max_by<T, K>(values: [T], key: fn(T): K): T? =
             key,
             true,
             1,
-            std.collection.count(values),
+            count(values),
             (key(values[0]), values[0]),
         );
         Some(value)
