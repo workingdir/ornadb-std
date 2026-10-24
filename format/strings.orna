@@ -1,7 +1,8 @@
 // String layout helpers count Unicode scalar values, not UTF-8 bytes or
 // grapheme clusters. A multi-scalar fill string repeats as a scalar pattern.
-use text;
-use collection;
+// `std` imports use ordinary `use` rules (09-standard-library), so the
+// text helpers are imported by their full namespace (ORNA-IMPORT-001).
+use std.text;
 
 fn scalar_count(value: Str): Int = count(text.split(value, ""));
 
