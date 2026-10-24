@@ -1,8 +1,3 @@
-// Contracts: consecutive nonempty groups; partition returns (matching, remaining);
-// zip stops at the shorter input; unique keeps each lawful equality class's first occurrence;
-// lawful keys while preserving input order inside each group; adjacent and overlapping pairs;
-// window emits complete windows only; split_when starts a group before a matching item;
-// competition ranks (ties share a rank and later ranks skip tied positions).
 fn __group_by<T, K>(values: [T], key: fn(T): K): [(K, [T])] = [];
 fn __rank<T, K>(values: [T], key: fn(T): K): [(T, Int)] = [];
 fn __asof_join<T, Time, Key>(
