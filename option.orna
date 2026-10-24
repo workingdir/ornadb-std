@@ -71,8 +71,8 @@ pub fn or<T>(left: T?, right: T?): T? = case left {
 /// Returns the present option only when exactly one input is present.
 pub fn xor<T>(left: T?, right: T?): T? = case left {
     Some(_): case right {
-        null: left,
         Some(_): null,
+        null: left,
     },
     null: right,
 };
