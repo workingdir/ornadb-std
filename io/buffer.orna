@@ -2,6 +2,10 @@
 // filesystem and stream capabilities. Reading snapshots the complete UTF-8
 // file once through std.io.reader before constructing a replayable list-backed
 // stream; `batch_size` bounds each emitted group, not the host read itself.
+use collection;
+use reader;
+use stream;
+use writer;
 
 // Read ordered line batches from one authorized file snapshot. Empty files
 // emit no batches, blank and terminal lines are preserved, and a positive
