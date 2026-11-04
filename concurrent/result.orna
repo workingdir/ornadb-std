@@ -3,6 +3,9 @@
 // values: they preserve input order and duplicates while splitting success
 // payloads from error payloads. A thrown child failure still follows the
 // cancellation and error rules of std.concurrent.
+use concurrent;
+use result;
+
 fn values_from<T, E>(
     outcomes: [std.result.Result<T, E>],
     index: Int,

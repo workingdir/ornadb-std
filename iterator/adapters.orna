@@ -2,6 +2,7 @@
 // adapter catalogue. These adapters follow std.iterator's persistent pull
 // contract: callbacks run only as output is requested, source order is kept,
 // and replaying an input cursor recomputes the same pure traversal.
+use iterator;
 
 fn filter_map_pull<T, U>(
     source: std.iterator.Iterator<T>,

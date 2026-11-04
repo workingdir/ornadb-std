@@ -1,6 +1,7 @@
 // Date and instant conveniences composed from the pinned Gregorian calendar
 // and exact elapsed-time operations. Calendar days are never treated as fixed
 // seconds, and instants never inherit a process-local time zone.
+use time;
 
 // Weekdays use ISO numbering: Monday is 1 and Sunday is 7. Invalid civil
 // dates return null so callers can distinguish invalid input from a weekday.
