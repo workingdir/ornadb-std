@@ -1,6 +1,8 @@
 // A lazy sequence is a repeatable thunk that creates an initial persistent
 // iterator. Building a pipeline does not call its source thunk; forcing a
 // pipeline creates its cursor, and cursor adapters run only when pulled.
+use iterator;
+use iterator.adapters;
 
 pub fn from_iterator<T>(source: std.iterator.Iterator<T>): fn(): std.iterator.Iterator<T> =
     () => source;

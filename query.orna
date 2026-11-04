@@ -3,6 +3,7 @@
 // callback order, failures, and stable ordering aligned across both modules.
 // Contracts: partition returns (matching, remaining); zip stops at the shorter input; unique keeps each lawful equality class's first occurrence; lawful keys while preserving input order inside each group; adjacent and overlapping pairs; window emits complete windows only; split_when starts a group before a matching item; competition ranks (ties share a rank and later ranks skip tied positions).
 use collection;
+use stats;
 
 pub fn chunk<T>(values: [T], size: Int): [[T]] =
     std.collection.chunk(values, size);

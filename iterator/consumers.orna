@@ -1,6 +1,7 @@
 // Terminal consumers traverse persistent pull cursors in source order. A
 // consumer only advances its local successor; the original cursor can be
 // observed again and callbacks may therefore run again on replay.
+use iterator;
 
 fn any_from<T>(
     source: std.iterator.Iterator<T>,

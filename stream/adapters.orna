@@ -1,6 +1,8 @@
 // Finite cursor adapters materialize a persistent iterator once, then pin the
 // resulting list as a replayable stream source. These helpers require finite
 // input; they do not make an unbounded iterator safe to consume.
+use iterator;
+use stream;
 
 // Adapt a finite iterator into a replayable stream in pull order. The source
 // identity is still combined with the typed digest of the collected values.

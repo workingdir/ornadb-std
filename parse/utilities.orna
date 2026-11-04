@@ -1,6 +1,8 @@
 // Composed helpers keep std.parse's primitive spellings strict. Delimited
 // lists preserve empty fields, so a leading, trailing, or repeated separator
 // makes the entire parse fail. Empty input represents an empty list.
+use parse;
+
 fn parse_integer_fields(fields: [Str]): [Int]? {
     let values = [];
     let index = 0;

@@ -2,6 +2,7 @@
 // boundary, but not a separate combinator API. These helpers operate only on
 // ordinary Error values and preserve cause structure.
 // The helpers never catch, replace, or convert a language failure.
+use error;
 
 // Add one outer diagnostic while keeping the complete previous error as its
 // first cause. This is data composition, not recovery from a thrown failure.
