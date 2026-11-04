@@ -6,6 +6,7 @@
 // position and the last value for duplicates; merge lets right-hand values
 // replace left-hand values while preserving left-hand key positions.
 use collection;
+use encoding.ovb;
 
 pub fn size<K, V>(entries: [(K, V)]): Int =
     count(from_entries(entries));

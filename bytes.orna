@@ -2,6 +2,9 @@
 // Every operation that consumes a buffer validates all elements first.
 // Buffer-producing functions return null for invalid bytes, sizes, ranges,
 // byte orders, or values that do not fit the requested width.
+use bits;
+use collection;
+
 fn all_bytes(values: [Int]): Bool {
     let index = 0;
     let valid = true;

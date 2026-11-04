@@ -3,6 +3,8 @@
 // Every `force` call invokes its thunk again. This is call-by-name with no memoization.
 // `from_pull` bridges one delayed pull into the persistent std.iterator cursor;
 // its callback runs only when that cursor is advanced.
+use iterator;
+
 pub fn defer<T>(computation: fn(): T): fn(): T = computation;
 
 pub fn force<T>(computation: fn(): T): T = computation();
