@@ -50,6 +50,16 @@ pub fn Chart<T>(series: T, title: Str? = null): UI =
         [("title", "std.option<std.text>")],
     );
 
+// A Blob node retains only its committed reference; the renderer links to the
+// media route and never embeds the bytes.
+pub fn Image(blob: Blob, alt: Str): UI =
+    __node("image", { blob: blob, alt: alt }, [], [], []);
+
+pub fn Audio(blob: Blob): UI = __node("audio", { blob: blob }, [], [], []);
+
+pub fn Download(blob: Blob, label: Str): UI =
+    __node("download", { blob: blob, label: label }, [], [], []);
+
 // Only the host-issued Action descriptor is retained. This helper does not
 // invoke it or synthesize an executable handle.
 pub fn Button<A>(label: Str, action: A): UI =
