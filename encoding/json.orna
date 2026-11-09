@@ -8,10 +8,18 @@
 // `decode(input, as: T)`, not as a runtime value.
 
 pub fn encode<T>(value: T): Str = __encode(value);
-fn __encode<T>(value: T): Str = encode(value);
+fn __encode<T>(value: T): Str =
+    fail(error(
+        code: "ORNA-EVAL-UNSUPPORTED",
+        message: "std.encoding.json.encode is a native intrinsic"
+    ));
 
 pub fn decode<T>(input: Str): T = __decode(input);
-fn __decode<T>(input: Str): T = decode(input);
+fn __decode<T>(input: Str): T =
+    fail(error(
+        code: "ORNA-EVAL-UNSUPPORTED",
+        message: "std.encoding.json.decode is a native intrinsic"
+    ));
 
 // Unknown fields may be ignored only when the caller opts in explicitly.
 // Duplicate keys, malformed values and type mismatches still fail.
@@ -20,4 +28,7 @@ pub fn decode_with_options<T>(
     ignore_unknown_fields: Bool = false
 ): T = __decode_with_options(input, ignore_unknown_fields);
 fn __decode_with_options<T>(input: Str, ignore_unknown_fields: Bool): T =
-    decode_with_options(input, ignore_unknown_fields);
+    fail(error(
+        code: "ORNA-EVAL-UNSUPPORTED",
+        message: "std.encoding.json.decode_with_options is a native intrinsic"
+    ));

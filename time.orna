@@ -51,7 +51,11 @@ pub fn duration_clamp(value: Duration, lower: Duration, upper: Duration): Durati
 // transition. Callers always supply a zone and never inherit a process-local
 // default.
 pub fn offset_at(instant: Instant, zone: Str): Int = __offset_at(instant, zone);
-fn __offset_at(instant: Instant, zone: Str): Int = offset_at(instant, zone);
+fn __offset_at(instant: Instant, zone: Str): Int =
+    fail(error(
+        code: "ORNA-EVAL-UNSUPPORTED",
+        message: "std.time.offset_at is a native intrinsic"
+    ));
 
 // `local` is exactly YYYY-MM-DDTHH:MM:SS with an optional dot and 1..9 ASCII
 // fractional digits. It has no offset suffix; invalid Gregorian dates, hour
@@ -66,7 +70,10 @@ fn __offset_at(instant: Instant, zone: Str): Int = offset_at(instant, zone);
 pub fn resolve_local(local: Str, zone: Str, ambiguous: Str, gap: Str? = null): Instant =
     __resolve_local(local, zone, ambiguous, gap);
 fn __resolve_local(local: Str, zone: Str, ambiguous: Str, gap: Str?): Instant =
-    resolve_local(local, zone, ambiguous, gap);
+    fail(error(
+        code: "ORNA-EVAL-UNSUPPORTED",
+        message: "std.time.resolve_local is a native intrinsic"
+    ));
 
 // Keep the four elapsed-duration presentations reachable from std.time. Their
 // sources are separate pinned modules, so a snapshot captures each formatter
