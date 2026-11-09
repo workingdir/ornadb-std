@@ -193,39 +193,3 @@ pub fn bucket_by<T, P>(rows: [T], period: P, zone: Str): [[T]] =
 // example; the runtime binds it natively.
 pub fn last<T>(rows: [T]): T? =
     fail(error(code: "ORNA-EVAL-UNSUPPORTED", message: "std.collection.last is a native intrinsic"));
-
-// The core relation operators are also re-exported from std.collection with
-// their root intrinsic identities, so every registered std.collection spelling
-// has a pinned declaration.
-pub fn filter<T>(rows: [T], predicate: fn(T): Bool): [T] =
-    fail(error(code: "ORNA-EVAL-UNSUPPORTED", message: "std.collection.filter is the core relation intrinsic"));
-pub fn map<T, U>(rows: [T], transform: fn(T): U): [U] =
-    fail(error(code: "ORNA-EVAL-UNSUPPORTED", message: "std.collection.map is the core relation intrinsic"));
-pub fn flat_map<T, U>(rows: [T], transform: fn(T): [U]): [U] =
-    fail(error(code: "ORNA-EVAL-UNSUPPORTED", message: "std.collection.flat_map is the core relation intrinsic"));
-pub fn sort_by<T, K>(rows: [T], key: fn(T): K): [T] =
-    fail(error(code: "ORNA-EVAL-UNSUPPORTED", message: "std.collection.sort_by is the core relation intrinsic"));
-pub fn take<T>(rows: [T], count: Int): [T] =
-    fail(error(code: "ORNA-EVAL-UNSUPPORTED", message: "std.collection.take is the core relation intrinsic"));
-pub fn drop<T>(rows: [T], count: Int): [T] =
-    fail(error(code: "ORNA-EVAL-UNSUPPORTED", message: "std.collection.drop is the core relation intrinsic"));
-pub fn distinct<T>(rows: [T]): [T] =
-    fail(error(code: "ORNA-EVAL-UNSUPPORTED", message: "std.collection.distinct is the core relation intrinsic"));
-pub fn union<T>(left: [T], right: [T]): [T] =
-    fail(error(code: "ORNA-EVAL-UNSUPPORTED", message: "std.collection.union is the core relation intrinsic"));
-pub fn count<T>(rows: [T]): Int =
-    fail(error(code: "ORNA-EVAL-UNSUPPORTED", message: "std.collection.count is the core relation intrinsic"));
-pub fn first<T>(rows: [T]): T? =
-    fail(error(code: "ORNA-EVAL-UNSUPPORTED", message: "std.collection.first is the core relation intrinsic"));
-pub fn one<T>(rows: [T], predicate: fn(T): Bool = value => true): T =
-    fail(error(code: "ORNA-EVAL-UNSUPPORTED", message: "std.collection.one is the core relation intrinsic"));
-pub fn sum<T>(rows: [T]): T =
-    fail(error(code: "ORNA-EVAL-UNSUPPORTED", message: "std.collection.sum is the core relation intrinsic"));
-pub fn min<T>(rows: [T]): T? =
-    fail(error(code: "ORNA-EVAL-UNSUPPORTED", message: "std.collection.min is the core relation intrinsic"));
-pub fn max<T>(rows: [T]): T? =
-    fail(error(code: "ORNA-EVAL-UNSUPPORTED", message: "std.collection.max is the core relation intrinsic"));
-pub fn every<T>(rows: [T], predicate: fn(T): Bool): Bool =
-    fail(error(code: "ORNA-EVAL-UNSUPPORTED", message: "std.collection.every is the core relation intrinsic"));
-pub fn exists<T>(rows: [T], predicate: fn(T): Bool): Bool =
-    fail(error(code: "ORNA-EVAL-UNSUPPORTED", message: "std.collection.exists is the core relation intrinsic"));
