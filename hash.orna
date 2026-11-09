@@ -10,25 +10,45 @@
 //
 // SHA-256 over the complete Blob, returning the 32-byte digest value.
 pub fn sha256(input: Blob): Digest = __sha256(input);
-fn __sha256(input: Blob): Digest = sha256(input);
+fn __sha256(input: Blob): Digest =
+    fail(error(
+        code: "ORNA-EVAL-UNSUPPORTED",
+        message: "std.hash.sha256 is a native intrinsic"
+    ));
 
 // Encode text as its exact UTF-8 bytes before hashing. No Unicode
 // normalisation, case folding or locale conversion is applied.
 pub fn sha256_text(input: Str): Digest = __sha256_text(input);
-fn __sha256_text(input: Str): Digest = sha256_text(input);
+fn __sha256_text(input: Str): Digest =
+    fail(error(
+        code: "ORNA-EVAL-UNSUPPORTED",
+        message: "std.hash.sha256_text is a native intrinsic"
+    ));
 
 // Compute SHA256(ASCII(domain) || 00 || payload). Domain must be nonempty
 // ASCII without an embedded zero byte. The separator is exactly one zero byte;
 // payload bytes are not interpreted, normalised or re-encoded.
 pub fn domain_sha256(domain: Str, payload: Blob): Digest = __domain_sha256(domain, payload);
-fn __domain_sha256(domain: Str, payload: Blob): Digest = domain_sha256(domain, payload);
+fn __domain_sha256(domain: Str, payload: Blob): Digest =
+    fail(error(
+        code: "ORNA-EVAL-UNSUPPORTED",
+        message: "std.hash.domain_sha256 is a native intrinsic"
+    ));
 
 // Render a Digest as exactly 64 lowercase hexadecimal characters. Digest has
 // no implicit conversion to Str; this is an explicit presentation helper.
 pub fn to_hex(digest: Digest): Str = __to_hex(digest);
-fn __to_hex(digest: Digest): Str = to_hex(digest);
+fn __to_hex(digest: Digest): Str =
+    fail(error(
+        code: "ORNA-EVAL-UNSUPPORTED",
+        message: "std.hash.to_hex is a native intrinsic"
+    ));
 
 // Parse exactly 64 lowercase hexadecimal characters. Return null for uppercase,
 // whitespace, invalid characters or any other length; do not trim or repair.
 pub fn from_hex(value: Str): Digest? = __from_hex(value);
-fn __from_hex(value: Str): Digest? = from_hex(value);
+fn __from_hex(value: Str): Digest? =
+    fail(error(
+        code: "ORNA-EVAL-UNSUPPORTED",
+        message: "std.hash.from_hex is a native intrinsic"
+    ));

@@ -62,3 +62,8 @@ pub fn retry<T>(
 // API cannot acknowledge an ordered delivery by silently skipping it.
 pub fn recover<T>(stream: Stream<T>, handler: fn(Error): T): Stream<T> =
     std.stream.recover(stream, handler);
+
+// D3: construct a provider-backed source. The caller supplies the provider
+// identity explicitly; the runtime binds this declaration natively.
+pub fn from_provider<T>(source: Str, identity: Str): Stream<T> =
+    fail(error(code: "ORNA-EVAL-UNSUPPORTED", message: "std.stream.from_provider is a native intrinsic"));

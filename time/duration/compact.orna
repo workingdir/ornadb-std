@@ -7,4 +7,8 @@ pub fn format(
 fn __format(
     duration: Duration,
     context: { locale: Str, time_zone: Str }
-): Str = format(duration, context);
+): Str =
+    fail(error(
+        code: "ORNA-EVAL-UNSUPPORTED",
+        message: "std.time.duration.compact.format is a native intrinsic"
+    ));

@@ -12,7 +12,10 @@ pub fn quantize<T>(amount: T, minor_digits: Int, rounding: Str): T =
     __quantize(amount, minor_digits, rounding);
 
 fn __quantize<T>(amount: T, minor_digits: Int, rounding: Str): T =
-    quantize(amount, minor_digits, rounding);
+    fail(error(
+        code: "ORNA-EVAL-UNSUPPORTED",
+        message: "std.money.quantize is a native intrinsic"
+    ));
 
 pub fn allocate<T>(
     amount: T,
@@ -26,7 +29,11 @@ fn __allocate<T>(
     weights: [Int],
     minor_digits: Int,
     rounding: Str?
-): [T] = allocate(amount, weights, minor_digits, rounding);
+): [T] =
+    fail(error(
+        code: "ORNA-EVAL-UNSUPPORTED",
+        message: "std.money.allocate is a native intrinsic"
+    ));
 
 pub fn format<T>(
     amount: T,
@@ -42,4 +49,8 @@ fn __format<T>(
     minor_digits: Int,
     rounding: Str,
     locale: Str
-): Str = format(amount, currency_code, minor_digits, rounding, locale);
+): Str =
+    fail(error(
+        code: "ORNA-EVAL-UNSUPPORTED",
+        message: "std.money.format is a native intrinsic"
+    ));

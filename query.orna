@@ -136,11 +136,31 @@ pub fn window_histogram<T>(
 // Native leaf scans timestamps iteratively so a sparse series' skipped points
 // do not consume one source call frame each. Exported window operators still
 // construct complete windows and compute their real statistic values below.
-fn __strictly_ordered_time_series<T>(points: [(Instant, T)]): Bool = false;
-fn __window_rate<T>(points: [(Instant, T)], size: Int, step: Int): [T?] = [];
-fn __window_rate_integrate<T>(points: [(Instant, T)], size: Int, step: Int): [(T?, T?)] = [];
-fn __window_derivative<T>(points: [(Instant, T)], size: Int, step: Int): [[(Instant, T)]] = [];
-fn __window_integrate<T>(points: [(Instant, T)], size: Int, step: Int): [T?] = [];
+fn __strictly_ordered_time_series<T>(points: [(Instant, T)]): Bool =
+    fail(error(
+        code: "ORNA-EVAL-UNSUPPORTED",
+        message: "std.query.strictly_ordered_time_series is a native intrinsic"
+    ));
+fn __window_rate<T>(points: [(Instant, T)], size: Int, step: Int): [T?] =
+    fail(error(
+        code: "ORNA-EVAL-UNSUPPORTED",
+        message: "std.query.window_rate is a native intrinsic"
+    ));
+fn __window_rate_integrate<T>(points: [(Instant, T)], size: Int, step: Int): [(T?, T?)] =
+    fail(error(
+        code: "ORNA-EVAL-UNSUPPORTED",
+        message: "std.query.window_rate_integrate is a native intrinsic"
+    ));
+fn __window_derivative<T>(points: [(Instant, T)], size: Int, step: Int): [[(Instant, T)]] =
+    fail(error(
+        code: "ORNA-EVAL-UNSUPPORTED",
+        message: "std.query.window_derivative is a native intrinsic"
+    ));
+fn __window_integrate<T>(points: [(Instant, T)], size: Int, step: Int): [T?] =
+    fail(error(
+        code: "ORNA-EVAL-UNSUPPORTED",
+        message: "std.query.window_integrate is a native intrinsic"
+    ));
 
 // Time-series statistics operate on complete timestamped windows. The stats
 // functions retain strict timestamp ordering and their value/time or
@@ -227,3 +247,48 @@ pub fn bucket_by<T, P>(rows: [T], period: P, zone: Str): [[T]] =
 // planner's structured, snapshot-pinned plan so callers can inspect its chosen
 // operators and estimate assumptions without parsing rendered explain text.
 pub fn plan_hint<T>(query: Query<T>): sys.Plan = sys.explain(query);
+
+// The core relation operators are re-exported with their intrinsic identities
+// (spec 09:9). The runtime binds each declaration to the same intrinsic as the
+// root spelling; the marker body is unreachable while that binding holds.
+pub fn filter<T>(rows: [T], predicate: fn(T): Bool): [T] =
+    fail(error(code: "ORNA-EVAL-UNSUPPORTED", message: "std.query.filter is the core relation intrinsic"));
+pub fn map<T, U>(rows: [T], transform: fn(T): U): [U] =
+    fail(error(code: "ORNA-EVAL-UNSUPPORTED", message: "std.query.map is the core relation intrinsic"));
+pub fn flat_map<T, U>(rows: [T], transform: fn(T): [U]): [U] =
+    fail(error(code: "ORNA-EVAL-UNSUPPORTED", message: "std.query.flat_map is the core relation intrinsic"));
+pub fn sort_by<T, K>(rows: [T], key: fn(T): K): [T] =
+    fail(error(code: "ORNA-EVAL-UNSUPPORTED", message: "std.query.sort_by is the core relation intrinsic"));
+pub fn take<T>(rows: [T], count: Int): [T] =
+    fail(error(code: "ORNA-EVAL-UNSUPPORTED", message: "std.query.take is the core relation intrinsic"));
+pub fn drop<T>(rows: [T], count: Int): [T] =
+    fail(error(code: "ORNA-EVAL-UNSUPPORTED", message: "std.query.drop is the core relation intrinsic"));
+pub fn distinct<T>(rows: [T]): [T] =
+    fail(error(code: "ORNA-EVAL-UNSUPPORTED", message: "std.query.distinct is the core relation intrinsic"));
+pub fn union<T>(left: [T], right: [T]): [T] =
+    fail(error(code: "ORNA-EVAL-UNSUPPORTED", message: "std.query.union is the core relation intrinsic"));
+pub fn count<T>(rows: [T]): Int =
+    fail(error(code: "ORNA-EVAL-UNSUPPORTED", message: "std.query.count is the core relation intrinsic"));
+pub fn first<T>(rows: [T]): T? =
+    fail(error(code: "ORNA-EVAL-UNSUPPORTED", message: "std.query.first is the core relation intrinsic"));
+pub fn one<T>(rows: [T], predicate: fn(T): Bool = value => true): T =
+    fail(error(code: "ORNA-EVAL-UNSUPPORTED", message: "std.query.one is the core relation intrinsic"));
+pub fn sum<T>(rows: [T]): T =
+    fail(error(code: "ORNA-EVAL-UNSUPPORTED", message: "std.query.sum is the core relation intrinsic"));
+pub fn min<T>(rows: [T]): T? =
+    fail(error(code: "ORNA-EVAL-UNSUPPORTED", message: "std.query.min is the core relation intrinsic"));
+pub fn max<T>(rows: [T]): T? =
+    fail(error(code: "ORNA-EVAL-UNSUPPORTED", message: "std.query.max is the core relation intrinsic"));
+pub fn every<T>(rows: [T], predicate: fn(T): Bool): Bool =
+    fail(error(code: "ORNA-EVAL-UNSUPPORTED", message: "std.query.every is the core relation intrinsic"));
+pub fn exists<T>(rows: [T], predicate: fn(T): Bool): Bool =
+    fail(error(code: "ORNA-EVAL-UNSUPPORTED", message: "std.query.exists is the core relation intrinsic"));
+pub fn last<T>(rows: [T]): T? =
+    fail(error(code: "ORNA-EVAL-UNSUPPORTED", message: "std.query.last is the core relation intrinsic"));
+
+// D2: recursive_cte is declared by the pinned standard library, not appended
+// from a Rust-side fixture.
+pub fn recursive_cte<T>(anchor: [T], recursive_term: fn(T): [T]): [T] =
+    __recursive_cte(anchor, recursive_term);
+fn __recursive_cte<T>(anchor: [T], recursive_term: fn(T): [T]): [T] =
+    fail(error(code: "ORNA-EVAL-UNSUPPORTED", message: "std.query.recursive_cte is a native intrinsic"));

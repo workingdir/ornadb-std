@@ -8,7 +8,11 @@ fn __node<P, A>(
     children: [UI],
     actions: [(Str, A)],
     property_types: [(Str, Str)],
-): UI = __node(kind, properties, children, actions, property_types);
+): UI =
+    fail(error(
+        code: "ORNA-EVAL-UNSUPPORTED",
+        message: "std.ui.node is a native intrinsic"
+    ));
 
 // A Field retains the original value and its runtime type. Details therefore
 // accepts homogeneous UI nodes rather than coercing mixed values to text.

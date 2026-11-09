@@ -3,12 +3,28 @@
 // lawful keys while preserving input order inside each group; adjacent and overlapping pairs;
 // window emits complete windows only; split_when starts a group before a matching item;
 // competition ranks (ties share a rank and later ranks skip tied positions).
-fn __group_by<T, K>(values: [T], key: fn(T): K): [(K, [T])] = [];
-fn __rank<T, K>(values: [T], key: fn(T): K): [(T, Int)] = [];
+fn __group_by<T, K>(values: [T], key: fn(T): K): [(K, [T])] =
+    fail(error(
+        code: "ORNA-EVAL-UNSUPPORTED",
+        message: "std.collection.group_by is a native intrinsic"
+    ));
+fn __rank<T, K>(values: [T], key: fn(T): K): [(T, Int)] =
+    fail(error(
+        code: "ORNA-EVAL-UNSUPPORTED",
+        message: "std.collection.rank is a native intrinsic"
+    ));
 fn __asof_join<T, Time, Key>(
     left: [T], right: [T], time: fn(T): Time, by: fn(T): Key
-): [(T, T?)] = [];
-fn __bucket_by<T, P>(rows: [T], period: P, zone: Str): [[T]] = [];
+): [(T, T?)] =
+    fail(error(
+        code: "ORNA-EVAL-UNSUPPORTED",
+        message: "std.collection.asof_join is a native intrinsic"
+    ));
+fn __bucket_by<T, P>(rows: [T], period: P, zone: Str): [[T]] =
+    fail(error(
+        code: "ORNA-EVAL-UNSUPPORTED",
+        message: "std.collection.bucket_by is a native intrinsic"
+    ));
 
 fn append<T>(values: [T], value: T): [T] = union(values, [value]);
 
@@ -172,3 +188,8 @@ pub fn rank<T, K>(values: [T], key: fn(T): K): [(T, Int)] = __rank(values, key);
 // used by relation bucketing. Input order must be nondecreasing by time.
 pub fn bucket_by<T, P>(rows: [T], period: P, zone: Str): [[T]] =
     __bucket_by(rows, period, zone);
+
+// D1: `last` is part of the core relation surface used by the specification's
+// example; the runtime binds it natively.
+pub fn last<T>(rows: [T]): T? =
+    fail(error(code: "ORNA-EVAL-UNSUPPORTED", message: "std.collection.last is a native intrinsic"));

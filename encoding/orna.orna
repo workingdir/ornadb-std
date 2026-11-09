@@ -17,7 +17,15 @@
 // `decode(input, as: T)`; `as` selects T and is not a runtime value argument.
 
 pub fn encode<T>(value: T): Str = __encode(value);
-fn __encode<T>(value: T): Str = encode(value);
+fn __encode<T>(value: T): Str =
+    fail(error(
+        code: "ORNA-EVAL-UNSUPPORTED",
+        message: "std.encoding.orna.encode is a native intrinsic"
+    ));
 
 pub fn decode<T>(input: Str): T = __decode(input);
-fn __decode<T>(input: Str): T = decode(input);
+fn __decode<T>(input: Str): T =
+    fail(error(
+        code: "ORNA-EVAL-UNSUPPORTED",
+        message: "std.encoding.orna.decode is a native intrinsic"
+    ));
